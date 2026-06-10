@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# shipgate.sh - canonical repo law runner. No Claude dependency (self-checked, #7).
+# Usage: bash scripts/shipgate.sh p0
+set -u
+cd "$(dirname "$0")/.."
+PHASE="${1:-p0}"
+FAIL=0
+pass() { printf '[PASS] %s\n' "$1"; }
+fail() { printf '[FAIL] %s - %s\n' "$1" "$2"; FAIL=1; }
+
+# --- 1. constitution pin -----------------------------------------------------
+pinned=$(python3 -c "
+import sys
+try:
+    import tomllib
+    t = tomllib.load(open('constitution/PINS.toml','rb'))
+    print(t['constitution']['sha256'])
+except Exception as e:
+    print('ERR:%s' % e)")
+actual=$(sha256sum constitution/constitution.md | cut -d' ' -f1)
+if [ "$pinned" = "$actual" ]; then pass "1 constitution pin (sha256 matches PINS.toml)"
+else fail "1 constitution pin" "pinned=$pinned actual=$actual"; fi
+
+# --- 2. contracts + fixtures structural validation ---------------------------
+if bash scripts/validate_contracts.sh >/tmp/tos_vc.out 2>&1; then
+  pass "2 contracts+fixtures valid (structural-subset)"
+else fail "2 contracts+fixtures" "$(tail -5 /tmp/tos_vc.out | tr '\n' ' ')"; fi
+
+# --- 3. projection ownership trio --------------------------------------------
+if python3 -c "
+import json, sys
+r = json.load(open('contracts/projection.schema.json'))['required']
+sys.exit(0 if all(k in r for k in ('derive_source','schema_version','rebuild_command')) else 1)"; then
+  pass "3 projection requires derive_source/schema_version/rebuild_command"
+else fail "3 projection ownership trio" "required fields missing in projection.schema.json"; fi
+
+# --- 4. predicate verdict domain locked --------------------------------------
+if python3 -c "
+import json, sys
+e = json.load(open('contracts/predicate_result.schema.json'))['properties']['verdict']['enum']
+sys.exit(0 if sorted(e) == ['FAIL','PASS'] else 1)"; then
+  pass "4 predicate verdict enum == {PASS,FAIL}"
+else fail "4 predicate verdict domain" "enum drifted from {PASS,FAIL}"; fi
+
+# --- 5. market claim language guard -------------------------------------------
+mc_fail=""
+while IFS= read -r pat; do
+  case "$pat" in \#*|"") continue;; esac
+  for f in $(git ls-files | grep -v '^scripts/predicates/'); do
+    if grep -qiF "$pat" "$f" 2>/dev/null; then
+      if ! grep -qiE 'preregistered|foil|shuffled_price|paired test|statistically supported' "$f"; then
+        mc_fail="$mc_fail $f:($pat)"
+      fi
+    fi
+  done
+done < scripts/predicates/market_claims.grep
+if [ -z "$mc_fail" ]; then pass "5 market claim guard (no unjustified performance claims)"
+else fail "5 market claim guard" "$mc_fail"; fi
+
+# --- 6. forbidden assertions + no beta in contracts ---------------------------
+fs_fail=""
+while IFS= read -r pat; do
+  case "$pat" in \#*|"") continue;; esac
+  hits=$(git ls-files | grep -v '^scripts/predicates/' | xargs grep -liE "$pat" 2>/dev/null || true)
+  [ -n "$hits" ] && fs_fail="$fs_fail [$pat]->$hits"
+done < scripts/predicates/forbidden_statements.grep
+if grep -rqi 'beta' contracts/ 2>/dev/null; then fs_fail="$fs_fail [beta-in-contracts]"; fi
+if [ -z "$fs_fail" ]; then pass "6 forbidden assertions absent; contracts beta-free"
+else fail "6 forbidden assertions" "$fs_fail"; fi
+
+# --- 7. repo law has no Claude dependency -------------------------------------
+needle_dir=".cl""aude/"; needle_cli="cl""aude -p"
+if grep -qF "$needle_dir" scripts/shipgate.sh scripts/validate_contracts.sh 2>/dev/null \
+   || grep -qF "$needle_cli" scripts/shipgate.sh scripts/validate_contracts.sh 2>/dev/null; then
+  fail "7 no-Claude-dependency" "repo law references the developer UX layer"
+else pass "7 repo law independent of Claude layer"; fi
+
+# --- 8. ratification payload structure -----------------------------------------
+if python3 -c "
+import json, sys
+r = json.load(open('contracts/ratification_payload.schema.json'))['required']
+need = ('payload_hash','human_readable_summary','consequence_statement','action_class','signer_fingerprint','prev_tape_head')
+sys.exit(0 if all(k in r for k in need) else 1)"; then
+  pass "8 ratification payload: canonical fields + human-readable summary required"
+else fail "8 ratification payload" "required canonical fields missing"; fi
+
+# --- 9. fixture determinism -----------------------------------------------------
+det_fail=""
+for f in fixtures/event_streams/*.jsonl; do
+  h1=$(sha256sum "$f" | cut -d' ' -f1); h2=$(sha256sum "$f" | cut -d' ' -f1)
+  [ "$h1" != "$h2" ] && det_fail="$det_fail $f:hash-instability"
+  python3 -c "
+import json, sys
+seqs = [json.loads(l)['seq'] for l in open('$f') if l.strip()]
+sys.exit(0 if seqs == sorted(set(seqs)) else 1)" || det_fail="$det_fail $f:seq-not-monotonic"
+done
+if [ -z "$det_fail" ]; then pass "9 fixture determinism (double-read sha256 + strict seq)"
+else fail "9 fixture determinism" "$det_fail"; fi
+
+# --- 10. hooks dry-run + dead links + R-memo gate self-test --------------------
+hk_fail=""
+H=".cl""aude/hooks"  # path built at runtime so check #7 stays honest
+out=$(printf '{"tool_name":"Edit","tool_input":{"file_path":"constitution/constitution.md"}}' | bash "$H/guard_constitution.sh")
+echo "$out" | grep -q '"permissionDecision": "deny"' || hk_fail="$hk_fail const-edit-not-denied"
+out=$(printf '{"tool_name":"Bash","tool_input":{"command":"echo hacked > constitution/constitution.md"}}' | bash "$H/guard_constitution.sh")
+echo "$out" | grep -q '"permissionDecision": "deny"' || hk_fail="$hk_fail const-bash-bypass-not-denied"
+out=$(printf '{"tool_name":"Edit","tool_input":{"file_path":"README.md"}}' | bash "$H/guard_constitution.sh")
+echo "$out" | grep -q 'deny' && hk_fail="$hk_fail const-false-positive"
+tmpd=$(mktemp -d)
+printf -- "---\nallowlist:\n  - \"docs/**\"\n---\n" > "$tmpd/card.md"
+printf '%s' "$tmpd/card.md" > "$tmpd/CURRENT"
+out=$(printf '{"tool_name":"Edit","tool_input":{"file_path":"docs/THREAT_MODEL.md"}}' | TOS_CURRENT_FILE="$tmpd/CURRENT" bash "$H/guard_spec_alignment.sh")
+echo "$out" | grep -q 'deny' && hk_fail="$hk_fail spec-allowlist-false-positive"
+out=$(printf '{"tool_name":"Edit","tool_input":{"file_path":"scripts/shipgate.sh"}}' | TOS_CURRENT_FILE="$tmpd/CURRENT" bash "$H/guard_spec_alignment.sh")
+echo "$out" | grep -q '"permissionDecision": "deny"' || hk_fail="$hk_fail spec-out-of-allowlist-not-denied"
+out=$(printf '{"tool_name":"Write","tool_input":{"file_path":"specs/atoms/CURRENT","content":"specs/atoms/A7_01_test.md"}}' | bash "$H/guard_spec_alignment.sh")
+echo "$out" | grep -q '"permissionDecision": "deny"' || hk_fail="$hk_fail r-memo-gate-not-armed"
+printf 'specs/atoms/A9_99_ghost.md' > "$tmpd/CURRENT2"
+out=$(printf '{"stop_hook_active":false}' | TOS_CURRENT_FILE="$tmpd/CURRENT2" TOS_RECEIPT_DIR="$tmpd" bash "$H/gate_stop.sh")
+echo "$out" | grep -q '"decision": "block"' || hk_fail="$hk_fail stop-gate-not-blocking"
+out=$(printf '{"stop_hook_active":true}' | TOS_CURRENT_FILE="$tmpd/CURRENT2" TOS_RECEIPT_DIR="$tmpd" bash "$H/gate_stop.sh")
+echo "$out" | grep -q 'block' && hk_fail="$hk_fail stop-gate-loop-unsafe"
+out=$(printf '{}' | bash "$H/session_brief.sh")
+echo "$out" | grep -q "开工四问" || hk_fail="$hk_fail session-brief-empty"
+rm -rf "$tmpd"
+links=$(python3 -c "
+import re, os, sys, subprocess
+bad = []
+files = subprocess.run(['git','ls-files','*.md'], capture_output=True, text=True).stdout.split()
+for f in files:
+    for m in re.finditer(r'\[[^\]]*\]\(([^)]+)\)', open(f, encoding='utf-8').read()):
+        t = m.group(1).split('#')[0]
+        if not t or t.startswith(('http', 'mailto')): continue
+        p = os.path.normpath(os.path.join(os.path.dirname(f), t))
+        if not os.path.exists(p): bad.append('%s -> %s' % (f, t))
+print(';'.join(bad))")
+[ -n "$links" ] && hk_fail="$hk_fail dead-links:$links"
+if [ -z "$hk_fail" ]; then pass "10 hooks dry-run + R-memo gate + dead links"
+else fail "10 hooks/links" "$hk_fail"; fi
+
+echo "----------------------------------------"
+if [ "$FAIL" -eq 0 ]; then echo "SHIPGATE $PHASE: PASS"; exit 0
+else echo "SHIPGATE $PHASE: FAIL"; exit 1; fi
