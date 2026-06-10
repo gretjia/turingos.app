@@ -1,5 +1,11 @@
 # Canonical repo law in CI (ADR-006): no Claude dependency by construction
 # (shipgate check #7 self-verifies). Same gate for every contributor.
+#
+# Runs the FULL current-phase gate (p1) on both OSes so CI executes exactly
+# what the atom cards declare as their gate (S-stage critique: p0.5-only CI
+# never exercised checks 13-16; the macOS job also builds the daemon first
+# via the rust gates, so check 16's live wire-probe runs for real in CI,
+# not just on the dev machine).
 name: shipgate
 on:
   push:
@@ -7,8 +13,19 @@ on:
   pull_request:
 jobs:
   shipgate:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-26]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Run repo law (12 checks incl. thin-slice determinism + golden)
-        run: bash scripts/shipgate.sh p0.5
+      - name: Ensure Rust toolchain
+        run: |
+          if ! command -v cargo >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
+          rustup component add clippy rustfmt 2>/dev/null || true
+      - name: Run repo law (full p1 gate)
+        run: bash scripts/shipgate.sh p1

@@ -1,0 +1,19 @@
+# App lane quick signal: SwiftUI shell build + tests + bundle on macos-26
+# (runner Xcode per ADR-008; locally the 27 beta SDK via DEVELOPER_DIR
+# inside build_app.sh). The CANONICAL enforcement incl. the live wire-probe
+# is shipgate.yml's macos-26 job, which builds the daemon first and runs
+# the full `shipgate.sh p1` - this lane exists for fast path-scoped feedback.
+name: app
+on:
+  push:
+    branches: ["**"]
+    paths: ["app/**", "scripts/build_app.sh", "scripts/shipgate.sh", "fixtures/**", ".github/workflows/app.yml"]
+  pull_request:
+    paths: ["app/**", "scripts/build_app.sh", "scripts/shipgate.sh", "fixtures/**", ".github/workflows/app.yml"]
+jobs:
+  app:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: build + test + bundle (+wire probe when daemon present)
+        run: bash scripts/build_app.sh

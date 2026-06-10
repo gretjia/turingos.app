@@ -169,6 +169,21 @@ if [ "$PHASE" = "p1" ]; then
   fi
 fi
 
+# --- p1 app lane (macOS-only by nature; CI runs it via app.yml on macos-26;
+# --- the Linux shipgate lane delegates VISIBLY rather than silently skipping)
+if [ "$PHASE" = "p1" ]; then
+  if [ "$(uname)" = "Darwin" ]; then
+    if command -v swift >/dev/null 2>&1; then
+      if bash scripts/build_app.sh >/tmp/tos_app.out 2>&1; then pass "16 app lane (swift build+test+bundle$(grep -q 'probe received real envelope' /tmp/tos_app.out && echo '+wire-probe'))"
+      else fail "16 app lane" "$(tail -3 /tmp/tos_app.out | tr '\n' ' ')"; fi
+    else
+      fail "16 app lane" "swift not found on Darwin - fail-closed (install Xcode toolchain)"
+    fi
+  else
+    pass "16 app lane (delegated: macOS-only, enforced by app.yml on macos-26)"
+  fi
+fi
+
 echo "----------------------------------------"
 if [ "$FAIL" -eq 0 ]; then echo "SHIPGATE $PHASE: PASS"; exit 0
 else echo "SHIPGATE $PHASE: FAIL"; exit 1; fi
