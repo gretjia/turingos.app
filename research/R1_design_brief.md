@@ -75,3 +75,11 @@ FSEvents 脏信号 ──(notify crate, FSEvents backend)──┘   │
 |---|---|
 | D1 细化 | **开发直接用 Xcode 27 SDK**，deployment target 维持 macOS 26（ADR-008 已更新：27-only API 源文件级隔离，CI 在 runner 提供 27 前用 26.5） |
 | 新增④ | **预留 macOS 27 Apple Intelligence 接入** → ADR-014：App Intents = typed Action API 的系统投影；仅 L0/L1；entity 只来自 Projection API；P1 不实现、架构保证纯增量接入 |
+
+### 三次裁决（用户 2026-06-10，本地会话）
+
+| 项 | 裁决 |
+|---|---|
+| UI 选型 | **三张效果图（variant-a-operations-table / variant-b-radar-cards / menubar-glance）全部否决**。用户亲自操刀设计，满意稿后续提供——共创方向改为「用户出稿 → agent 评审与实现」。UI Atom 维持门禁阻塞（ADR-012 增补不变） |
+| 设计空窗期安排 | 内核轨不受阻：执行 agent 即刻续行 A1_02 → A1_03 → A1_04；另行调研+实证「模型分级路由」工作方法论（Claude 开发层纪律，不触 repo law） |
+| R_GENUI §6 R1-R8 | 本次未裁决，**维持待批准状态**（批准后并入 DESIGN.md） |
