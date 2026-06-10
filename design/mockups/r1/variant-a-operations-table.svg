@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="760" viewBox="0 0 1180 760" font-family="-apple-system, 'SF Pro Text', 'PingFang SC', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101014"/><stop offset="1" stop-color="#17171c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/><stop offset="1" stop-color="#ffffff" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+
+  <!-- window -->
+  <rect width="1180" height="760" rx="26" fill="url(#bg)"/>
+  <rect width="1180" height="760" rx="26" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- traffic lights + title -->
+  <circle cx="30" cy="28" r="7" fill="#FF5F57"/><circle cx="54" cy="28" r="7" fill="#FEBC2E"/><circle cx="78" cy="28" r="7" fill="#28C840"/>
+  <text x="590" y="33" fill="#9a9aa2" font-size="13" text-anchor="middle">TuringOS — Worktree Radar</text>
+
+  <!-- ============ VARIANT A: Operations Table（信息密度优先） ============ -->
+  <!-- sidebar -->
+  <rect x="16" y="52" width="216" height="692" rx="18" fill="url(#glass)"/>
+  <text x="36" y="88" fill="#8E8E93" font-size="11" letter-spacing="1">导航</text>
+  <g font-size="14">
+    <rect x="26" y="100" width="196" height="34" rx="9" fill="#0A84FF" fill-opacity="0.22"/>
+    <text x="40" y="122" fill="#dfe0e6">⌖ Worktrees</text>
+    <text x="40" y="158" fill="#9a9aa2">▤ Projects</text>
+    <text x="40" y="192" fill="#9a9aa2">◇ Missions</text>
+    <text x="40" y="226" fill="#9a9aa2">⇄ Proposals <tspan fill="#FFCC00">●2</tspan></text>
+    <text x="40" y="260" fill="#9a9aa2">⛊ Identity</text>
+    <text x="40" y="294" fill="#BF5AF2">✦ Ratification <tspan fill="#BF5AF2">●1</tspan></text>
+    <text x="40" y="328" fill="#9a9aa2">⟲ Replay</text>
+  </g>
+  <text x="36" y="380" fill="#8E8E93" font-size="11" letter-spacing="1">项目</text>
+  <text x="40" y="406" fill="#dfe0e6" font-size="14">▾ proj_demo</text>
+  <text x="52" y="430" fill="#6e6e76" font-size="12">~/code/demo · 4 worktrees</text>
+
+  <!-- health strip -->
+  <rect x="248" y="52" width="916" height="58" rx="16" fill="url(#glass)"/>
+  <circle cx="282" cy="81" r="9" fill="#FFCC00"/>
+  <text x="302" y="86" fill="#dfe0e6" font-size="15">1 项需要注意</text>
+  <text x="470" y="86" fill="#9a9aa2" font-size="13"><tspan fill="#0A84FF">●</tspan> 1 活跃会话　<tspan fill="#FFCC00">●</tspan> 2 待审提案　<tspan fill="#8E8E93">●</tspan> 1 未注册来源　对账 2s 前 ✓</text>
+  <text x="1100" y="86" fill="#636368" font-size="12">演示数据=fixtures/p1</text>
+
+  <!-- table header -->
+  <g font-size="11" fill="#8E8E93">
+    <text x="268" y="142">WORKTREE / 分支</text><text x="520" y="142">HEAD</text><text x="600" y="142">变更指纹</text><text x="760" y="142">占用者</text><text x="900" y="142">信任</text><text x="1010" y="142">活动</text>
+  </g>
+  <line x1="248" y1="152" x2="1164" y2="152" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- row 1: agent worktree, active -->
+  <rect x="248" y="162" width="916" height="58" rx="14" fill="url(#glass)"/>
+  <rect x="248" y="162" width="3.5" height="58" rx="2" fill="#0A84FF"/>
+  <text x="268" y="186" fill="#e8e9ee" font-size="14">wt_feature_x</text>
+  <text x="268" y="206" fill="#8e8e96" font-size="12">⎇ feature/x</text>
+  <text x="520" y="196" fill="#9a9aa2" font-size="13" font-family="ui-monospace, 'SF Mono', monospace">a1b2c3d</text>
+  <text x="600" y="196" font-size="13"><tspan fill="#34C759">+12</tspan> <tspan fill="#FF3B30">−2</tspan> <tspan fill="#8E8E93">· 1 file</tspan></text>
+  <text x="760" y="196" fill="#dfe0e6" font-size="13">agent_claude_01</text>
+  <rect x="896" y="178" width="64" height="24" rx="12" fill="#0A84FF" fill-opacity="0.18" stroke="#0A84FF" stroke-opacity="0.5"/>
+  <text x="928" y="194" fill="#6cb8ff" font-size="11" text-anchor="middle">active</text>
+  <circle cx="1022" cy="190" r="6" fill="#0A84FF"><animate attributeName="opacity" values="1;0.25;1" dur="2.4s" repeatCount="indefinite"/></circle>
+  <text x="1038" y="195" fill="#8e8e96" font-size="12">src/lib.rs</text>
+
+  <!-- row 2: main, clean external -->
+  <rect x="248" y="230" width="916" height="58" rx="14" fill="#ffffff" fill-opacity="0.03"/>
+  <text x="268" y="254" fill="#c9cad1" font-size="14">wt_main</text>
+  <text x="268" y="274" fill="#8e8e96" font-size="12">⎇ main</text>
+  <text x="520" y="264" fill="#9a9aa2" font-size="13" font-family="ui-monospace, monospace">a1b2c3d</text>
+  <text x="600" y="264" fill="#8E8E93" font-size="13">clean</text>
+  <text x="760" y="264" fill="#8e8e96" font-size="13">—</text>
+  <rect x="896" y="246" width="64" height="24" rx="12" fill="#8E8E93" fill-opacity="0.15" stroke="#8E8E93" stroke-opacity="0.4"/>
+  <text x="928" y="262" fill="#a8a8ae" font-size="11" text-anchor="middle">foreign</text>
+
+  <!-- row 3: CONFLICT same branch x2 (exception is first-class) -->
+  <rect x="248" y="298" width="916" height="74" rx="14" fill="#FFCC00" fill-opacity="0.07" stroke="#FFCC00" stroke-opacity="0.45"/>
+  <rect x="248" y="298" width="3.5" height="74" rx="2" fill="#FFCC00"/>
+  <text x="268" y="322" fill="#e8e9ee" font-size="14">wt_hotfix ⚠ wt_hotfix_2</text>
+  <text x="268" y="342" fill="#8e8e96" font-size="12">⎇ hotfix/crash — 同一分支被两个 worktree 检出（--force 旁路）</text>
+  <text x="268" y="362" fill="#d4a900" font-size="12">证据: git worktree list --porcelain · 两个 writer 互相覆写的风险</text>
+  <rect x="888" y="318" width="80" height="24" rx="12" fill="#FFCC00" fill-opacity="0.18" stroke="#FFCC00" stroke-opacity="0.6"/>
+  <text x="928" y="334" fill="#ffd60a" font-size="11" text-anchor="middle">attention</text>
+
+  <!-- row 4: prunable orphan -->
+  <rect x="248" y="382" width="916" height="58" rx="14" fill="#ffffff" fill-opacity="0.02" stroke="#8E8E93" stroke-opacity="0.25" stroke-dasharray="5 5"/>
+  <text x="268" y="406" fill="#9a9aa2" font-size="14">wt_old_spike</text>
+  <text x="268" y="426" fill="#6e6e76" font-size="12">gitdir 死链 — 对账发现的孤儿（prunable）</text>
+  <text x="520" y="416" fill="#6e6e76" font-size="13" font-family="ui-monospace, monospace">9f8e7d6</text>
+  <rect x="888" y="398" width="80" height="24" rx="12" fill="#8E8E93" fill-opacity="0.13" stroke="#8E8E93" stroke-opacity="0.4"/>
+  <text x="928" y="414" fill="#a8a8ae" font-size="11" text-anchor="middle">orphan</text>
+
+  <!-- evidence drawer (selected row detail) -->
+  <rect x="248" y="456" width="916" height="288" rx="16" fill="url(#glass)"/>
+  <text x="272" y="488" fill="#8E8E93" font-size="11" letter-spacing="1">证据抽屉 — wt_feature_x（点行展开，Review 时刻的入口）</text>
+  <g font-size="13">
+    <text x="272" y="520" fill="#9a9aa2">会话</text><text x="380" y="520" fill="#dfe0e6">sess_0001 · agent_claude_01 · <tspan fill="#6cb8ff">manifest_registered</tspan></text>
+    <text x="272" y="548" fill="#9a9aa2">最近事件</text><text x="380" y="548" fill="#dfe0e6" font-family="ui-monospace, monospace" font-size="12">seq 6 · ProposalCandidate · diff sha256:1f2e3d…</text>
+    <text x="272" y="576" fill="#9a9aa2">溯源</text><text x="380" y="576" fill="#dfe0e6" font-family="ui-monospace, monospace" font-size="12">FileChanged(fsevents, hint) → DiffSnapshot(git) → 对账 ✓</text>
+    <text x="272" y="604" fill="#9a9aa2">谓词</text><text x="380" y="604" fill="#34C759">尚无 — 提案提交后运行（P6）</text>
+  </g>
+  <rect x="272" y="640" width="190" height="36" rx="10" fill="#0A84FF" fill-opacity="0.2" stroke="#0A84FF" stroke-opacity="0.5"/>
+  <text x="367" y="663" fill="#6cb8ff" font-size="13" text-anchor="middle">查看完整事件流 (L0)</text>
+  <text x="272" y="716" fill="#636368" font-size="11">只读 Radar：本界面不存在任何写入用户仓库的按钮 — 失败与异常是一等显示对象</text>
+</svg>

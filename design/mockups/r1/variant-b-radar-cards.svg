@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="760" viewBox="0 0 1180 760" font-family="-apple-system, 'SF Pro Text', 'PingFang SC', sans-serif">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0e0e13"/><stop offset="1" stop-color="#15151b"/>
+    </linearGradient>
+    <linearGradient id="glass2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.11"/><stop offset="1" stop-color="#ffffff" stop-opacity="0.045"/>
+    </linearGradient>
+    <radialGradient id="pulse" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.5" stop-color="#0A84FF" stop-opacity="0.35"/><stop offset="1" stop-color="#0A84FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1180" height="760" rx="26" fill="url(#bg2)"/>
+  <rect width="1180" height="760" rx="26" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+  <circle cx="30" cy="28" r="7" fill="#FF5F57"/><circle cx="54" cy="28" r="7" fill="#FEBC2E"/><circle cx="78" cy="28" r="7" fill="#28C840"/>
+  <text x="590" y="33" fill="#9a9aa2" font-size="13" text-anchor="middle">TuringOS — Worktree Radar</text>
+
+  <!-- ============ VARIANT B: Radar Cards + 可见的 tape（ambient 优先） ============ -->
+  <!-- top: ambient health band -->
+  <rect x="16" y="52" width="1148" height="64" rx="18" fill="url(#glass2)"/>
+  <circle cx="52" cy="84" r="10" fill="#FFCC00"/>
+  <text x="74" y="90" fill="#e8e9ee" font-size="16">proj_demo — 1 项需要注意，其余健康</text>
+  <text x="850" y="90" fill="#9a9aa2" font-size="13">对账 2s 前 ✓ · 演示数据=fixtures/p1</text>
+
+  <!-- card 1: active agent worktree with breathing ring -->
+  <rect x="16" y="132" width="380" height="240" rx="20" fill="url(#glass2)" stroke="#0A84FF" stroke-opacity="0.35"/>
+  <circle cx="76" cy="196" r="42" fill="url(#pulse)"><animate attributeName="r" values="36;46;36" dur="3s" repeatCount="indefinite"/></circle>
+  <circle cx="76" cy="196" r="26" fill="#0A84FF" fill-opacity="0.2" stroke="#0A84FF"/>
+  <text x="76" y="201" fill="#6cb8ff" font-size="12" text-anchor="middle">claude</text>
+  <text x="126" y="172" fill="#e8e9ee" font-size="16">wt_feature_x</text>
+  <text x="126" y="194" fill="#8e8e96" font-size="12">⎇ feature/x · a1b2c3d</text>
+  <text x="126" y="216" font-size="13"><tspan fill="#34C759">+12</tspan> <tspan fill="#FF3B30">−2</tspan> <tspan fill="#8E8E93">src/lib.rs</tspan></text>
+  <rect x="36" y="252" width="340" height="1" fill="#ffffff" fill-opacity="0.08"/>
+  <text x="36" y="282" fill="#9a9aa2" font-size="12">sess_0001 · <tspan fill="#6cb8ff">manifest_registered</tspan></text>
+  <text x="36" y="306" fill="#9a9aa2" font-size="12">候选提案 cand_0001 已就绪</text>
+  <rect x="36" y="324" width="120" height="30" rx="9" fill="#0A84FF" fill-opacity="0.18" stroke="#0A84FF" stroke-opacity="0.45"/>
+  <text x="96" y="344" fill="#6cb8ff" font-size="12" text-anchor="middle">事件流 (L0)</text>
+
+  <!-- card 2: conflict (attention) -->
+  <rect x="412" y="132" width="380" height="240" rx="20" fill="#FFCC00" fill-opacity="0.06" stroke="#FFCC00" stroke-opacity="0.5"/>
+  <text x="436" y="172" fill="#ffd60a" font-size="15">⚠ 同分支双检出</text>
+  <text x="436" y="198" fill="#e8e9ee" font-size="14">wt_hotfix ↔ wt_hotfix_2</text>
+  <text x="436" y="220" fill="#8e8e96" font-size="12">⎇ hotfix/crash — git 默认禁止，--force 旁路造成</text>
+  <text x="436" y="248" fill="#d4a900" font-size="12">两个 writer 互相覆写的风险。</text>
+  <text x="436" y="268" fill="#d4a900" font-size="12">证据: worktree list --porcelain 分组命中 ≥2</text>
+  <rect x="436" y="290" width="150" height="30" rx="9" fill="#FFCC00" fill-opacity="0.15" stroke="#FFCC00" stroke-opacity="0.5"/>
+  <text x="511" y="310" fill="#ffd60a" font-size="12" text-anchor="middle">查看两侧 diff (L0)</text>
+  <text x="436" y="348" fill="#6e6e76" font-size="11">只读：Radar 不替你解决，只让你看见</text>
+
+  <!-- card 3: clean + orphan stacked -->
+  <rect x="808" y="132" width="356" height="112" rx="20" fill="url(#glass2)"/>
+  <text x="832" y="168" fill="#c9cad1" font-size="15">wt_main</text>
+  <text x="832" y="190" fill="#8e8e96" font-size="12">⎇ main · clean · 外部创建</text>
+  <rect x="1066" y="156" width="74" height="24" rx="12" fill="#8E8E93" fill-opacity="0.15" stroke="#8E8E93" stroke-opacity="0.4"/>
+  <text x="1103" y="172" fill="#a8a8ae" font-size="11" text-anchor="middle">foreign</text>
+  <text x="832" y="222" fill="#6e6e76" font-size="11">未注册来源 — 对账发现，灰即"系统不背书"</text>
+
+  <rect x="808" y="260" width="356" height="112" rx="20" fill="#ffffff" fill-opacity="0.02" stroke="#8E8E93" stroke-opacity="0.3" stroke-dasharray="5 5"/>
+  <text x="832" y="296" fill="#9a9aa2" font-size="15">wt_old_spike</text>
+  <text x="832" y="318" fill="#6e6e76" font-size="12">gitdir 死链 · prunable 孤儿</text>
+  <rect x="1066" y="284" width="74" height="24" rx="12" fill="#8E8E93" fill-opacity="0.13" stroke="#8E8E93" stroke-opacity="0.4"/>
+  <text x="1103" y="300" fill="#a8a8ae" font-size="11" text-anchor="middle">orphan</text>
+
+  <!-- THE TAPE: visible evidence stream (Software 3.0: 证据流是一等界面元素) -->
+  <rect x="16" y="392" width="1148" height="352" rx="20" fill="url(#glass2)"/>
+  <text x="40" y="424" fill="#8E8E93" font-size="11" letter-spacing="1">事件流（tape 投影 · 实时 · 可拖回放）</text>
+  <line x1="40" y1="446" x2="1140" y2="446" stroke="#ffffff" stroke-opacity="0.07"/>
+
+  <g font-family="ui-monospace, 'SF Mono', monospace" font-size="12.5">
+    <text x="40" y="474" fill="#636368">seq 7</text><circle cx="110" cy="470" r="4" fill="#8E8E93"/><text x="128" y="474" fill="#c9cad1">ReconciliationCompleted <tspan fill="#8e8e96">seen=2 drift=0 · git_worktree_list+fs</tspan></text>
+    <text x="40" y="506" fill="#636368">seq 6</text><circle cx="110" cy="502" r="4" fill="#0A84FF"/><text x="128" y="506" fill="#c9cad1">ProposalCandidate <tspan fill="#8e8e96">cand_0001 · diff sha256:1f2e3d…</tspan></text>
+    <text x="40" y="538" fill="#636368">seq 5</text><circle cx="110" cy="534" r="4" fill="#34C759"/><text x="128" y="538" fill="#c9cad1">DiffSnapshot <tspan fill="#8e8e96">+12/−2 · 1 file · source=git</tspan></text>
+    <text x="40" y="570" fill="#636368">seq 4</text><circle cx="110" cy="566" r="4" fill="#0A84FF"/><text x="128" y="570" fill="#c9cad1">FileChanged <tspan fill="#8e8e96">src/lib.rs · hint_only（fsevents，待 git 确认）</tspan></text>
+    <text x="40" y="602" fill="#636368">seq 3</text><circle cx="110" cy="598" r="4" fill="#0A84FF"/><text x="128" y="602" fill="#c9cad1">AgentSessionStarted <tspan fill="#8e8e96">agent_claude_01 · sess_0001</tspan></text>
+    <text x="40" y="634" fill="#636368">seq 2</text><circle cx="110" cy="630" r="4" fill="#0A84FF"/><text x="128" y="634" fill="#c9cad1">WorktreeDiscovered <tspan fill="#8e8e96">wt_feature_x · created_by=agent_claude_01</tspan></text>
+    <text x="40" y="666" fill="#636368">seq 1</text><circle cx="110" cy="662" r="4" fill="#8E8E93"/><text x="128" y="666" fill="#c9cad1">WorktreeDiscovered <tspan fill="#8e8e96">wt_main · source=git · observed_unsigned</tspan></text>
+  </g>
+
+  <!-- replay scrubber -->
+  <rect x="40" y="692" width="1100" height="6" rx="3" fill="#ffffff" fill-opacity="0.08"/>
+  <rect x="40" y="692" width="1100" height="6" rx="3" fill="#0A84FF" fill-opacity="0.35"/>
+  <circle cx="1140" cy="695" r="9" fill="#0A84FF"/>
+  <text x="40" y="726" fill="#636368" font-size="11">回放滑块 = Replay 时刻的种子（P6 全量实现）· 色点 = VISUAL_SEMANTICS 唯一徽章语义</text>
+</svg>

@@ -30,6 +30,14 @@ UI/UX 与美学是独立且贯穿全程的一等任务。本文档与 `docs/NAVI
 - **可达性 0/1 谓词**：VoiceOver 标签覆盖率、对比度阈值——机器可判，进 shipgate。
 - **主观美学**永远走 R-stage 人类设计评审与 RiskFinding 通道，**绝不冒充谓词**（M6/M8）。
 
+## 设计共创协议（用户 2026-06-10 裁定，ADR-012 增补）
+
+UI 设计从草图开始共创：**执行 agent 出方案（草图/效果图，落盘 `design/mockups/<phase>/`）→ 用户参与初期设计与测试 → 认可后才开 UI 实现 Atom**。内核轨（daemon/契约/数据通路）不受此限可并行。效果图是证据不是装饰：每轮方案带变体对比与取舍说明，用户的裁定记录进对应 R-stage 简报。
+
+## Generative UI 北极星（独立调研中）
+
+用户裁定：generative UI 是 Software 3.0 人机交流的基石策略，直接面向未来设计。独立 R-stage 调研进行中（产出 `research/R_GENUI_memo.md`）；其设计法律（生成区域的信任边界、与确定性仪式屏的关系、typed 组件调色板等）经停机点确认后并入本宪章。**在此之前的既定底线**：签名仪式屏（L4）永远确定性渲染，永不生成。
+
 ## 平台语言与扩展姿态
 
 - Liquid Glass（macOS 26 引入、27 Golden Gate 精修）：Design Preview Lane（ADR-008）持续适配研究；细则由 R1 设计简报钉死。中文/英文双语一等公民。

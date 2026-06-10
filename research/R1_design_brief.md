@@ -56,3 +56,15 @@ FSEvents 脏信号 ──(notify crate, FSEvents backend)──┘   │
 ## 确认方式
 
 回复确认/修改 D1-D5 任意项。确认后我自主执行：PINS 钉版 → Atom 卡集（预计 6-8 颗：daemon 骨架/枚举快照/FSEvents spike/UDS 订阅/SwiftUI 壳/MenuBarExtra/golden+CI）→ D-stage 开发 → S-stage 过闸，下次停机即 Phase 末视觉评审。
+
+---
+
+## 停机点裁决记录（用户 2026-06-10）
+
+| 项 | 裁决 |
+|---|---|
+| D1 | **修改**：面向 macOS 27 设计 + 向下兼容。工程释义（已并 ADR-008）：设计北极星 = 27 的 Liquid Glass 精修形态；deployment target = macOS 26（"向下兼容"的机器含义）；27 专属 API 只做 `#available` 渐进增强；27 GM + runner 就位后整体切主车道，零返工 |
+| D2-D5 | **批准** |
+| 新增① | UI 设计共创：agent 出草图/效果图，用户参与初期设计与测试（ADR-012 增补 + DESIGN.md 共创协议）；UI Atom 待草图认可，内核轨即刻开工 |
+| 新增② | Generative UI 独立调研（Software 3.0 人机交流基石）——后台深度调研中，产出 R_GENUI_memo 后另设停机点 |
+| 新增③ | 硬件签名零重构预留 → ADR-013 签名抽象层（Signer trait + key_kind 开放枚举 + P2 即接线） |

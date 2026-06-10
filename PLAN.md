@@ -15,6 +15,8 @@
 | 签名仪式屏要给人读的摘要 | ratification payload 必含 `human_readable_summary` | `contracts/ratification_payload.schema.json`（required） |
 | Radar 实时流 | GUI↔daemon IPC 必须事件订阅式而非纯请求响应 | ADR-005 |
 | Replay 时间轴拖动 | tape 必须支持范围查询 API | P6 R-stage 设计约束 |
+| 活动脉冲要"呼吸感"而非闪烁噪音 | FSEvents 去抖窗口成为协议参数（事件 payload 携带 debounce 元数据，minor 扩展） | R1 简报；A1_04 落地 |
+| 菜单栏三计数恒时可信 | daemon 维护常驻聚合投影（非查询时现算），投影守恒测试覆盖 | R1 简报；A1_03 落地 |
 
 ## Phase 总表
 
