@@ -8,7 +8,4 @@ pub mod projection;
 pub mod signer;
 pub mod snapshot;
 pub mod uds;
-
-// Placeholders wired in later atoms (kept out of the tree until then - M1:
-// no module exists before its first real caller):
-//   watch     - A1_04 fs-watch dirty signals (notify crate spike)
+pub mod watch;

@@ -1,0 +1,22 @@
+atom: A1_04_fs_watch_spike
+utc: 2026-06-10T12:14:59Z
+head: bdbdce3664e6f4a1ae9cbc7e7f326cbb6f64e7f1
+note: rust 1.94.0 + notify 8.2.0; cargo test 43/43 x2 (incl. watch_ 7); clippy -D warnings clean; R1 UNVERIFIED #6/#7 closed with strikethrough citations in memo; S-stage dual review: .git feedback-loop blocker PARTIALLY REFUTED by probe (--no-optional-locks leaves index untouched) but .git-churn-as-fake-pulse fixed at source (is_git_internal filter + regression); bounded signal queue w/ visible dropped_signals; FileChanged retained-log coalescing; cfg-honest event source (Linux=daemon, contracts debt registered); drop-order deadlock found by real test and fixed; 7/7 fix-map ALL-VERIFIED; veto clean-context PASS; real run: edit -> hint@0.82s (debounce 800ms) -> DiffSnapshot@0.87s via poke (vs 2s periodic)
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+----------------------------------------
+SHIPGATE p1: PASS

@@ -157,4 +157,13 @@ branch refs/heads/feature
 3. `core.bigFileThreshold` 默认 512 MiB 文档原文（§2.c）
 4. macOS 27 是否存在 Radar 必需 hard API delta（§3，judgement/monitor）
 5. runner 镜像内 Swift 版本字符串（§4）
-6. macOS UDS peer-cred pid 可得性（§5，**最优先**）
+6. ~~macOS UDS peer-cred pid 可得性（§5，最优先）~~ **已销项（2026-06-10，A1_03）**：
+   tokio `UnixStream::peer_cred()` 在 macOS 真实 socket 上 uid/gid/pid 全可得
+   （`daemon/tests/uds_subscription.rs::uds_peer_cred_uid_and_pid` 本机实测 PASS，
+   cfg 断言同时覆盖 linux/macos，macos-26 CI rust lane 持续复证）
+7. ~~notify crate FSEvents backend 能力（§2.f / 设计简报 D4 风险登记）~~
+   **已销项（2026-06-10，A1_04）**：`notify` v8.2 RecommendedWatcher 在 macOS
+   （FSEvents backend）对真实文件写入递归送达事件，自实现 800ms 级去抖聚合正常
+   （`daemon/src/watch.rs::tests` watch_real_fs_event_arrives /
+   watch_debounce_coalesces_bursts 本机实测 PASS；Linux inotify 路径由 CI 复证）。
+   降级路径保留：watcher 建立失败 → 可见 stderr + 纯周期对账，契约不变
