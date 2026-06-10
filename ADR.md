@@ -43,3 +43,9 @@ Claude Code 的 WorktreeCreate/WorktreeRemove hooks **存在且可用**（2026-0
 - **Action API**：typed action（contracts/typed_actions.schema.json）；策略检查；可要求本地签名人；**禁止任意命令转发**。
 - **Signing API**：仅接受 canonical payload；显式人类确认；预留 m-of-n SignerSet（未来 iPhone SE 可注册为 Class-4 第二签名因子）。
 未来 iOS/iPadOS/visionOS 客户端只消费 Projection + 提交 typed action + 签 canonical payload，**永不成为第二个 daemon**（主权宿主拓扑：Mac 持密钥/daemon/worktree）。字段分级见 docs/PROJECTION_POLICY.md。
+
+## ADR-012 运行授权协议（用户 2026-06-10 当面裁定，PR #1 合并时授予）
+- **自主域**：R→D→S 全流程的执行环节由执行 agent 自主决策执行——含 **repo law（shipgate + CI）全绿后的 PR 合并**。宪法约束与 harness 监督全程在场。
+- **停机点（唯一例外）**：每个 Phase/Module 的 R-stage 调研思辨完成后、形成可执行细节（Atom 卡集）之前——**设计简报与关键裁决必须停机等用户确认**（"探讨"环节）；UX-heavy Phase 的设计评审属此列。
+- **合并纪律**：FAIL 状态下无合并权，原文上报；合并方式保留分支历史（不 squash 宪法域锚定的 merge——T5 防线）。
+- **权力边界**：本 ADR 不下放宪法权力——L3/L4 域动作（宪法/PINS/RATIFICATION_POLICY/本协议自身的变更）仍需用户显式批准。

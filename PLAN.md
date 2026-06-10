@@ -4,7 +4,7 @@
 
 ## R→D→S 运行协议（每个 Phase 强制三段，Harness 机械执行）
 
-1. **R-stage 调研门禁**：独立调研（外部 API/框架必须 WebFetch 实证）→ 思辨（**内核问**：做什么/怎么实现 × **体验问**：入口长什么样/用户看到什么/参与什么）→ 与用户探讨关键裁决。产出 `research/R<N>_memo.md`（verified facts 带溯源与日期）+ 设计简报（UX-heavy Phase 必含界面草案）+ ADR 增量 + Atom 卡集。**门禁**：memo 未提交，`guard_spec_alignment` 拒绝把该 Phase 的任何 Atom 设为 CURRENT。
+1. **R-stage 调研门禁**：独立调研（外部 API/框架必须 WebFetch 实证）→ 思辨（**内核问**：做什么/怎么实现 × **体验问**：入口长什么样/用户看到什么/参与什么）→ **停机点：设计简报与关键裁决呈交用户确认（ADR-012 唯一强制停机环节）**。产出 `research/R<N>_memo.md`（verified facts 带溯源与日期）+ 设计简报（UX-heavy Phase 必含界面草案）+ ADR 增量 + Atom 卡集（用户确认后方可产出）。**门禁**：memo 未提交，`guard_spec_alignment` 拒绝把该 Phase 的任何 Atom 设为 CURRENT。
 2. **D-stage 原子开发**：逐 Atom 实现。Atom = 一次会话可完成的最小单元，卡片含 intent / allowlist / predicates / `verified_external_facts`（带日期）/ `ux_touchpoints` / gate（模板：`specs/ATOM_TEMPLATE.md`）。
 3. **S-stage 过闸**：`scripts/shipgate.sh <phase>` 全绿 + Veto-AI 清洁上下文审计（输出域 {PASS,VETO}）+ UX-heavy Phase 加快照/可达性谓词。FAIL 原文上报。
 
