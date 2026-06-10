@@ -1,0 +1,23 @@
+atom: A1_08_attention_home
+utc: 2026-06-10T16:49:30Z
+head: 49ac0e649a23598c84dae9ec7a535492f9825fe2
+note: swift test 38/38 (MIN_TESTS 34->38, forensic floor matched); Software 3.0 home shipped per 五次裁决三定律 - WorktreeLedger latest-fact fold + AttentionTriage (failure>decision>disconnect) + deterministic sentence templates (golden-pinned bytes); count-grid GlanceMetrics DELETED, popover/home/menubar all sentence-first off ONE cached store.triage; S-stage dual review -> 10 rulings all fixed (landing-screen blocker .globalOps, phantom-event guard-drop, conflict GROUPING one-decision w/ array evidence, facts-based attribution, gray override on connecting/disconnected, visible popover overflow + per-row a11y, single cached derivation, sentence-grammar whitelist guard w/ negative controls, digest-only shortName strip, icon+color dual channel); fix-map 11/12 Sonnet-verified + residual item rule-based grep PASS after NUL-separator conflict-key fix (git forbids NUL in refs = collision-free); anti-pattern guard upgraded from CJK heuristic to template whitelist Sentences.matchesTemplate
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

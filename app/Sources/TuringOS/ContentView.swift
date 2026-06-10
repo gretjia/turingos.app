@@ -30,7 +30,9 @@ enum NavItem: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @ObservedObject var store: GlanceStore
-    @State private var selection: NavItem? = .worktreeRadar
+    // Landing screen == the Attention Stack home (S-stage blocker: the
+    // atom's whole deliverable must be what the user opens into).
+    @State private var selection: NavItem? = .globalOps
     @AppStorage("daemonSocketPath") private var socketPath = ""
 
     var body: some View {
@@ -76,14 +78,16 @@ struct ContentView: View {
         switch selection {
         case .settings:
             SettingsPane(store: store, socketPath: $socketPath)
-        default:
-            VStack(spacing: 16) {
-                ConnectionBadge(state: store.connection)
-                GlanceMetrics(projection: store.projection)
-                Text("Radar canvas lands in A1_08")
+        case .worktreeRadar:
+            VStack(spacing: 12) {
+                Text("星系视图在 A1_09 点亮")
                     .font(Tokens.Typography.ui(12))
                     .foregroundStyle(Tokens.Text.tertiary)
             }
+        default:
+            // Home == the Attention Stack (Software 3.0 law 1: the screen
+            // answers "do I need to act, and on what?" - nothing else).
+            AttentionStackView(store: store)
         }
     }
 }
@@ -123,52 +127,54 @@ struct ConnectionBadge: View {
     }
 }
 
-struct GlanceMetrics: View {
-    let projection: GlanceProjection
-
-    var body: some View {
-        HStack(spacing: 8) {
-            metric(num: projection.activeSessions, label: "Active", semantic: .blue)
-            metric(num: projection.pendingProposals, label: "Pending", semantic: .yellow)
-            metric(num: projection.anomalousWorktrees, label: "Anomalous", semantic: .yellow)
-        }
-    }
-
-    private func metric(num: UInt64, label: String, semantic: Tokens.Semantic) -> some View {
-        VStack(spacing: 2) {
-            Text(String(num))
-                .font(Tokens.Typography.mono(18, weight: .semibold))
-                .foregroundStyle(semantic.color)
-            Text(label.uppercased())
-                .font(Tokens.Typography.ui(10))
-                .foregroundStyle(Tokens.Text.secondary)
-        }
-        .frame(width: 90)
-        .padding(.vertical, 10)
-        .background(Tokens.Space.glassBase, in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Tokens.Space.glassBorder))
-        .accessibilityLabel("\(label): \(num)")
-    }
-}
+// GlanceMetrics (the three-count grid) was DELETED in A1_08: the count
+// grid is the dashboard anti-pattern the 五次裁决 outlawed. The Glance is
+// now one dot + one sentence + (only when nonempty) the attention items.
 
 struct GlancePopover: View {
     @ObservedObject var store: GlanceStore
 
+    private static let maxItems = 4
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Global Workspace")
-                .font(Tokens.Typography.ui(13, weight: .semibold))
-                .foregroundStyle(Tokens.Text.primary)
-            GlanceMetrics(projection: store.projection)
-            ConnectionBadge(state: store.connection)
-            if let ts = store.lastEventTs {
-                Text("last event \(ts)")
-                    .font(Tokens.Typography.mono(10))
-                    .foregroundStyle(Tokens.Text.tertiary)
+        let triage = store.triage
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(triage.glanceSemantic.color)
+                    .frame(width: 8, height: 8)
+                Text(triage.glanceSentence)
+                    .font(Tokens.Typography.ui(13, weight: .medium))
+                    .foregroundStyle(Tokens.Text.primary)
+            }
+            .accessibilityElement(children: .combine)
+            if !triage.needsYou.isEmpty {
+                Divider()
+                ForEach(triage.needsYou.prefix(Self.maxItems)) { item in
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: item.severity.iconName)
+                            .font(.system(size: 9))
+                            .foregroundStyle(item.severity.semantic.color)
+                            .padding(.top, 2)
+                        Text(item.sentence)
+                            .font(Tokens.Typography.ui(11))
+                            .foregroundStyle(Tokens.Text.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(item.sentence)
+                }
+                // Truncation is VISIBLE (报忧义务): the popover never
+                // pretends 4 items are the whole story.
+                if triage.needsYou.count > Self.maxItems {
+                    Text(Sentences.popoverOverflow(hidden: triage.needsYou.count - Self.maxItems))
+                        .font(Tokens.Typography.ui(10))
+                        .foregroundStyle(Tokens.Text.tertiary)
+                }
             }
         }
-        .padding(16)
-        .frame(width: 340)
+        .padding(14)
+        .frame(width: 320)
         .background(Tokens.Space.background)
     }
 }
