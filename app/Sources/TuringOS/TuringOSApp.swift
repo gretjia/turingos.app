@@ -103,8 +103,10 @@ struct TuringOSApp: App {
         MenuBarExtra {
             GlancePopover(store: store)
         } label: {
-            // Health dot semantics: worst level across the product
-            // (gray = disconnected/unreconciled, yellow = anomalies, blue = healthy+active)
+            // The dot = the whole product compressed to one pixel cluster:
+            // gray whenever the stream is not live (未对账 overrides all),
+            // else the worst triage level (red failure / yellow decision /
+            // blue ambient-or-quiet) - same derivation as home & popover.
             Image(systemName: "circle.fill")
                 .foregroundStyle(menubarSemantic.color)
         }
@@ -129,12 +131,9 @@ struct TuringOSApp: App {
         store.start(socketPath: Workspace.socketPath)
     }
 
+    /// One law, three surfaces: dot, popover and home all read the store's
+    /// single cached triage.
     private var menubarSemantic: Tokens.Semantic {
-        switch store.connection {
-        case .connected:
-            store.projection.anomalousWorktrees > 0 ? .yellow : .blue
-        case .connecting, .disconnected:
-            .gray
-        }
+        store.triage.glanceSemantic
     }
 }
