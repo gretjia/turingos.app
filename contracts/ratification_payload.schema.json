@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.ratification_payload.v0",
+  "title": "RatificationPayload",
+  "description": "Canonical payload for L4 constitutional actions. An approval without this structure is not a ratification (shipgate #8). human_readable_summary is REQUIRED: the ceremony screen's human-legible digest is constitutional law shaping the kernel schema, not UI decoration (PLAN.md reverse-shaping register).",
+  "type": "object",
+  "required": ["schema_version", "action_class", "action_kind", "payload_hash", "human_readable_summary", "signer_fingerprint", "prev_tape_head", "consequence_statement"],
+  "properties": {
+    "schema_version": { "const": "tos.app.ratification.v0" },
+    "action_class": { "enum": [4] },
+    "action_kind": { "type": "string" },
+    "payload_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{8,64}$" },
+    "human_readable_summary": { "type": "string" },
+    "signer_fingerprint": { "type": "string" },
+    "prev_tape_head": { "type": "string" },
+    "consequence_statement": { "type": "string" }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.typed_actions.v0",
+  "title": "TypedAction",
+  "description": "Every user-initiated action. action_kind <-> level pairing is law (docs/RATIFICATION_POLICY.md); runtime must reject any pairing not listed in level_map below. No arbitrary command forwarding exists.",
+  "type": "object",
+  "required": ["action_id", "schema_version", "action_kind", "level", "params", "requested_by"],
+  "properties": {
+    "action_id": { "type": "string", "pattern": "^act_[a-z0-9_]+$" },
+    "schema_version": { "const": "tos.app.action.v0" },
+    "action_kind": {
+      "enum": [
+        "RegisterProject",
+        "OpenWorktree",
+        "AssignMission",
+        "SubmitProposal",
+        "ApproveProposal",
+        "AdoptHumanChange",
+        "RevokeSigner",
+        "UpdatePins",
+        "SignRatification",
+        "ReplayRange"
+      ]
+    },
+    "level": { "enum": [0, 1, 2, 3, 4] },
+    "params": { "type": "object" },
+    "requested_by": { "type": "string" }
+  },
+  "level_map": {
+    "ReplayRange": 0,
+    "RegisterProject": 1,
+    "OpenWorktree": 1,
+    "AssignMission": 2,
+    "SubmitProposal": 2,
+    "ApproveProposal": 2,
+    "AdoptHumanChange": 2,
+    "RevokeSigner": 3,
+    "UpdatePins": 3,
+    "SignRatification": 4
+  }
+}

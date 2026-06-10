@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.projection.v0",
+  "title": "Projection",
+  "description": "Every derived view state. The three ownership fields (derive_source, schema_version, rebuild_command) are required: a projection without an owner and a rebuild path is not allowed to exist (ADR-003, docs/UPSTREAM_CONTRACT.md rule 3).",
+  "type": "object",
+  "required": ["projection_id", "schema_version", "derive_source", "rebuild_command", "as_of_seq", "state"],
+  "properties": {
+    "projection_id": { "type": "string", "pattern": "^prj_[a-z0-9_]+$" },
+    "schema_version": { "const": "tos.app.projection.v0" },
+    "derive_source": { "enum": ["chaintape", "git", "fixture_event_stream"] },
+    "rebuild_command": { "type": "string" },
+    "as_of_seq": { "type": "integer", "minimum": 0 },
+    "state": { "type": "object" }
+  }
+}

@@ -1,0 +1,38 @@
+# PINS.toml — single source for pinned external truth.
+# Rule (M7): every pinned fact carries `verified_on`. A verification result is
+# itself perishable — re-verify before relying on anything older than the
+# current phase's R-stage memo.
+
+[constitution]
+file = "constitution/constitution.md"
+sha256 = "bbbe1ebd5f3372345d1f8911894e26b3f80cf0a45c353f2eb6251c006fae073a"
+source = "verbatim user upload (1c451ed3, 1258 lines)"
+verified_on = "2026-06-10"
+tier = 1 # Tier-1 read-only: guarded by hook + shipgate; amendments only via Class-4 ratification upstream
+
+[upstream.turingosv4]
+repo = "https://github.com/gretjia/turingosv4"
+role = "constitutional runtime: ChainTape/CAS/replay/sequencer/market/verifier"
+rev = "UNPINNED" # pin at the first phase that consumes a runtime interface (P2 R-stage at latest); never consume unpinned
+facts_verified_on = "2026-06-10" # README/AGENTS.md/Cargo.toml: bins-only (no lib target), ed25519-dalek v2, git2 0.20, no SQLite dep
+
+[toolchain.stable_build_lane]
+# Repo law lane: CI and public artifacts. Core contracts MUST NOT depend on beta-only API.
+xcode = "PIN-AT-R1" # latest GM Xcode at P1 R-stage (26.x family as of 2026-06-10)
+deployment_target = "DECIDE-AT-R1" # macOS 26 or 27, decided with evidence in research/R1_memo.md
+
+[toolchain.design_preview_lane]
+# Exploration lane only: DESIGN.md research, Liquid Glass adaptation, snapshot prototypes.
+# Never a release gate.
+xcode = "27.0 beta (27A5194q)"
+swift = "6.4"
+sdk = "macOS 27 (Golden Gate)"
+verified_on = "2026-06-10" # Apple developer releases feed + WWDC26 coverage
+notes = "Golden Gate GM expected 2026-09; beta APIs drift until GM; Apple-Silicon-only"
+
+[claude_code_facts]
+# Corrected finding, see research/R0_memo.md §4 (an earlier check wrongly said these hooks don't exist).
+worktree_hooks = "WorktreeCreate/WorktreeRemove EXIST"
+hook_event_count = 31
+verified_on = "2026-06-10"
+source = "https://code.claude.com/docs/en/hooks"

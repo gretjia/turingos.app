@@ -1,0 +1,9 @@
+# Forbidden market performance claims (case-insensitive fixed strings).
+# A file containing any of these MUST also contain a justification term
+# (preregistered / foil / shuffled_price / paired test / statistically supported)
+# or shipgate #5 fails. This file itself is excluded from the scan.
+price wins
+market improves performance
+market outperforms
+price effect proven
+market routing advantage
