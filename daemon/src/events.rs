@@ -19,6 +19,51 @@ pub struct EventEnvelope {
     pub payload: serde_json::Value,
 }
 
+impl EventEnvelope {
+    /// The one envelope constructor (A1_03: a second hand-rolled copy is how
+    /// paired paths drift). event_id derives from the sanitized project id +
+    /// seq and always matches the schema pattern `^evt_[a-z0-9_]+$`.
+    pub fn new(
+        project_id: &str,
+        seq: u64,
+        ts: &str,
+        kind: EventKind,
+        source: EventSource,
+        trust_state: TrustState,
+        payload: serde_json::Value,
+    ) -> Self {
+        EventEnvelope {
+            event_id: format!("evt_{}_{seq:04}", sanitize_id(project_id)),
+            seq,
+            ts: ts.to_string(),
+            schema_version: EVENT_SCHEMA_VERSION.to_string(),
+            kind,
+            source,
+            trust_state,
+            payload,
+        }
+    }
+}
+
+/// Lowercase [a-z0-9_] identifier component (schema id patterns).
+pub(crate) fn sanitize_id(s: &str) -> String {
+    let mut out: String = s
+        .chars()
+        .map(|c| {
+            let c = c.to_ascii_lowercase();
+            if c.is_ascii_lowercase() || c.is_ascii_digit() {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    if out.is_empty() {
+        out.push('x');
+    }
+    out
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EventKind {
     ProjectRegistered,

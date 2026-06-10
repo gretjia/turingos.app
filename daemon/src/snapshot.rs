@@ -19,7 +19,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use sha2::{Digest, Sha256};
 
-use crate::events::{EventEnvelope, EventKind, EventSource, TrustState, EVENT_SCHEMA_VERSION};
+use crate::events::{sanitize_id, EventEnvelope, EventKind, EventSource, TrustState};
 
 #[derive(Debug)]
 pub enum SnapshotError {
@@ -480,24 +480,6 @@ pub struct RepoSnapshot {
     pub rows: Vec<WorktreeStatusRow>,
 }
 
-fn sanitize_id(s: &str) -> String {
-    let mut out: String = s
-        .chars()
-        .map(|c| {
-            let c = c.to_ascii_lowercase();
-            if c.is_ascii_lowercase() || c.is_ascii_digit() {
-                c
-            } else {
-                '_'
-            }
-        })
-        .collect();
-    if out.is_empty() {
-        out.push('x');
-    }
-    out
-}
-
 fn basename(path: &str) -> &str {
     Path::new(path)
         .file_name()
@@ -569,16 +551,65 @@ fn envelope(
     kind: EventKind,
     payload: serde_json::Value,
 ) -> EventEnvelope {
-    EventEnvelope {
-        event_id: format!("evt_{}_{seq:04}", sanitize_id(project_id)),
+    EventEnvelope::new(
+        project_id,
         seq,
-        ts: ts.to_string(),
-        schema_version: EVENT_SCHEMA_VERSION.to_string(),
+        ts,
         kind,
-        source: EventSource::Git,
-        trust_state: TrustState::ObservedUnsigned,
+        EventSource::Git,
+        TrustState::ObservedUnsigned,
         payload,
+    )
+}
+
+/// The single WorktreeDiscovered payload shape - shared by `to_events` and
+/// the A1_03 reconciler (one builder, or the two paths drift).
+pub fn worktree_discovered_payload(project_id: &str, row: &WorktreeStatusRow) -> serde_json::Value {
+    let dirty = row.fingerprint.as_ref().is_some_and(|f| f.is_dirty());
+    let mut payload = serde_json::json!({
+        "project_id": project_id,
+        "worktree_id": row.worktree_id,
+        "path": row.entry.path,
+        "head": row.entry.head,
+        "dirty": dirty,
+        "bare": row.entry.bare,
+        "detached": row.entry.detached,
+        "locked": row.entry.locked.is_some(),
+        "prunable": row.entry.prunable.is_some() || row.git2_invalid,
+        "same_branch_conflict": row.same_branch_conflict,
+    });
+    if let Some(b) = &row.entry.branch {
+        payload["branch"] =
+            serde_json::Value::String(b.strip_prefix("refs/heads/").unwrap_or(b).to_string());
     }
+    if let Some(r) = row.entry.locked.as_ref().filter(|r| !r.is_empty()) {
+        payload["locked_reason"] = serde_json::Value::String(r.clone());
+    }
+    if let Some(r) = row.entry.prunable.as_ref().filter(|r| !r.is_empty()) {
+        payload["prunable_reason"] = serde_json::Value::String(r.clone());
+    }
+    if let Some(e) = &row.fingerprint_error {
+        payload["fingerprint_error"] = serde_json::Value::String(e.clone());
+    }
+    payload
+}
+
+/// The single DiffSnapshot payload shape; `None` when the row is clean.
+pub fn diff_snapshot_payload(row: &WorktreeStatusRow) -> Option<serde_json::Value> {
+    row.fingerprint.as_ref().filter(|f| f.is_dirty()).map(|fp| {
+        serde_json::json!({
+            "worktree_id": row.worktree_id,
+            "diff_hash": fp.diff_hash,
+            "files_changed": fp.files_changed,
+            "insertions": fp.insertions,
+            "deletions": fp.deletions,
+            "binary_files": fp.binary_files,
+            "lfs_pointer_files": fp.lfs_pointer_files,
+            "untracked": fp.untracked,
+            "renamed": fp.renamed,
+            "submodules_dirty": fp.submodules_dirty,
+        })
+    })
 }
 
 /// Project a snapshot into contract envelopes: one WorktreeDiscovered per
@@ -588,59 +619,22 @@ pub fn to_events(snap: &RepoSnapshot, seq_start: u64, ts: &str) -> Vec<EventEnve
     let mut out = Vec::new();
     let mut seq = seq_start;
     for row in &snap.rows {
-        let dirty = row.fingerprint.as_ref().is_some_and(|f| f.is_dirty());
-        let mut payload = serde_json::json!({
-            "project_id": snap.project_id,
-            "worktree_id": row.worktree_id,
-            "path": row.entry.path,
-            "head": row.entry.head,
-            "dirty": dirty,
-            "bare": row.entry.bare,
-            "detached": row.entry.detached,
-            "locked": row.entry.locked.is_some(),
-            "prunable": row.entry.prunable.is_some() || row.git2_invalid,
-            "same_branch_conflict": row.same_branch_conflict,
-        });
-        if let Some(b) = &row.entry.branch {
-            payload["branch"] =
-                serde_json::Value::String(b.strip_prefix("refs/heads/").unwrap_or(b).to_string());
-        }
-        if let Some(r) = row.entry.locked.as_ref().filter(|r| !r.is_empty()) {
-            payload["locked_reason"] = serde_json::Value::String(r.clone());
-        }
-        if let Some(r) = row.entry.prunable.as_ref().filter(|r| !r.is_empty()) {
-            payload["prunable_reason"] = serde_json::Value::String(r.clone());
-        }
-        if let Some(e) = &row.fingerprint_error {
-            payload["fingerprint_error"] = serde_json::Value::String(e.clone());
-        }
         out.push(envelope(
             &snap.project_id,
             seq,
             ts,
             EventKind::WorktreeDiscovered,
-            payload,
+            worktree_discovered_payload(&snap.project_id, row),
         ));
         seq += 1;
 
-        if let Some(fp) = row.fingerprint.as_ref().filter(|f| f.is_dirty()) {
+        if let Some(payload) = diff_snapshot_payload(row) {
             out.push(envelope(
                 &snap.project_id,
                 seq,
                 ts,
                 EventKind::DiffSnapshot,
-                serde_json::json!({
-                    "worktree_id": row.worktree_id,
-                    "diff_hash": fp.diff_hash,
-                    "files_changed": fp.files_changed,
-                    "insertions": fp.insertions,
-                    "deletions": fp.deletions,
-                    "binary_files": fp.binary_files,
-                    "lfs_pointer_files": fp.lfs_pointer_files,
-                    "untracked": fp.untracked,
-                    "renamed": fp.renamed,
-                    "submodules_dirty": fp.submodules_dirty,
-                }),
+                payload,
             ));
             seq += 1;
         }
