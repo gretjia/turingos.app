@@ -1,0 +1,14 @@
+# Canonical repo law in CI (ADR-006): no Claude dependency by construction
+# (shipgate check #7 self-verifies). Same gate for every contributor.
+name: shipgate
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+jobs:
+  shipgate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run repo law (12 checks incl. thin-slice determinism + golden)
+        run: bash scripts/shipgate.sh p0.5
