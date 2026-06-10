@@ -1,0 +1,19 @@
+[package]
+name = "turingosd"
+version = "0.1.0"
+edition = "2021"
+description = "TuringOS.app sovereign-host daemon: kernel emitting typed event streams over UDS. The app is not the truth; this daemon projects it."
+license = "UNLICENSED"
+publish = false
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lib]
+name = "turingosd"
+path = "src/lib.rs"
+
+[[bin]]
+name = "turingosd"
+path = "src/main.rs"
