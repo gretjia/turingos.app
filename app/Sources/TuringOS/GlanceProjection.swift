@@ -67,6 +67,9 @@ public final class GlanceStore: ObservableObject {
     /// this one cached triage (S-stage: three per-frame re-derivations).
     @Published public private(set) var triage = AttentionTriage.derive(
         ledger: WorktreeLedger(), connection: .disconnected(reason: "not started"))
+    /// Same discipline for the radar: ONE cached scene per ledger change,
+    /// never re-derived per frame in a view body.
+    @Published public private(set) var radarScene = RadarScene.derive(ledger: WorktreeLedger())
 
     private var client: UDSClient?
     private var consumer: Task<Void, Never>?
@@ -96,6 +99,7 @@ public final class GlanceStore: ObservableObject {
                 }
                 self.triage = AttentionTriage.derive(
                     ledger: self.ledger, connection: self.connection)
+                self.radarScene = RadarScene.derive(ledger: self.ledger)
             }
         }
         Task { await client.connect() }
