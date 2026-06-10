@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.signature_receipt.v0",
+  "title": "SignatureReceipt",
+  "description": "Verification receipt. verified=false is a legitimate receipt that goes on tape (failure is a state, never hidden). nonce + anchored_seq provide replay resistance (THREAT_MODEL T4).",
+  "type": "object",
+  "required": ["receipt_id", "schema_version", "payload_hash", "key_kind", "signer_fingerprint", "signature", "verified", "trust_state", "nonce", "anchored_seq"],
+  "properties": {
+    "receipt_id": { "type": "string", "pattern": "^rcp_[a-z0-9_]+$" },
+    "schema_version": { "const": "tos.app.receipt.v0" },
+    "payload_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{8,64}$" },
+    "key_kind": { "enum": ["se-p256", "ssh-ed25519", "ssh-fido2-ed25519", "gpg"] },
+    "signer_fingerprint": { "type": "string" },
+    "signature": { "type": "string" },
+    "verified": { "type": "boolean" },
+    "trust_state": {
+      "enum": [
+        "observed_unsigned",
+        "manifest_missing",
+        "manifest_registered",
+        "signature_valid",
+        "signature_invalid",
+        "signer_unregistered",
+        "signer_revoked",
+        "capability_missing",
+        "human_adopted",
+        "human_root_signed",
+        "legacy_pre_rule"
+      ]
+    },
+    "nonce": { "type": "string" },
+    "anchored_seq": { "type": "integer", "minimum": 0 }
+  }
+}

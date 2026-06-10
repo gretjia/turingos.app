@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.event_stream.v0",
+  "title": "EventEnvelope",
+  "description": "Envelope for every event flowing through the tape->projection pipeline. JSONL: one envelope per line. seq strictly increasing per stream; event_id globally unique.",
+  "type": "object",
+  "required": ["event_id", "seq", "ts", "schema_version", "kind", "source", "trust_state", "payload"],
+  "properties": {
+    "event_id": { "type": "string", "pattern": "^evt_[a-z0-9_]+$" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "ts": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
+    "schema_version": { "const": "tos.app.event.v0" },
+    "kind": {
+      "enum": [
+        "ProjectRegistered",
+        "WorktreeDiscovered",
+        "WorktreeRemoved",
+        "FileChanged",
+        "DiffSnapshot",
+        "ProposalCandidate",
+        "ProposalSubmitted",
+        "ProposalRejected",
+        "ProposalAccepted",
+        "PredicateResult",
+        "VetoVerdict",
+        "AgentManifestRegistered",
+        "AgentSessionStarted",
+        "AgentSessionEnded",
+        "SignatureVerified",
+        "SignatureRejected",
+        "RatificationProposed",
+        "RatificationCeremonyOpened",
+        "RatificationSigned",
+        "RatificationTagCreated",
+        "MarketTxObserved",
+        "ReconciliationCompleted"
+      ]
+    },
+    "source": {
+      "enum": ["git", "fsevents", "claude_hook", "codex_appserver", "human", "daemon", "fixture"]
+    },
+    "trust_state": {
+      "enum": [
+        "observed_unsigned",
+        "manifest_missing",
+        "manifest_registered",
+        "signature_valid",
+        "signature_invalid",
+        "signer_unregistered",
+        "signer_revoked",
+        "capability_missing",
+        "human_adopted",
+        "human_root_signed",
+        "legacy_pre_rule"
+      ]
+    },
+    "payload": { "type": "object" }
+  }
+}

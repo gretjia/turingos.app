@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.predicate_result.v0",
+  "title": "PredicateResult",
+  "description": "Hard gate output. verdict domain is exactly {PASS, FAIL} - locked by shipgate #4. Subjective opinions use the RiskFinding channel below and NEVER carry a verdict field (M6: advisory and predicate are separate tracks).",
+  "type": "object",
+  "required": ["predicate_id", "schema_version", "verdict", "evidence_hash", "target"],
+  "properties": {
+    "predicate_id": { "type": "string", "pattern": "^prd_[a-z0-9_]+$" },
+    "schema_version": { "const": "tos.app.predicate.v0" },
+    "verdict": { "enum": ["PASS", "FAIL"] },
+    "evidence_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{8,64}$" },
+    "target": { "type": "string" }
+  },
+  "$defs": {
+    "RiskFinding": {
+      "title": "RiskFinding",
+      "description": "Advisory channel. No verdict field by construction.",
+      "type": "object",
+      "required": ["finding_id", "schema_version", "severity", "finding", "author"],
+      "properties": {
+        "finding_id": { "type": "string", "pattern": "^rsk_[a-z0-9_]+$" },
+        "schema_version": { "const": "tos.app.riskfinding.v0" },
+        "severity": { "enum": ["info", "attention", "risk"] },
+        "finding": { "type": "string" },
+        "author": { "type": "string" }
+      }
+    }
+  }
+}
