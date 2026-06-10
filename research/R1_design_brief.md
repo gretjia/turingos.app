@@ -68,3 +68,10 @@ FSEvents 脏信号 ──(notify crate, FSEvents backend)──┘   │
 | 新增① | UI 设计共创：agent 出草图/效果图，用户参与初期设计与测试（ADR-012 增补 + DESIGN.md 共创协议）；UI Atom 待草图认可，内核轨即刻开工 |
 | 新增② | Generative UI 独立调研（Software 3.0 人机交流基石）——后台深度调研中，产出 R_GENUI_memo 后另设停机点 |
 | 新增③ | 硬件签名零重构预留 → ADR-013 签名抽象层（Signer trait + key_kind 开放枚举 + P2 即接线） |
+
+### 二次裁决（用户 2026-06-10 后续）
+
+| 项 | 裁决 |
+|---|---|
+| D1 细化 | **开发直接用 Xcode 27 SDK**，deployment target 维持 macOS 26（ADR-008 已更新：27-only API 源文件级隔离，CI 在 runner 提供 27 前用 26.5） |
+| 新增④ | **预留 macOS 27 Apple Intelligence 接入** → ADR-014：App Intents = typed Action API 的系统投影；仅 L0/L1；entity 只来自 Projection API；P1 不实现、架构保证纯增量接入 |
