@@ -30,3 +30,22 @@ notify::RecommendedWatcher（Linux→inotify，macOS→FSEvents）+ 自实现 de
 （窗口可配，事件 payload 带 {hint_only:true, debounce_ms}）；watch 回调只置脏标记，
 重活全在对账循环（与 R0/R1 纪律一致）；macOS CI job 跑真实文件写入→事件到达断言，
 结果回写 R1_memo UNVERIFIED 清单（销项留痕）。
+
+## 修订记录（留痕）
+
+- 2026-06-10 本地执行 agent，S-stage 对抗双审裁决落地：
+  ① critic 报告 `.git` 自激反馈回路（blocker）——**实证部分推翻**：本 daemon 的全部 git
+  调用带 `--no-optional-locks`，实测 .git/index mtime 不变（critic 探针用的是 plain
+  status）；但「外部 git 操作的 bookkeeping 冒充用户编辑脉冲」成立 → watcher 回调源头
+  过滤 `.git` 组件路径 + 回归测试 watch_git_internal_churn_filtered（.git 写入零脉冲、
+  真实编辑仍脉冲）。git 状态变化仍由 ≤2s 周期对账捕获。
+  ② 无界 mpsc → sync_channel(1024) + try_send 溢出丢弃 + dropped_signals 计数进
+  payload（hint 本就 best-effort，丢弃可见不沉默）。
+  ③ FileChanged 在 retained log 无界累积 → EventHub::publish_hint 合并连续 hint
+  （live 全保留，replay 只留最新；守恒不破，watch_hint_log_coalesces 钉死）。
+  ④ Linux 上 source=fsevents 名实不符 → cfg 分平台（macOS=fsevents 真值；其余=daemon），
+  **登记契约债务**：EventSource 需增通用 fs_watch/inotify 值（contracts minor，
+  不在本卡 allowlist）。
+  ⑤ 测试 300ms 固定 arm-sleep 颤抖面 → write_until_first_batch 重试式装填。
+- 2026-06-10 实证补记：drop 顺序死锁（join 先于 watcher 析构）由真跑发现并修复，
+  顺序语义入 Drop 注释。

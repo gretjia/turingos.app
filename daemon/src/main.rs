@@ -38,23 +38,50 @@ fn main() -> ExitCode {
                 let listener = turingosd::uds::bind_socket(Path::new(&socket))?;
                 eprintln!("turingosd serving {project_id} on {socket}");
 
+                // fs-watch hints (A1_04): best-effort pulse + early tick.
+                // Failure degrades VISIBLY to periodic-only reconciliation;
+                // the contract does not change (R1 design brief D4).
+                let (poke_tx, poke_rx) = std::sync::mpsc::channel::<()>();
+                let poke_rx = Arc::new(std::sync::Mutex::new(poke_rx));
+                let watch_hub = hub.clone();
+                let _watcher = match turingosd::watch::watch_dirty(
+                    &repo,
+                    turingosd::watch::WatchConfig::default(),
+                    move |batch| {
+                        let payload = batch.to_payload(watch_hub.project_id());
+                        watch_hub.publish_hint(payload);
+                        let _ = poke_tx.send(()); // wake the reconciler now
+                    },
+                ) {
+                    Ok(w) => Some(w),
+                    Err(e) => {
+                        eprintln!("fs-watch unavailable, periodic reconciliation only: {e}");
+                        None
+                    }
+                };
+
                 // Reconciliation on a SUPERVISED blocking thread (git
                 // spawns): a panic inside the loop must be loudly visible
                 // and survivable, never a silently frozen projection
                 // (S-stage critique). A poisoned hub lock re-panics every
                 // restart - repeated stderr is the visible failure state.
+                // Ticks fire every 2s OR immediately on a watch poke.
                 let recon_hub = hub.clone();
                 let recon_repo = repo.clone();
                 std::thread::spawn(move || loop {
                     let hub = recon_hub.clone();
                     let repo = recon_repo.clone();
+                    let poke = poke_rx.clone();
                     let worker = std::thread::spawn(move || {
                         let mut reconciler = turingosd::uds::Reconciler::new(&repo);
                         loop {
                             if let Err(e) = reconciler.tick(&hub) {
                                 eprintln!("reconcile failed (next tick retries): {e}");
                             }
-                            std::thread::sleep(std::time::Duration::from_secs(2));
+                            let _ = poke
+                                .lock()
+                                .expect("poke lock")
+                                .recv_timeout(std::time::Duration::from_secs(2));
                         }
                     });
                     if worker.join().is_err() {

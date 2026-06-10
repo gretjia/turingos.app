@@ -163,6 +163,39 @@ impl EventHub {
         )
     }
 
+    /// FileChanged hints (A1_04): live stream keeps every pulse; the
+    /// retained log keeps only the latest of consecutive hints - the same
+    /// unbounded-growth hardening the idle reconciliation markers got.
+    /// Hints are projection no-ops except as_of_seq (dominated by the newer
+    /// hint), so `projection == fold(log)` conservation survives the pop.
+    /// Source honesty (S-stage critique): fsevents only where the backend
+    /// really is FSEvents (macOS); elsewhere the watch subsystem reports as
+    /// daemon - the contract enum has no inotify value yet (registered
+    /// contracts debt on the atom card).
+    pub fn publish_hint(&self, payload: serde_json::Value) -> EventEnvelope {
+        #[cfg(target_os = "macos")]
+        let source = EventSource::Fsevents;
+        #[cfg(not(target_os = "macos"))]
+        let source = EventSource::Daemon;
+        let mut st = self.state.lock().expect("hub lock");
+        let last_is_hint = st
+            .events
+            .last()
+            .is_some_and(|e| e.kind == EventKind::FileChanged);
+        if last_is_hint {
+            st.events.pop();
+        }
+        Self::publish_locked(
+            &self.project_id,
+            &self.tx,
+            &mut st,
+            EventKind::FileChanged,
+            source,
+            TrustState::ObservedUnsigned,
+            payload,
+        )
+    }
+
     /// Atomic snapshot replay + live subscription (single lock - see
     /// `publish`).
     pub fn replay_and_subscribe(&self) -> (Vec<EventEnvelope>, broadcast::Receiver<EventEnvelope>) {

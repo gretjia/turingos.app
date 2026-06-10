@@ -17,6 +17,9 @@ sha2 = "0.10"
 # for getuid (peer-cred same-uid policy); no other raw syscalls.
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "time", "sync"] }
 libc = "0.2"
+# A1_04 fs-watch spike: macOS -> FSEvents backend, Linux -> inotify.
+# Watch events are HINTS only (R1_memo §2.f) - git remains the truth.
+notify = "8"
 
 [dev-dependencies]
 tempfile = "3"
