@@ -1,0 +1,23 @@
+atom: A1_05_app_shell_tokens
+utc: 2026-06-10T14:35:31Z
+head: 37760791908cc2b6832c950e294926ee43e280bf
+note: SwiftPM project (decision: no pbxproj); Swift 6.4 / Xcode 27 SDK local lane, swift test 11/11 w/ MIN_TESTS forensic floor; app binary --probe received real envelope over real UDS inside the gate itself (check 16 +wire-probe); shipgate.yml upgraded to dual-OS p1 (CI now runs exactly the atom gate; macOS lane wire-probes for real); S-stage review (1 critic survived API drop, covered both lenses; veto PASS) -> 1 blocker (test-output forensic false-signal) + 5 risks fixed: single totally-ordered ClientUpdate stream + generation guard, accent palette re-derived for the near-value clause (min RGB dist 77.3/63.7 vs thresholds 72/56, independently re-computed by checker), 10/10 fix-map ALL-VERIFIED; gray==tx-secondary RiskFinding handed to A1_08 user visual review
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
