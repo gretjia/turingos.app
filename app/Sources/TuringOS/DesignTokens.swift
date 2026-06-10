@@ -114,6 +114,10 @@ public enum Tokens {
         /// Semantic zoom threshold: below this scale the universe compresses.
         public static let semanticFarThreshold: Double = 0.6
         public static let zoomRange: ClosedRange<Double> = 0.1...2.0
+        /// Mainline-track sweep period (V6 axisSweep - a slow tide, not a blink).
+        public static let axisSweepPeriod: Double = 6.0
+        /// Fly-to camera glide.
+        public static let flyTo: Double = 0.45
     }
 }
 

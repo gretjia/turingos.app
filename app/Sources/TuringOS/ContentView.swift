@@ -33,6 +33,9 @@ struct ContentView: View {
     // Landing screen == the Attention Stack home (S-stage blocker: the
     // atom's whole deliverable must be what the user opens into).
     @State private var selection: NavItem? = .globalOps
+    /// Fly-to channel: an attention row hands its structured target here;
+    /// the radar consumes it (focus + select) and clears it.
+    @State private var radarFocus: AttentionTarget?
     @AppStorage("daemonSocketPath") private var socketPath = ""
 
     var body: some View {
@@ -79,15 +82,16 @@ struct ContentView: View {
         case .settings:
             SettingsPane(store: store, socketPath: $socketPath)
         case .worktreeRadar:
-            VStack(spacing: 12) {
-                Text("星系视图在 A1_09 点亮")
-                    .font(Tokens.Typography.ui(12))
-                    .foregroundStyle(Tokens.Text.tertiary)
-            }
+            RadarCanvasView(store: store, focus: $radarFocus)
         default:
             // Home == the Attention Stack (Software 3.0 law 1: the screen
             // answers "do I need to act, and on what?" - nothing else).
-            AttentionStackView(store: store)
+            // Tapping a row flies to its node in the galaxy (charter:
+            // 注意力项从 Home 点入时直接飞到对应节点并聚焦).
+            AttentionStackView(store: store) { target in
+                radarFocus = target
+                selection = .worktreeRadar
+            }
         }
     }
 }

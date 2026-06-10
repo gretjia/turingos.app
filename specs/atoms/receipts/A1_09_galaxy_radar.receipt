@@ -1,0 +1,23 @@
+atom: A1_09_galaxy_radar
+utc: 2026-06-10T17:49:12Z
+head: 7e2d02fe54bab3b31fbf8523209138bb15534f55
+note: swift test 53/53 (MIN_TESTS 38->53, card-amended); galaxy radar = exploratory drill-down per 五次裁决 - RadarScene deterministic fact-bound derivation (anchor=path-equality witness w/ lexical normalization; forms failed/conflict/orphan/active/quiet, GREEN RESERVED until a merge fact exists; edges = membership + conflictTension only, tension keyed on FACT not form); mouse-anchored camera 0.1-2.0 + semantic far <0.6 (glow dots + giant accent labels); default node = title+glow ONLY (structural NodeCardContent guard); fly-to from attention rows via structured AttentionTarget (no id parsing); RadarMood honesty - non-connected => grayscale wash + paused sweep + suppressed breathing + whitelisted banner; @GestureState transient deltas (cancel-safe) + displayCamera composition; ScrollWheelMonitor converts in-view (titlebar bug live-probe-proven and fixed); layout offsets = UserDefaults only, never on tape/golden; TWO goldens (p1 fixture + discriminative mixed scene, all 5 forms + both edges byte-pinned); S-stage dual critique -> 6 blockers fixed + risk dispositions; fix-map 12/12 Sonnet ALL-VERIFIED; veto PASS (clean-context, re-ran gate itself); deferred w/ card 留痕: Agent Chip occupant + FSEvents hint pulse (need P5/contract facts); parallel-session audit_data/ untouched
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

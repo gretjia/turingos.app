@@ -9,9 +9,14 @@ import SwiftUI
 public struct AttentionStackView: View {
     @ObservedObject var store: GlanceStore
     @State private var evidenceItem: AttentionItem?
+    /// Optional fly-to: tapping a row jumps to its node in the radar.
+    /// The evidence button stays the row's single primary ACTION (law 1);
+    /// the row tap is navigation, not a second decision.
+    let onFlyTo: ((AttentionTarget) -> Void)?
 
-    public init(store: GlanceStore) {
+    public init(store: GlanceStore, onFlyTo: ((AttentionTarget) -> Void)? = nil) {
         self.store = store
+        self.onFlyTo = onFlyTo
     }
 
     public var body: some View {
@@ -50,7 +55,13 @@ public struct AttentionStackView: View {
                 if !triage.needsYou.isEmpty {
                     section("等你") {
                         ForEach(triage.needsYou) { item in
-                            AttentionRow(item: item) { evidenceItem = item }
+                            AttentionRow(
+                                item: item,
+                                onEvidence: { evidenceItem = item },
+                                onFlyTo: item.target.flatMap { target in
+                                    onFlyTo.map { fly in { fly(target) } }
+                                }
+                            )
                         }
                     }
                 }
@@ -86,10 +97,11 @@ public struct AttentionStackView: View {
 }
 
 /// One needs-you row: severity dot + the sentence + one action (law 1:
-/// a single decision per item).
+/// a single decision per item). Row tap = fly to the node (navigation).
 struct AttentionRow: View {
     let item: AttentionItem
     let onEvidence: () -> Void
+    var onFlyTo: (() -> Void)?
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
@@ -117,8 +129,18 @@ struct AttentionRow: View {
             RoundedRectangle(cornerRadius: 10)
                 .stroke(item.severity.semantic.color.opacity(0.25))
         )
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .onTapGesture { onFlyTo?() }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(item.sentence)
+        .accessibilityActions {
+            // Only advertise the fly-to when it exists: the disconnect
+            // notice has no galaxy home, so it must not enumerate a
+            // silent no-op command (S-stage blocker).
+            if let onFlyTo {
+                Button("在星图中查看", action: onFlyTo)
+            }
+        }
     }
 }
 
@@ -148,17 +170,28 @@ struct WorkingRowView: View {
 }
 
 /// Evidence drill-down (law 2): the raw payload behind the sentence,
-/// rendered as plain key-value rows - evidence, not decoration.
+/// rendered as plain key-value rows - evidence, not decoration. Shared by
+/// the attention stack and the radar node cards (one drawer, one law).
 struct EvidenceDrawer: View {
-    let item: AttentionItem
+    let title: String
+    let evidence: JSONValue?
+
+    init(title: String, evidence: JSONValue?) {
+        self.title = title
+        self.evidence = evidence
+    }
+
+    init(item: AttentionItem) {
+        self.init(title: item.sentence, evidence: item.evidence)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(item.sentence)
+            Text(title)
                 .font(Tokens.Typography.ui(12, weight: .semibold))
                 .foregroundStyle(Tokens.Text.primary)
             Divider()
-            switch item.evidence {
+            switch evidence {
             case .object(let fields):
                 fieldRows(fields)
             case .array(let parts):
@@ -225,4 +258,14 @@ struct BreathingModifier: ViewModifier {
 
 extension View {
     func breathing() -> some View { modifier(BreathingModifier()) }
+
+    /// Conditional variant for the radar: only living things breathe.
+    @ViewBuilder
+    func breathing(active: Bool) -> some View {
+        if active {
+            modifier(BreathingModifier())
+        } else {
+            self
+        }
+    }
 }

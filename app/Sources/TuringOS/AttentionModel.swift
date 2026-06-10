@@ -19,13 +19,43 @@ public struct WorktreeFact: Equatable, Sendable {
     public let prunable: Bool
     public let sameBranchConflict: Bool
     public let fingerprintError: String?
+    public let path: String?
+    public let head: String?
+    public let locked: Bool
+    public let detached: Bool
     /// The raw payload - the evidence the sentence drills down to.
     public let evidence: JSONValue
+
+    public init(
+        projectId: String, worktreeId: String, branch: String? = nil,
+        dirty: Bool = false, prunable: Bool = false,
+        sameBranchConflict: Bool = false, fingerprintError: String? = nil,
+        path: String? = nil, head: String? = nil,
+        locked: Bool = false, detached: Bool = false,
+        evidence: JSONValue
+    ) {
+        self.projectId = projectId
+        self.worktreeId = worktreeId
+        self.branch = branch
+        self.dirty = dirty
+        self.prunable = prunable
+        self.sameBranchConflict = sameBranchConflict
+        self.fingerprintError = fingerprintError
+        self.path = path
+        self.head = head
+        self.locked = locked
+        self.detached = detached
+        self.evidence = evidence
+    }
 }
 
 public struct ProjectFact: Equatable, Sendable {
     public let projectId: String
     public let local: Bool
+    /// Registered checkout path - the radar's anchor witness: the worktree
+    /// whose own path equals it IS the primary checkout (fact-coupling,
+    /// never a branch-name heuristic).
+    public let path: String?
 }
 
 public struct WorktreeLedger: Equatable, Sendable {
@@ -40,7 +70,12 @@ public struct WorktreeLedger: Equatable, Sendable {
             if let id = event.payload["project_id"]?.stringValue {
                 projects[id] = ProjectFact(
                     projectId: id,
-                    local: event.payload["local"]?.boolValue ?? false
+                    local: event.payload["local"]?.boolValue ?? false,
+                    // Registry daemon emits "path"; the committed fixture
+                    // era used canonical_path/root_path - accept all three.
+                    path: event.payload["path"]?.stringValue
+                        ?? event.payload["canonical_path"]?.stringValue
+                        ?? event.payload["root_path"]?.stringValue
                 )
             }
         case .worktreeDiscovered:
@@ -57,6 +92,10 @@ public struct WorktreeLedger: Equatable, Sendable {
                 prunable: event.payload["prunable"]?.boolValue ?? false,
                 sameBranchConflict: event.payload["same_branch_conflict"]?.boolValue ?? false,
                 fingerprintError: event.payload["fingerprint_error"]?.stringValue,
+                path: event.payload["path"]?.stringValue,
+                head: event.payload["head"]?.stringValue,
+                locked: event.payload["locked"]?.boolValue ?? false,
+                detached: event.payload["detached"]?.boolValue ?? false,
                 evidence: event.payload
             )
         case .worktreeRemoved:
@@ -102,12 +141,21 @@ public enum AttentionSeverity: Int, Comparable, Sendable {
     }
 }
 
+/// Structured attribution for an attention item - the radar fly-to reads
+/// THIS, never parses item ids back apart (the A1_08 S-stage lesson).
+public struct AttentionTarget: Equatable, Sendable {
+    public let projectId: String
+    public let worktreeIds: [String]
+}
+
 /// One "needs you" item: a sentence + its evidence (law 2).
 public struct AttentionItem: Identifiable, Equatable, Sendable {
     public let id: String
     public let severity: AttentionSeverity
     public let sentence: String
     public let evidence: JSONValue?
+    /// nil when the item has no spatial home (e.g. the disconnect notice).
+    public let target: AttentionTarget?
 }
 
 /// One ambient "working" row: a project with uncommitted motion.
@@ -136,7 +184,8 @@ public struct AttentionTriage: Equatable, Sendable {
                 id: "disconnect",
                 severity: .disconnect,
                 sentence: Sentences.disconnected(reason: reason),
-                evidence: nil
+                evidence: nil,
+                target: nil
             ))
         }
 
@@ -149,7 +198,9 @@ public struct AttentionTriage: Equatable, Sendable {
                     id: "fp:\(fact.worktreeId)",
                     severity: .failure,
                     sentence: Sentences.fingerprintFailure(fact: fact, error: error),
-                    evidence: fact.evidence
+                    evidence: fact.evidence,
+                    target: AttentionTarget(
+                        projectId: fact.projectId, worktreeIds: [fact.worktreeId])
                 ))
             }
             if fact.sameBranchConflict {
@@ -164,7 +215,9 @@ public struct AttentionTriage: Equatable, Sendable {
                     id: "orphan:\(fact.worktreeId)",
                     severity: .decision,
                     sentence: Sentences.orphan(fact: fact),
-                    evidence: fact.evidence
+                    evidence: fact.evidence,
+                    target: AttentionTarget(
+                        projectId: fact.projectId, worktreeIds: [fact.worktreeId])
                 ))
             }
         }
@@ -173,7 +226,10 @@ public struct AttentionTriage: Equatable, Sendable {
                 id: "conflict:\(key)",
                 severity: .decision,
                 sentence: Sentences.sameBranchConflict(group: group),
-                evidence: .array(group.map(\.evidence))
+                evidence: .array(group.map(\.evidence)),
+                target: AttentionTarget(
+                    projectId: group[0].projectId,
+                    worktreeIds: group.map(\.worktreeId))
             ))
         }
         items.sort { ($0.severity, $0.id) < ($1.severity, $1.id) }
