@@ -1,13 +1,14 @@
 ---
-atom: A1_08_global_radar_canvas
+atom: A1_09_galaxy_radar
 phase: "1"
 intent: >
-  V6 Global Workspace Radar 的 SwiftUI 化（设计北极星落地）：星云/主轴/Bezier 连线
-  Canvas 绘制 + 节点卡 overlay（可达性树保留）；pan/zoom（鼠标位锚定缩放 0.1-2.0）；
-  语义缩放 <0.6 压缩态=默认初始视角（V6 规范 §7.2 隐藏清单逐条）；节点拖拽每帧
-  updateEdges；五节点形态（Truth/Active/Merged/Conflict/Orphan）绑 daemon 真实流
-  （A1_03 订阅 + A1_06 分桶投影）；Glance popover 三计数。golden 快照 + 可达性
-  0/1 谓词进 shipgate。布局状态=本地偏好不上 tape。
+  星系空间视图（五次裁决：从首页降格为**探索性下钻**，材质语言沿用 V6，信息层级按
+  Software 3.0 三定律重构）：星云/主轴/Bezier 连线 Canvas + 节点 overlay；
+  **节点默认只有标题 + 状态辉光**，选中聚焦才展开（分支/指纹/证据抽屉）；
+  pan/zoom（鼠标位锚定 0.1-2.0）+ 语义缩放；从 Attention Stack 点入注意力项
+  直接飞到对应节点并聚焦。五节点形态绑 daemon 真实流。golden 快照 + 可达性
+  0/1 谓词进 shipgate。布局状态=本地偏好不上 tape。反模式黑名单适用
+  （默认态节点不得渲染多行数据卡）。
 allowlist:
   - "app/**"
   - "scripts/shipgate.sh"

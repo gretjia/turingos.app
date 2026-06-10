@@ -93,3 +93,11 @@ FSEvents 脏信号 ──(notify crate, FSEvents backend)──┘   │
 | R_GENUI §6 R1-R8 | **批准**。八条设计法律已并入 DESIGN.md（推翻 R1 须新 ADR + L4） |
 | 平台 | Xcode 27 beta（27.0/27A5194q + MacOSX27.sdk）已移入 /Applications/Xcode-beta.app——ADR-008 的 27-SDK 开发车道本机就绪（构建经 DEVELOPER_DIR 指定，不动 xcode-select 全局默认） |
 | 对账与切片 | V6 ↔ 仓库设计法律逐条对账 + P1-UI atom 卡集见 `design/V6_RECONCILIATION.md`；唯一立法调和 = 项目辨识色第二通道（VISUAL_SEMANTICS 增补第 5-7 条） |
+
+### 五次裁决（用户 2026-06-10，本地会话）——Software 3.0 信息架构重构
+
+| 项 | 裁决 |
+|---|---|
+| 看板哲学否定 | 此前一切稿件（r1 三张乃至 V6 忠实翻译路线）犯 **Software 1.0/2.0 看板哲学**错误：数据轰炸、用户抓不住重点。以 Software 3.0 理念重构整个软件 |
+| 设计自主权 | V6 参考稿**不构成严格约束**；执行 agent 有自主决定权（代码简洁性、贴合内核的设计、更优的 Software 3.0 美学）。调研结果需磋商时才停机 |
+| 三定律立法 | 注意力优先 / 语言优先 / 安静即成功 → `design/SOFTWARE3_UX.md`（含反模式黑名单）；V6 降格为材质语言参考；P1-UI 卡集重切：A1_08=Attention Stack Home（取代星系画布首页定位），A1_09=星系 Radar 下钻视图 |
