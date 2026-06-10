@@ -26,10 +26,10 @@ UI 状态、SQLite、内存缓存一律 derived projection：可删、可重建�
 新验证规则 fail-closed forward 生效；历史链标 `legacy_pre_rule`，**绝不改判历史**。重放旧链用旧 epoch 规则。
 
 ## ADR-008 双轨平台目标
-- **设计北极星 = macOS 27**（用户 2026-06-10 停机点裁定）：界面按 27 的 Liquid Glass 精修形态设计；27 rollout 预期快。
-- **向下兼容 = deployment target macOS 26**："面向 27 设计、26 起可运行"。代码默认只用 26 可用 API；27 专属增强一律 `if #available(macOS 27)` 渐进增强，**禁止成为功能依赖**。
-- **构建车道**：CI / 对外构件用最新稳定 Xcode（当前 26.5，PINS 钉版）；Xcode 27 beta 为 design preview lane（27 GM + runner 镜像就位后整体切换为主车道，届时只换工具链不改代码——以上"26 起可运行 + 渐进增强"纪律保证零返工）。
-- **arm64-only** 不变。core contracts 禁止依赖 beta-only API（shipgate #6）不变。
+- **开发 SDK = Xcode 27 (macOS 27 SDK)**（用户 2026-06-10 二次裁定）：本地开发与设计直接用 Xcode 27 beta SDK；**deployment target = macOS 26**（向下兼容）。
+- **27-only API 隔离纪律**：凡 macOS 27 专属 API 必须 `if #available(macOS 27, *)` 且**源文件级隔离**（独立文件/条件编译），保证工程在 26.5 SDK 下仍可整体编译——这是 CI 可行性的前提，也保证 27 GM 切换零返工。
+- **CI Swift lane**：用 runner 镜像现有的最新 Xcode（当前 26.5）；macos-26 镜像提供 Xcode 27 beta 后即切（R-stage 例行核查 runner-images）。**禁止功能依赖 beta-only API** 不变（shipgate #6）。
+- **arm64-only** 不变。
 
 ## ADR-009 双仓契约
 - `turingosv4` = constitutional runtime（ChainTape/CAS/replay/sequencer/market/verifier，canonical receipts/predicates/economic tx）。
@@ -57,3 +57,9 @@ Claude Code 的 WorktreeCreate/WorktreeRemove hooks **存在且可用**（2026-0
 - **key_kind 开放枚举**：`contracts/signature_receipt.schema.json` 的 key_kind 扩值 = minor 版本（加值向后兼容，contracts/README 既定规则）；未来硬件签名介质（FIDO2 token、外置 HSM、新 SE 形态、多设备 SignerSet 成员）以**新增 key_kind + 新 Signer 实现**接入，**底层与业务代码零重构**。
 - **接线时点**：P2 第一颗签名 Atom 即以 trait 落地（SE-P256 与 ssh-ed25519 是首两个实现，本身就互为"第二调用方"——M1 满足）；attestation 字段在 receipt schema 预留 optional。
 - **验收谓词**：P2 起 shipgate 增加"具体算法类型名不得出现在 daemon 业务模块"的 grep 谓词（只许出现在 signer 实现目录）。
+
+## ADR-014 Apple Intelligence 接入姿态（用户 2026-06-10 裁定：预留可能）
+- **接入面 = App Intents**：未来 macOS 27 Apple Intelligence（Siri/Spotlight/Visual Intelligence）接入 TuringOS 的唯一通道是 **App Intents 作为 typed Action API 的系统投影**——intent 注册表与 `contracts/typed_actions.schema.json` 一一对应，模型/系统永不直接组合本 app 的 UI（WWDC25 官方架构，R_GENUI_memo §2.2）。
+- **级别红线**：仅 **L0/L1** action 可注册为 App Intent；**L3/L4 永不可被系统 AI 一句话触发**（与 RATIFICATION_POLICY 仪式稀缺性一致；R_GENUI R7 的谓词形态：intent 注册表 × typed_actions level 交叉校验，level≥3 有对应 intent 即门禁红）。
+- **实体投影**：暴露给系统 AI 的 entity 只来自 Projection API（read-only、携带 provenance、projection-safe 字段分级——ADR-011/PROJECTION_POLICY 原样适用）。
+- **接线时点**：P1 不实现；SwiftUI 壳的 action 分发层从第一天按 typed_actions 编排（本就是 D4 架构），届时接 App Intents 是纯增量。

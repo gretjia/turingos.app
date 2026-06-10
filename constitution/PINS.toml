@@ -16,14 +16,22 @@ role = "constitutional runtime: ChainTape/CAS/replay/sequencer/market/verifier"
 rev = "UNPINNED" # pin at the first phase that consumes a runtime interface (P2 R-stage at latest); never consume unpinned
 facts_verified_on = "2026-06-10" # README/AGENTS.md/Cargo.toml: bins-only (no lib target), ed25519-dalek v2, git2 0.20, no SQLite dep
 
-[toolchain.stable_build_lane]
-# Repo law lane: CI and public artifacts. Core contracts MUST NOT depend on beta-only API.
-xcode = "26.5" # latest stable; bundled Swift 6.3.2 (xcodereleases.com)
-swift = "6.3.2"
-deployment_target = "macOS 26" # user ruling 2026-06-10: design faces macOS 27, runs from 26 ("27-facing, backward compatible"); 27-only API via #available progressive enhancement only (ADR-008)
-ci_runner = "macos-26" # arm64; Xcode 26.5 preinstalled (actions/runner-images)
+[toolchain.dev_lane]
+# Primary development SDK (user second ruling 2026-06-10): build with Xcode 27 SDK,
+# deploy from macOS 26. 27-only API must be file-isolated behind #available so the
+# project still compiles under the CI lane SDK (ADR-008).
+xcode = "27.0 beta (27A5194q)"
+sdk = "macOS 27 (Golden Gate)"
+deployment_target = "macOS 26"
 verified_on = "2026-06-10"
-ratified = "user checkpoint 2026-06-10 (UpdatePins L3 approval given at R1 design-brief checkpoint)"
+
+[toolchain.ci_lane]
+# CI Swift lane: newest Xcode available on hosted runners; switch to 27 the moment
+# runner images carry it (check actions/runner-images at each R-stage).
+xcode = "26.5" # bundled Swift 6.3.2 (xcodereleases.com)
+ci_runner = "macos-26" # arm64; proven green 2026-06-10 (rust lane, 24s)
+verified_on = "2026-06-10"
+ratified = "user rulings 2026-06-10 (UpdatePins L3: checkpoint + follow-up ruling)"
 
 [toolchain.design_preview_lane]
 # Exploration lane only: DESIGN.md research, Liquid Glass adaptation, snapshot prototypes.
