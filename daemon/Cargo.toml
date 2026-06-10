@@ -13,6 +13,10 @@ serde_json = "1"
 # daemon never fetches; vendored build keeps Linux CI and macOS dev identical.
 git2 = { version = "0.20", default-features = false, features = ["vendored-libgit2"] }
 sha2 = "0.10"
+# A1_03 UDS event subscription: async listener + broadcast fan-out. libc only
+# for getuid (peer-cred same-uid policy); no other raw syscalls.
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "time", "sync"] }
+libc = "0.2"
 
 [dev-dependencies]
 tempfile = "3"

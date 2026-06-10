@@ -1,0 +1,22 @@
+atom: A1_03_event_stream_uds
+utc: 2026-06-10T11:23:23Z
+head: 3a006ca301061b8780a34c79c585462cca9cd1f9
+note: rust 1.94.0; cargo test 36/36 x3 consecutive runs (16 lib + 8 uds + 12 boundary); predicates uds_/projection_ split per card amendment (cargo rejects dual TESTNAME); clippy -D warnings clean; macOS peer-cred pid verified on real socket (R1 UNVERIFIED #6 closed locally); S-stage dual review (2 opus critics) -> 2 blockers (rebuild_command name-lie, derive_source hardcode) + risks all fixed, umask fix REJECTED by real test (process-global hazard), 10/10 fix-map ALL-VERIFIED by independent checker; veto-ai clean-context audit PASS; real run: serve + python UDS client, lock-toggle drift received over wire
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+----------------------------------------
+SHIPGATE p1: PASS
