@@ -23,8 +23,11 @@ verified_external_facts:
   - fact: "MenuBarExtra 最低 macOS 13.0+；Liquid Glass macOS 26 引入、27 精修多为 SDK 重编自动生效"
     source: "research/R1_memo.md §3"
     verified_on: "2026-06-10"
-  - fact: "Network.framework NWConnection 对 UDS（NWEndpoint）的支持 UNVERIFIED——本卡第一步实测；失败降级 = BSD socket 薄封装（POSIX read loop）"
-    source: "design/V6_RECONCILIATION.md §3（待实测销项）"
+  - fact: "NWConnection(to: .unix(path:), using: .tcp) 走 UDS 全链路可用——Xcode 27 SDK
+      (Swift 6.4) 编译最小客户端连真实 turingosd socket，收到并 JSON 解析真实
+      EventEnvelope（kind=WorktreeDiscovered, schema=tos.app.event.v0）。UNVERIFIED 销项，
+      无需 BSD socket 降级"
+    source: "本机实测（swiftc + 真实 daemon serve，探针 /tmp/uds_probe.swift）"
     verified_on: "2026-06-10"
 ux_touchpoints: >
   V6 设计 tokens 是全产品视觉法源（DESIGN.md 美学门禁化：单文件无散落魔数）；
