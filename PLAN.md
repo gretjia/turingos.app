@@ -17,6 +17,8 @@
 | Replay 时间轴拖动 | tape 必须支持范围查询 API | P6 R-stage 设计约束 |
 | 活动脉冲要"呼吸感"而非闪烁噪音 | FSEvents 去抖窗口成为协议参数（事件 payload 携带 debounce 元数据，minor 扩展） | R1 简报；A1_04 落地 |
 | 菜单栏三计数恒时可信 | daemon 维护常驻聚合投影（非查询时现算），投影守恒测试覆盖 | R1 简报；A1_03 落地 |
+| 全景面板 = 多 repo 同屏（V6/四次裁决） | daemon 注册表驱动 N×Reconciler，事件按 project_id 隔离 | design/V6_RECONCILIATION.md；A1_06 |
+| 压缩卡每 repo 一眼健康度（四次裁决） | 聚合投影按 project 分桶 + 全局 rollup，双层守恒测试 | design/V6_RECONCILIATION.md；A1_06 |
 
 ## Phase 总表
 

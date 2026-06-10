@@ -83,3 +83,13 @@ FSEvents 脏信号 ──(notify crate, FSEvents backend)──┘   │
 | UI 选型 | **三张效果图（variant-a-operations-table / variant-b-radar-cards / menubar-glance）全部否决**。用户亲自操刀设计，满意稿后续提供——共创方向改为「用户出稿 → agent 评审与实现」。UI Atom 维持门禁阻塞（ADR-012 增补不变） |
 | 设计空窗期安排 | 内核轨不受阻：执行 agent 即刻续行 A1_02 → A1_03 → A1_04；另行调研+实证「模型分级路由」工作方法论（Claude 开发层纪律，不触 repo law） |
 | R_GENUI §6 R1-R8 | 本次未裁决，**维持待批准状态**（批准后并入 DESIGN.md） |
+
+### 四次裁决（用户 2026-06-10 深夜，本地会话）——UI 轨门禁解除
+
+| 项 | 裁决 |
+|---|---|
+| 设计定稿 | 用户交付自绘 **V6 Global Workspace Radar**（HTML 原稿 + 防漂移设计规范），即批准的设计北极星。入库 `design/mockups/v6/`；稿内数据全部为 illustration example 非真实数据。星系美学/语义发光/语义缩放/项目独立拓扑四哲学锁定 |
+| UX 流程重裁 | Onboard 三段式：**Connect**（无缝接入既有 git 体系：gh CLI 复用 → GitHub Device Flow → 纯本地，逐级降档）→ **Select**（列全部 repo，用户勾选纳管，已完结项目可不进）→ **Observe**（Global Workspace 全景面板默认**压缩态**，可全局观察/[P4+]派任务，或点入单项目操作）。已并入 DESIGN.md Onboard 章 |
+| R_GENUI §6 R1-R8 | **批准**。八条设计法律已并入 DESIGN.md（推翻 R1 须新 ADR + L4） |
+| 平台 | Xcode 27 beta（27.0/27A5194q + MacOSX27.sdk）已移入 /Applications/Xcode-beta.app——ADR-008 的 27-SDK 开发车道本机就绪（构建经 DEVELOPER_DIR 指定，不动 xcode-select 全局默认） |
+| 对账与切片 | V6 ↔ 仓库设计法律逐条对账 + P1-UI atom 卡集见 `design/V6_RECONCILIATION.md`；唯一立法调和 = 项目辨识色第二通道（VISUAL_SEMANTICS 增补第 5-7 条） |

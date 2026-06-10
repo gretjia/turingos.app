@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+
+    
+<meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuringOS - Mainline Clear Radar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+
+    <style>
+        
+/* ================= DESIGN TOKENS ================= */
+
+        
+:root {
+
+            --space-bg: #030305;
+            
+--space-nebula: radial-gradient(circle at 50% 50%, rgba(15, 15, 25, 0.8) 0%, rgba(3, 3, 5, 1) 100%);
+
+            
+            --c-green: #34D399;  /* verified / pass / merged */
+            --c-red: #F87171;    /* failed / invalid */
+            
+--c-yellow: #FBBF24; /* attention / conflict */
+
+            
+--c-gray: #9CA3AF;   /* unknown / inactive */
+
+            
+--c-blue: #3B82F6;   /* active / streaming */
+
+            
+--c-purple: #A855F7; /* ratification */
+
+            
+--c-orange: #F97316; /* experimental */
+
+            --glass-bg: rgba(15, 15, 20, 0.5);
+            
+--glass-border: rgba(255, 255, 255, 0.05);
+
+            
+
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            
+--font-mono: 'JetBrains Mono', monospace;
+
+            
+
+            --tx-primary: #FFFFFF;
+            
+--tx-secondary: #9CA3AF;
+
+            --tx-tertiary: #4B5563;
+        
+}
+
+        * { box-sizing: border-box; }
+        
+body { margin: 0; padding: 0; background: var(--space-bg); background-image: var(--space-nebula); color: var(--tx-primary); font-family: var(--font-sans); overflow: hidden; user-select: none; -webkit-font-smoothing: antialiased; }
+
+        
+/* ================= MAC MENUBAR & GLANCE ================= */
+
+        #mac-menubar {
+            
+position: relative; z-index: 2000; height: 28px; width: 100%;
+
+            
+background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+
+            
+display: flex; justify-content: space-between; align-items: center;
+
+            
+padding: 0 16px; font-size: 13px; font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.05);
+
+        }
+        .mb-left, .mb-right { display: flex; gap: 16px; align-items: center; }
+        
+.mb-item { padding: 0 6px; border-radius: 4px; display: flex; align-items: center; gap: 6px; cursor: default; color: var(--tx-primary);}
+
+        .mb-item:hover { background: rgba(255,255,255,0.1); }
+        .health-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-yellow); box-shadow: 0 0 10px var(--c-yellow); }
+
+        
+#glance-popover {
+
+            
+position: absolute; top: 32px; right: 12px; width: 340px;
+
+            
+background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(40px);
+
+            border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px;
+            
+box-shadow: 0 24px 48px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1);
+
+            display: none; transform-origin: top right; z-index: 2001;
+        
+}
+
+        
+#glance-popover.active { display: block; animation: popIn 0.2s ease-out; }
+
+        
+@keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        
+
+        .glance-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--tx-primary); }
+        .glance-metrics { display: flex; gap: 8px; margin-bottom: 16px; }
+        
+.metric { flex: 1; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.03); text-align: center; border: 1px solid rgba(255,255,255,0.02);}
+
+        
+.m-num { font-size: 18px; font-weight: 600; margin-bottom: 2px; font-family: var(--font-mono); }
+
+        
+.m-lbl { font-size: 10px; color: var(--tx-secondary); text-transform: uppercase; letter-spacing: 0.5px;}
+
+        
+
+        
+.glance-list-title { font-size: 11px; color: var(--tx-tertiary); margin-bottom: 8px; text-transform: uppercase;}
+
+        
+.glance-item { background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2); padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;}
+
+        .glance-item:hover { background: rgba(251, 191, 36, 0.15); }
+        .glance-footer { border-top: 1px solid var(--glass-border); padding-top: 12px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        
+.l4-entry { color: var(--c-purple); font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+        
+/* ================= APP LAYOUT ================= */
+
+        
+#app-container { display: flex; height: calc(100vh - 28px); width: 100%; position: relative; }
+
+        
+#sidebar {
+
+            
+width: 240px; height: 100%; background: rgba(10, 10, 14, 0.4); backdrop-filter: blur(20px);
+
+            
+border-right: 1px solid var(--glass-border); padding: 20px 12px; z-index: 1000; display: flex; flex-direction: column; gap: 4px;
+
+        }
+        .nav-group { font-size: 11px; font-weight: 600; color: var(--tx-tertiary); text-transform: uppercase; padding: 12px 12px 4px 12px; letter-spacing: 0.5px; }
+        
+.nav-item { padding: 8px 12px; border-radius: 8px; font-size: 13px; color: var(--tx-secondary); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s;}
+
+        .nav-item.active { background: rgba(255,255,255,0.08); color: var(--tx-primary); font-weight: 500; }
+        
+.nav-item.disabled { opacity: 0.4; cursor: not-allowed; }
+
+        
+.nav-item:hover:not(.disabled) { background: rgba(255,255,255,0.05); }
+
+        
+.ratify-btn { color: var(--c-purple); border: 1px solid rgba(168,85,247,0.3); background: rgba(168,85,247,0.05); margin-top: auto; justify-content: center; font-weight: 600;}
+
+        #radar-wrapper { flex: 1; position: relative; overflow: hidden; background: transparent; cursor: grab;}
+        
+#radar-wrapper:active { cursor: grabbing; }
+
+        
+#canvas-world { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
+
+        
+
+        
+.star-grid {
+
+            
+position: absolute; width: 10000px; height: 10000px; left: -5000px; top: -5000px;
+
+            
+background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+
+            
+background-size: 80px 80px; pointer-events: none; z-index: 0;
+
+            mask-image: radial-gradient(circle at center, black 10%, transparent 90%);
+        }
+
+        .project-nebula { position: absolute; border-radius: 50%; filter: blur(150px); pointer-events: none; z-index: 0; opacity: 0.15; transition: opacity 0.5s; transform: translate(-50%, -50%);}
+        .project-label { position: absolute; transform: translate(-50%, -50%); font-size: 100px; font-weight: 800; color: rgba(255,255,255,0.03); z-index: 0; pointer-events: none; letter-spacing: -0.02em; white-space: nowrap; transition: opacity 0.5s; }
+
+        /* --- 主线轨道 (MAINLINE AXIS) --- */
+        
+.mainline-axis {
+
+            
+position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1;
+
+            
+display: flex; align-items: center;
+
+        
+}
+
+        
+.mainline-track {
+
+            
+height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px;
+
+            
+box-shadow: 0 0 10px rgba(255,255,255,0.05);
+
+            
+position: relative; overflow: hidden;
+
+        }
+        
+.mainline-track::after {
+
+            content: ''; position: absolute; top: 0; left: -100px; width: 100px; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: axisSweep 4s linear infinite;
+        
+}
+
+        
+@keyframes axisSweep { 0% { left: -100px; } 100% { left: 100%; } }
+
+        
+.mainline-text {
+
+            position: absolute; top: -24px; left: 20px; font-family: var(--font-mono); font-size: 12px;
+            
+color: rgba(255,255,255,0.3); letter-spacing: 2px; text-transform: uppercase;
+
+        }
+
+        /* SVG Edges */
+        
+#edge-layer { position: absolute; top: 0; left: 0; width: 1px; height: 1px; pointer-events: none; z-index: 1; overflow: visible; }
+
+        .edge-path { fill: none; stroke-linecap: round; transition: stroke-width 0.3s; }
+        .flow-anim { animation: dashFlow 1.5s linear infinite; }
+        
+@keyframes dashFlow { to { stroke-dashoffset: -20; } }
+
+        
+/* HTML Nodes */
+
+        #node-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        
+.node { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; display: flex; flex-direction: column; align-items: center; cursor: grab; }
+
+        
+.node:active { cursor: grabbing; }
+
+        
+.n-card {
+
+            
+background: linear-gradient(145deg, rgba(20, 20, 25, 0.6) 0%, rgba(10, 10, 12, 0.9) 100%);
+
+            
+backdrop-filter: blur(40px); border-radius: 16px; padding: 20px; width: 280px;
+
+            
+box-shadow: 0 16px 32px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.08), inset 0 0 0 1px rgba(255,255,255,0.03);
+
+            
+transition: all 0.3s ease; position: relative; overflow: hidden;
+
+        
+}
+
+        
+.node:hover .n-card { transform: translateY(-4px); box-shadow: 0 24px 48px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.15), inset 0 0 0 1px rgba(255,255,255,0.06); z-index: 10;}
+
+        
+
+        
+.card-glow-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, currentColor, transparent); opacity: 0.6; }
+
+        
+.n-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; pointer-events: none;}
+
+        
+.n-title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;}
+
+        
+.n-branch { font-family: var(--font-mono); font-size: 11px; color: var(--tx-secondary); }
+
+        
+.proj-tag { padding: 2px 4px; border-radius: 4px; background: rgba(255,255,255,0.1); font-size: 9px; text-transform: uppercase; color: var(--tx-secondary);}
+
+        
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 6px; font-size: 9px; font-weight: 600; font-family: var(--font-mono); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); text-transform: uppercase;}
+
+        .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        .n-data { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; border: 1px solid rgba(255,255,255,0.02); pointer-events: none;}
+        
+.data-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+
+        
+.d-key { color: var(--tx-tertiary); font-weight: 500;}
+
+        
+.d-val { font-family: var(--font-mono); color: var(--tx-primary); text-align: right;}
+
+        
+.n-drawer {
+
+            background: rgba(0,0,0,0.5); border-radius: 8px; padding: 0 10px;
+            border: 1px solid rgba(255,255,255,0.03); margin-top: 0;
+            
+display: flex; flex-direction: column; gap: 6px;
+
+            max-height: 0; opacity: 0; overflow: hidden; border: none;
+            
+transition: all 0.3s ease;
+
+        }
+        
+.node.expanded .n-drawer { max-height: 300px; opacity: 1; padding: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); }
+
+        
+/* NODE STATES & COLORS */
+
+        
+.s-green { color: var(--c-green); } .s-blue { color: var(--c-blue); } .s-yellow { color: var(--c-yellow); } .s-purple { color: var(--c-purple); } .s-gray { color: var(--c-gray); } .s-orange { color: var(--c-orange); } .s-red { color: var(--c-red); }
+
+        /* Truth Node (Main Anchor) */
+        .type-truth .n-card { background: rgba(25,25,30,0.9); border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 0 30px rgba(255,255,255,0.05); width: 320px;}
+        
+.type-truth .card-glow-line { color: var(--tx-primary); opacity: 0.5; height: 3px;}
+
+        
+.type-truth .n-title { font-size: 18px; }
+
+        
+/* Active Node (Dynamic Color) */
+
+        
+.type-active .card-glow-line { box-shadow: 0 0 20px currentColor; }
+
+        
+
+        
+/* Merged Node (Green, Completed) */
+
+        
+.type-merged .n-card { background: rgba(16, 30, 22, 0.6); border-color: rgba(52, 211, 153, 0.15); }
+
+        .type-merged .card-glow-line { color: var(--c-green); opacity: 0.3; }
+        
+        /* Conflict Node (Yellow) */
+        .type-conflict .n-card { background: rgba(30, 25, 10, 0.8); border-color: rgba(251, 191, 36, 0.3); }
+        
+.type-conflict .card-glow-line { color: var(--c-yellow); opacity: 0.8; }
+
+        
+
+        
+/* Orphan Node (Gray Dashed) */
+
+        .type-orphan .n-card { background: transparent; border: 1px dashed rgba(156, 163, 175, 0.4); box-shadow: none; opacity: 0.7; }
+        
+.type-orphan .card-glow-line { display: none; }
+
+        /* Agent Chips and Live Stream (Only for Active Nodes) */
+        
+.agent-chip { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .ag-avatar { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);}
+        .ag-info { display: flex; flex-direction: column; gap: 2px;}
+        .ag-name { font-size: 11px; font-weight: 600; color: var(--tx-primary); }
+        
+.ag-model { font-size: 9px; font-family: var(--font-mono); color: var(--tx-tertiary); }
+
+        
+
+        .live-stream { margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1); }
+        .stream-title { font-size: 9px; margin-bottom: 6px; font-weight: 600; text-transform: uppercase;}
+        
+.stream-blocks { display: flex; gap: 4px; overflow: hidden; align-items: center;}
+
+        
+.s-block { height: 4px; background: currentColor; border-radius: 2px; animation: streamFade 1s infinite alternate; }
+
+        
+@keyframes streamFade { 0% { opacity: 0.2; transform: scaleX(0.5); } 100% { opacity: 1; transform: scaleX(1); } }
+
+        
+/* Auras & Warnings */
+
+        
+.aura { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 140%; height: 140%; border-radius: 50%; z-index: -1; pointer-events: none; animation: pulse-aura 4s ease-in-out infinite; }
+
+        
+@keyframes pulse-aura { 0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } }
+
+        .warning-glyph { position: absolute; left: -20px; top: 50%; transform: translateY(-50%); font-size: 32px; filter: drop-shadow(0 0 16px rgba(251,191,36,0.6)); animation: float-warn 2s infinite alternate; pointer-events: none;}
+        @keyframes float-warn { 0% { transform: translateY(calc(-50% - 4px)) scale(0.95); } 100% { transform: translateY(calc(-50% + 4px)) scale(1.05); } }
+
+        /* HUD Overlay */
+        .radar-hud { position: absolute; bottom: 24px; right: 24px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; z-index: 1000;}
+        
+.view-controls { pointer-events: auto; display: flex; gap: 6px; background: var(--glass-bg); backdrop-filter: blur(20px); border-radius: 12px; padding: 6px; border: 1px solid var(--glass-border); }
+
+        
+.v-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--tx-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: 0.2s; }
+
+        
+.v-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+
+        .watermark { font-family: var(--font-mono); font-size: 10px; color: var(--tx-tertiary); text-align: right; line-height: 1.4;}
+
+        
+/* Semantic Zoom */
+
+        
+.universe.semantic-far .n-data, .universe.semantic-far .agent-chip, .universe.semantic-far .live-stream { opacity: 0; max-height: 0; margin: 0; padding: 0; transform: scaleY(0); border: none; }
+
+        
+.universe.semantic-far .n-card { min-width: 140px; padding: 16px 20px; }
+
+        
+.universe.semantic-far .n-branch, .universe.semantic-far .badge { display: none; }
+
+        .universe.semantic-far .n-header { margin-bottom: 0; align-items: center; }
+        .universe.semantic-far .edge-path { stroke-width: 8 !important; opacity: 0.3;}
+        
+.universe.semantic-far .project-label { opacity: 1; }
+
+        .universe.semantic-far .project-nebula { opacity: 0.4; }
+        
+.universe.semantic-far .mainline-track { height: 8px; background: rgba(255,255,255,0.15); }
+
+        .universe:not(.semantic-far) .project-label { opacity: 0.05; }
+        
+.universe.semantic-far .n-drawer { display: none !important; }
+
+        /* L4 RATIFICATION SCREEN */
+        
+#l4-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 5, 15, 0.95); backdrop-filter: blur(60px); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+
+        
+#l4-screen.active { opacity: 1; pointer-events: auto; }
+
+        
+.l4-content { width: 640px; }
+
+        
+.l4-icon { font-size: 48px; margin-bottom: 24px; color: var(--c-purple); text-shadow: 0 0 30px var(--c-purple); text-align: center;}
+
+        
+.l4-title { font-size: 24px; font-weight: 600; margin-bottom: 12px; color: var(--c-purple); text-align: center; }
+
+        
+.l4-desc { font-size: 14px; color: var(--tx-secondary); margin-bottom: 32px; line-height: 1.6; text-align: center;}
+
+        
+.l4-hash-box { background: rgba(0,0,0,0.6); border: 1px solid rgba(168,85,247,0.3); padding: 24px; border-radius: 16px; font-family: var(--font-mono); font-size: 12px; color: var(--tx-primary); margin-bottom: 40px; }
+
+        .l4-hash-box span { color: var(--c-purple); }
+        
+.l4-action { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 32px; height: 64px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer;}
+
+        
+.l4-action:hover { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.3); }
+
+        
+.l4-action-text { font-size: 14px; font-weight: 600; color: var(--tx-secondary); }
+
+        .l4-thumb { position: absolute; left: 6px; width: 52px; height: 52px; border-radius: 50%; background: var(--c-purple); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(168,85,247,0.4); pointer-events: none;}
+        
+.l4-close { position: absolute; top: 40px; right: 40px; font-size: 13px; color: var(--tx-secondary); cursor: pointer; padding: 10px; }
+
+        
+.l4-close:hover { color: var(--tx-primary); }
+
+    
+</style>
+
+</head>
+<body>
+
+    
+<!-- MENUBAR -->
+
+    <div id="mac-menubar">
+        
+<div class="mb-left">
+
+            
+<div class="mb-item" style="font-weight: 700; font-size: 15px;"></div>
+
+            <div class="mb-item" style="font-weight: 600;">TuringOS</div>
+            <div class="mb-item">Radar</div>
+        
+</div>
+
+        
+<div class="mb-right">
+
+            
+<div class="mb-item" id="glance-trigger" style="cursor: pointer;">
+
+                
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+
+                
+<div class="health-dot"></div>
+
+            
+</div>
+
+            
+<div class="mb-item">10:42 AM</div>
+
+        
+</div>
+
+        <div id="glance-popover">
+            <div class="glance-title">Global Workspace: 发现多处分支冲突。</div>
+            <div class="glance-metrics">
+                <div class="metric"><div class="m-num s-blue">6</div><div class="m-lbl">Active</div></div>
+                
+<div class="metric"><div class="m-num s-yellow">3</div><div class="m-lbl">Conflict</div></div>
+
+                
+<div class="metric"><div class="m-num s-green">2</div><div class="m-lbl">Merged</div></div>
+
+            
+</div>
+
+            
+<div class="glance-list-title">冲突与阻断区 (Top 2)</div>
+
+            <div class="glance-item">
+                
+<span style="font-family: var(--font-mono); font-size: 12px; color: var(--c-yellow);">wt_sched_force</span>
+
+                
+<span style="font-size: 11px;">同分支双检出 <span class="s-yellow">⚠</span></span>
+
+            
+</div>
+
+            <div class="glance-item">
+                
+<span style="font-family: var(--font-mono); font-size: 12px; color: var(--c-yellow);">wt_radar_c</span>
+
+                
+<span style="font-size: 11px;">越权覆写风险 <span class="s-yellow">⚠</span></span>
+
+            
+</div>
+
+            <div class="glance-footer">
+                <div class="l4-entry" id="glance-l4-btn">✦ 1 宪法级决议</div>
+                
+<div style="color: var(--tx-secondary);">全景主控室已在线</div>
+
+            
+</div>
+
+        
+</div>
+
+    
+</div>
+
+    
+<!-- MAIN APP -->
+
+    
+<div id="app-container">
+
+        
+<!-- Sidebar -->
+
+        
+<div id="sidebar">
+
+            
+<div class="nav-group">Workspace</div>
+
+            <div class="nav-item disabled">Global Ops</div>
+            
+<div class="nav-item disabled">Projects</div>
+
+            
+<div class="nav-item active">⌖ Worktree Radar</div>
+
+            
+<div class="nav-item disabled">Proposals</div>
+
+            
+
+            
+<div class="nav-group" style="margin-top: 16px;">Security & Trust</div>
+
+            <div class="nav-item ratify-btn" id="sidebar-l4-btn">✦ Ratification</div>
+            <div class="nav-item disabled">Replay</div>
+        
+</div>
+
+        <!-- Radar Canvas -->
+        <div id="radar-wrapper">
+            
+<div id="canvas-world" class="universe">
+
+                <div class="star-grid"></div>
+                
+<div id="nebula-layer"></div>
+
+                <!-- 轨道层 (Axis Layer) -->
+                
+<div id="axis-layer"></div>
+
+                <svg id="edge-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+                
+<div id="node-layer"></div>
+
+            
+</div>
+
+            <!-- HUD Overlay -->
+            <div class="radar-hud">
+                
+<div class="view-controls">
+
+                    <button class="v-btn" id="btn-zoom-out" title="Macro View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                    
+<button class="v-btn" id="btn-zoom-in" title="Micro View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+
+                    <button class="v-btn" id="btn-reset" title="Center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg></button>
+                
+</div>
+
+                <div class="watermark">
+                    TuringOS Dynamic Timeline
+<br>
+
+                    
+<span style="color:var(--tx-secondary)">DRAG TO RECALCULATE • CLICK CARD TO EXPAND</span>
+
+                </div>
+            </div>
+        </div>
+    
+</div>
+
+    
+<!-- L4 Screen -->
+
+    <div id="l4-screen">
+        
+<div class="l4-close" id="l4-close">取消 (Esc)</div>
+
+        
+<div class="l4-content">
+
+            
+<div class="l4-icon">✦</div>
+
+            
+<div class="l4-title">宪法级确认：接管冲突分支</div>
+
+            
+<div class="l4-desc">你正在执行 L4 级操作。此动作将强制释放 <strong>agent_fixer</strong> 的 lease，并以人类身份接管该冲突。此操作不可逆，将写入持久化磁带账本。</div>
+
+            <div class="l4-hash-box">
+                TARGET_WORKTREE: <span>wt_auth_fix (HEAD: c8a2b1f)</span><br>
+                ACTION_INTENT: 
+<span>REVOKE_LEASE_AND_OVERRIDE</span><br>
+
+                EVIDENCE_HASH: 
+<span>SHA256:1f2e3d4c5b6a7980</span>
+
+            </div>
+            <div class="l4-action" id="l4-action-btn">
+                
+<div class="l4-action-text">Touch ID 验证签名行权</div>
+
+                
+<div class="l4-thumb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+
+            
+</div>
+
+        
+</div>
+
+    
+</div>
+
+    
+<!-- ================= JAVASCRIPT APP LOGIC ================= -->
+
+    
+<script>
+
+        
+// --- DATA (Left-to-Right Timeline Flow, 4 Independent Projects) ---
+
+        
+const graphData = {
+
+            nebulas: [
+                { id: 'neb_tos', x: 0, y: -1500, label: 'turingos', color: 'var(--c-blue)', w: 2500, h: 800 },
+                
+{ id: 'neb_omg', x: 0, y: -500, label: 'omega', color: 'var(--c-orange)', w: 2000, h: 800 },
+
+                
+{ id: 'neb_noo', x: 0, y: 500, label: 'noosphere', color: 'var(--c-green)', w: 2200, h: 800 },
+
+                
+{ id: 'neb_app', x: 0, y: 1500, label: 'turingos_app', color: 'var(--c-purple)', w: 2000, h: 800 }
+
+            ],
+            axes
+: [
+
+                
+{ id: 'ax_tos', x: -1200, y: -1500, length: 2800, label: 'turingos / main (OS Kernel)' },
+
+                
+{ id: 'ax_omg', x: -1000, y: -500, length: 2400, label: 'omega / main (AGI Logic)' },
+
+                { id: 'ax_noo', x: -1000, y: 500, length: 2400, label: 'noosphere / main (P2P Net)' },
+                
+{ id: 'ax_app', x: -1000, y: 1500, length: 2400, label: 'turingos_app / main (Control Surface)' }
+
+            
+],
+
+            nodes: [
+                
+// === PROJECT 1: turingos (Blue) ===
+
+                
+{ id: 'n_tos_merged', x: -600, y: -1800, tag: 'TOS', title: 'wt_boot_fix', branch: '⎇ merged/boot-fix', type: 'merged', color: 's-green', glow: 'var(--c-green)', badge: { txt: 'human_adopted', cls: 'color:var(--c-green);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.05)' }, data: [{k:'Author', v:'agent_kernel'}, {k:'Result', v:'Merged', vc:'s-green'}], ev: [{k:'PR', v:'#901 Merged'}] },
+
+                
+{ id: 'n_tos_stable', x: -200, y: -1800, tag: 'TOS', title: 'wt_v1.2', branch: '⎇ v1.2-stable (Release)', type: 'truth', color: 's-gray', glow: 'rgba(255,255,255,0.2)', badge: { txt: 'signature_valid', cls: '' }, data: [{k:'Commit', v:'b9f1a2'}, {k:'Status', v:'Stable', vc:'s-green'}], ev: [{k:'Info', v:'LTS Maintenance branch'}] },
+
+                
+{ id: 'n_tos_main', x: 0, y: -1500, tag: 'TOS', title: 'wt_main', branch: '⎇ main (HEAD)', type: 'truth', color: 's-gray', glow: 'rgba(255,255,255,0.2)', badge: { txt: 'signature_valid', cls: '' }, data: [{k:'Commit', v:'a1b2c3d'}, {k:'Status', v:'Verified', vc:'s-green'}], ev: [{k:'Info', v:'Mainline anchor.'}] },
+
+                { id: 'n_tos_mem', x: 500, y: -1800, tag: 'TOS', title: 'wt_mem_mgr', branch: '⎇ feat/mem-pool', type: 'active', color: 's-blue', glow: 'var(--c-blue)', aura: 'rgba(59,130,246,0.1)', badge: { txt: 'manifest_registered', cls: 'color:var(--c-blue);border-color:rgba(59,130,246,0.3)' }, 
+                  agent: { name: 'agent_c_expert', model: 'claude-3-opus', role: 'Kernel Eng', avatar: '🧠' }, live: { task: 'Rewriting page allocator...' },
+                  data: [{k:'Diff', v:'<span class="s-green">+542</span> <span class="s-red">−110</span>'}], ev: [{k:'Session', v:'sess_012'}] },
+                
+{ id: 'n_tos_sched', x: 600, y: -1200, tag: 'TOS', title: 'wt_sched', branch: '⎇ feat/scheduler', type: 'conflict', color: 's-yellow', glow: 'var(--c-yellow)', badge: { txt: 'capability_missing', cls: 'color:var(--c-yellow);border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.05)' }, 
+
+                  data
+: [{k:'Occupant', v:'Human (Blocked)'}, {k:'Warning', v:'Branch Collision', vc:'s-yellow'}], ev: [{k:'证据', v:'物理覆盖风险。'}] },
+
+                
+{ id: 'n_tos_sched2', x: 1000, y: -1200, tag: 'TOS', title: 'wt_sched_force', branch: '⎇ feat/scheduler', type: 'conflict', color: 's-yellow', glow: 'var(--c-yellow)', badge: { txt: 'capability_missing', cls: 'color:var(--c-yellow);border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.05)' }, 
+
+                  data
+: [{k:'Occupant', v:'agent_perf', vc:'s-blue'}, {k:'Violation', v:'--force detected', vc:'s-red'}], ev: [{k:'事件', v:'Agent 越权执行分支重置操作'}] },
+
+                
+// === PROJECT 2: omega (Orange) ===
+
+                { id: 'n_omg_main', x: 0, y: -500, tag: 'OMG', title: 'wt_main', branch: '⎇ main (HEAD)', type: 'truth', color: 's-gray', glow: 'rgba(255,255,255,0.2)', badge: { txt: 'signature_valid', cls: '' }, data: [{k:'Commit', v:'e4d5c6b'}, {k:'Status', v:'Verified', vc:'s-green'}], ev: [{k:'Info', v:'Mainline anchor.'}] },
+                { id: 'n_omg_exp1', x: 400, y: -800, tag: 'OMG', title: 'wt_agi_core', branch: '⎇ exp/agi-core', type: 'active', color: 's-orange', glow: 'var(--c-orange)', aura: 'rgba(249,115,22,0.1)', badge: { txt: 'manifest_registered', cls: 'color:var(--c-orange);border-color:rgba(249,115,22,0.3)' }, 
+                  agent: { name: 'agent_research', model: 'o1-preview', role: 'Scientist', avatar: '🔬' }, live: { task: 'Training loop setup...' },
+                  data
+: [{k:'Temp', v:'1.0 (Creative)'}], ev: [{k:'Session', v:'sess_998'}] },
+
+                
+{ id: 'n_omg_exp2', x: 900, y: -800, tag: 'OMG', title: 'wt_rlhf', branch: '⎇ exp/rlhf-tune', type: 'active', color: 's-orange', glow: 'var(--c-orange)', aura: 'rgba(249,115,22,0.1)', badge: { txt: 'manifest_registered', cls: 'color:var(--c-orange);border-color:rgba(249,115,22,0.3)' }, 
+
+                  agent: { name: 'agent_rlhf', model: 'gpt-4o', role: 'Evaluator', avatar: '⚖️' }, live: { task: 'Scoring reward model...' },
+                  data
+: [{k:'Source', v:'exp/agi-core (Depth 2)'}], ev: [{k:'Session', v:'sess_999'}] },
+
+                
+{ id: 'n_omg_orphan', x: 900, y: -200, tag: 'OMG', title: 'wt_legacy_eval', branch: 'Dead-link', type: 'orphan', color: 's-gray', glow: 'transparent', badge: { txt: 'manifest_missing', cls: 'color:var(--c-red);border-color:rgba(248,113,113,0.3)' }, data: [{k:'HEAD', v:'f9a8b7'}, {k:'Status', v:'Off-chain', vc:'s-gray'}], ev: [{k:'溯源', v:'gitdir 死链'}] },
+
+                
+// === PROJECT 3: noosphere (Green) ===
+
+                
+{ id: 'n_noo_main', x: 0, y: 500, tag: 'NOO', title: 'wt_main', branch: '⎇ main (HEAD)', type: 'truth', color: 's-gray', glow: 'rgba(255,255,255,0.2)', badge: { txt: 'signature_valid', cls: '' }, data: [{k:'Commit', v:'1a2b3c4'}, {k:'Status', v:'Verified', vc:'s-green'}], ev: [{k:'Info', v:'Mainline anchor.'}] },
+
+                { id: 'n_noo_merged', x: -600, y: 200, tag: 'NOO', title: 'wt_crypto', branch: '⎇ merged/crypto-sig', type: 'merged', color: 's-green', glow: 'var(--c-green)', badge: { txt: 'human_adopted', cls: 'color:var(--c-green);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.05)' }, data: [{k:'Author', v:'agent_sec (Completed)'}, {k:'Result', v:'Merged', vc:'s-green'}], ev: [{k:'PR', v:'#42 Merged'}] },
+                { id: 'n_noo_p2p', x: 500, y: 200, tag: 'NOO', title: 'wt_p2p_sync', branch: '⎇ feat/p2p-sync', type: 'active', color: 's-green', glow: 'var(--c-green)', aura: 'rgba(52,211,153,0.1)', badge: { txt: 'manifest_registered', cls: 'color:var(--c-green);border-color:rgba(52,211,153,0.3)' }, 
+                  agent
+: { name: 'agent_net', model: 'claude-3.5-sonnet', role: 'Net Eng', avatar: '🌐' }, live: { task: 'Implementing DHT routing...' },
+
+                  data: [{k:'Diff', v:'<span class="s-green">+210</span> <span class="s-red">−40</span>'}], ev: [{k:'Session', v:'sess_233'}] },
+                { id: 'n_noo_deps', x: 400, y: 800, tag: 'NOO', title: 'wt_deps', branch: '⎇ chore/deps-bump', type: 'active', color: 's-green', glow: 'var(--c-green)', aura: 'rgba(52,211,153,0.1)', badge: { txt: 'manifest_registered', cls: 'color:var(--c-green);border-color:rgba(52,211,153,0.3)' }, 
+                  agent: { name: 'agent_dependabot', model: 'gpt-4-mini', role: 'Maint', avatar: '📦' }, live: { task: 'Resolving cargo conflicts...' },
+                  data: [{k:'Crates', v:'12 updated'}], ev: [{k:'Session', v:'sess_234'}] },
+
+                
+// === PROJECT 4: turingos_app (Purple) ===
+
+                { id: 'n_app_main', x: 0, y: 1500, tag: 'APP', title: 'wt_main', branch: '⎇ main (HEAD)', type: 'truth', color: 's-gray', glow: 'rgba(255,255,255,0.2)', badge: { txt: 'signature_valid', cls: '' }, data: [{k:'Commit', v:'f5e4d3c'}, {k:'Status', v:'Verified', vc:'s-green'}], ev: [{k:'Info', v:'Mainline anchor.'}] },
+                { id: 'n_app_radar', x: 500, y: 1200, tag: 'APP', title: 'wt_radar_v7', branch: '⎇ feat/spatial-radar', type: 'active', color: 's-purple', glow: 'var(--c-purple)', aura: 'rgba(168,85,247,0.1)', badge: { txt: 'manifest_registered', cls: 'color:var(--c-purple);border-color:rgba(168,85,247,0.3)' }, 
+                  agent: { name: 'agent_frontend', model: 'claude-3-opus', role: 'UI Eng', avatar: '✨' }, live: { task: 'Rendering DAG topology...' },
+                  data: [{k:'Diff', v:'<span class="s-green">+854</span> <span class="s-red">−120</span>'}], ev: [{k:'Session', v:'sess_0088'}] },
+                { id: 'n_app_radar_c', x: 1000, y: 1200, tag: 'APP', title: 'wt_radar_c', branch: '⎇ feat/spatial-radar', type: 'conflict', color: 's-yellow', glow: 'var(--c-yellow)', badge: { txt: 'capability_missing', cls: 'color:var(--c-yellow);border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.05)' }, 
+                  data: [{k:'Occupant', v:'agent_ui_designer', vc:'s-purple'}, {k:'Warning', v:'Overwrite Risk', vc:'s-yellow'}], ev: [{k:'证据', v:'同分支双检出'}] }
+            
+],
+
+            edges
+: [
+
+                
+// turingos edges
+
+                
+{ id: 'e_tos_1', source: 'n_tos_merged', target: 'n_tos_stable', color: 'rgba(52,211,153,0.4)', width: 3, dash: '8 8' },
+
+                
+{ id: 'e_tos_2', source: 'n_tos_stable', target: 'n_tos_merged', color: 'rgba(52,211,153,0.2)', width: 2 },
+
+                
+{ id: 'e_tos_3', source: 'n_tos_main', target: 'n_tos_mem', color: 'rgba(59,130,246,0.3)', width: 3, anim: true },
+
+                
+{ id: 'e_tos_4', source: 'n_tos_main', target: 'n_tos_sched', color: 'rgba(59,130,246,0.3)', width: 3 },
+
+                
+{ id: 'e_tos_5', source: 'n_tos_sched', target: 'n_tos_sched2', color: 'rgba(251,191,36,0.5)', width: 4 },
+
+                
+                
+// omega edges
+
+                
+{ id: 'e_omg_1', source: 'n_omg_main', target: 'n_omg_exp1', color: 'rgba(249,115,22,0.3)', width: 3, anim: true },
+
+                
+{ id: 'e_omg_2', source: 'n_omg_exp1', target: 'n_omg_exp2', color: 'rgba(249,115,22,0.3)', width: 3, anim: true }, // depth 2
+
+                
+
+                
+// noosphere edges
+
+                { id: 'e_noo_1', source: 'n_noo_merged', target: 'n_noo_main', color: 'rgba(52,211,153,0.4)', width: 3, dash: '8 8' },
+                
+{ id: 'e_noo_2', source: 'n_noo_main', target: 'n_noo_merged', color: 'rgba(52,211,153,0.2)', width: 2 },
+
+                
+{ id: 'e_noo_3', source: 'n_noo_main', target: 'n_noo_p2p', color: 'rgba(52,211,153,0.3)', width: 3, anim: true },
+
+                
+{ id: 'e_noo_4', source: 'n_noo_main', target: 'n_noo_deps', color: 'rgba(52,211,153,0.3)', width: 3, anim: true },
+
+                
+
+                
+// turingos_app edges
+
+                { id: 'e_app_1', source: 'n_app_main', target: 'n_app_radar', color: 'rgba(168,85,247,0.3)', width: 3, anim: true },
+                
+{ id: 'e_app_2', source: 'n_app_radar', target: 'n_app_radar_c', color: 'rgba(251,191,36,0.5)', width: 4 }
+
+            
+]
+
+        };
+
+        const nebLayer = document.getElementById('nebula-layer');
+        
+const axisLayer = document.getElementById('axis-layer');
+
+        
+const nodeLayer = document.getElementById('node-layer');
+
+        
+const edgeLayer = document.getElementById('edge-layer');
+
+        const nMap = {}, eMap = {};
+
+        function initGraph() {
+            // Nebulas
+            graphData
+.nebulas.forEach(n => {
+
+                nebLayer
+.innerHTML += `<div class="project-nebula" style="background:${n.color}; width:${n.w}px; height:${n.h}px; left:${n.x}px; top:${n.y}px;"></div><div class="project-label" style="left:${n.x}px; top:${n.y+200}px;">${n.label}</div>`;
+
+            
+});
+
+            // Axes
+            graphData
+.axes.forEach(a => {
+
+                axisLayer
+.innerHTML += `
+
+                    <div class="mainline-axis" style="left:
+${a.x}px; top:${a.y}px; width:${a.length}px; transform: translateY(-50%);">
+
+                        <div class="mainline-track" style="width:100%"></div>
+                        <div class="mainline-text">${a.label}</div>
+                    </div>
+
+                `
+;
+
+            
+});
+
+            
+// Nodes
+
+            graphData.nodes.forEach(n => {
+                
+const el = document.createElement('div');
+
+                el
+.className = `node type-${n.type}`;
+
+                el.id = n.id; el.style.left = `${n.x}px`; el.style.top = `${n.y}px`;
+
+                let dRows = n.data.map(d => `<div class="data-row"><span class="d-key">${d.k}</span><span class="d-val ${d.vc||''}">${d.v}</span></div>`).join('');
+                
+let evRows = n.ev.map(e => `<div class="data-row"><span class="d-key">${e.k}</span><span class="d-val ${e.vc||''}">${e.v}</span></div>`).join('');
+
+                
+let auraHtml = n.aura ? `<div class="aura" style="background:radial-gradient(circle, ${n.aura} 0%, rgba(0,0,0,0) 60%)"></div>` : '';
+
+                
+let warnHtml = n.type === 'conflict' ? `<div class="warning-glyph">⚠️</div>` : '';
+
+                // AGENT LOGIC
+                
+let agentHtml = (n.type === 'active' && n.agent) ? `
+
+                    <div class="agent-chip">
+
+                        <div class="ag-avatar">${n.agent.avatar}</div>
+                        <div class="ag-info"><span class="ag-name">
+${n.agent.name} <span style="color:var(--tx-tertiary); font-weight:normal;">(${n.agent.role})</span></span><span class="ag-model">${n.agent.model}</span></div>
+
+                    </div>` : '';
+
+                let liveHtml = (n.type === 'active' && n.live) ? `
+                    <div class="live-stream" style="color:
+${n.glow}; border-color:${n.glow}55">
+
+                        <div class="stream-title"><span style="opacity:0.6">Streaming:</span> 
+${n.live.task}</div>
+
+                        <div class="stream-blocks">
+                            <div class="s-block" style="width: 25px;"></div>
+                            <div class="s-block" style="width: 45px; animation-delay: 0.3s;"></div>
+                            <div class="s-block" style="width: 15px; animation-delay: 0.6s;"></div>
+
+                        </div>
+                    </div>`
+ : '';
+
+                el
+.innerHTML = `
+
+                    ${auraHtml} ${warnHtml}
+                    <div class="n-card">
+
+                        <div class="card-glow-line" style="color:${n.glow}"></div>
+                        <div class="n-header">
+                            <div><div class="n-title"><span class="proj-tag">
+${n.tag}</span> ${n.title}</div><div class="n-branch">${n.branch}</div></div>
+
+                            <div class="badge" style="color:
+${n.glow}; border-color:${n.glow}"><div class="badge-dot" style="background:${n.glow}"></div>${n.badge.txt}</div>
+
+                        </div>
+                        ${agentHtml}
+                        <div class="n-data">${dRows}</div>
+                        ${liveHtml}
+                        <div class="n-drawer"><div class="drawer-title">EVIDENCE DRAWER (L0)</div>
+${evRows}</div>
+
+                    </div>
+
+                `
+;
+
+                el
+.addEventListener('click', () => { if(!dragOccurred) el.classList.toggle('expanded'); });
+
+                setupDrag
+(el, n); nodeLayer.appendChild(el); nMap[n.id] = n;
+
+            });
+
+            // Edges
+            graphData
+.edges.forEach(e => {
+
+                
+const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+                path
+.id = e.id; path.setAttribute('stroke', e.color); path.setAttribute('stroke-width', e.width);
+
+                
+if(e.dash) path.setAttribute('stroke-dasharray', e.dash);
+
+                
+if(e.anim) path.classList.add('flow-anim');
+
+                path.classList.add('edge-path'); edgeLayer.appendChild(path); eMap[e.id] = path;
+            
+});
+
+            updateEdges
+();
+
+        
+}
+
+        // Horizontal Bezier curves for Timeline layout
+        function updateEdges() {
+            graphData.edges.forEach(e => {
+                
+const s = nMap[e.source], t = nMap[e.target], path = eMap[e.id];
+
+                
+const dx = t.x - s.x; const cpOff = Math.abs(dx) * 0.4; 
+
+                path
+.setAttribute('d', `M ${s.x} ${s.y} C ${s.x + cpOff} ${s.y}, ${t.x - cpOff} ${t.y}, ${t.x} ${t.y}`);
+
+            });
+        
+}
+
+        
+let dragNode = null, dragOccurred = false, nOffset = { x:0, y:0 };
+
+        
+function setupDrag(el, data) {
+
+            el
+.addEventListener('mousedown', (e) => { e.stopPropagation(); dragNode = { el, data }; dragOccurred = false; const rect = el.getBoundingClientRect(); nOffset.x = (e.clientX - rect.left - rect.width/2)/state.scale; nOffset.y = (e.clientY - rect.top - rect.height/2)/state.scale; });
+
+        
+}
+
+        window.addEventListener('mousemove', (e) => { if(dragNode) { dragOccurred = true; dragNode.data.x = ((e.clientX - state.x)/state.scale) - nOffset.x; dragNode.data.y = ((e.clientY - state.y)/state.scale) - nOffset.y; dragNode.el.style.left = `${dragNode.data.x}px`; dragNode.el.style.top = `${dragNode.data.y}px`; updateEdges(); } });
+        window.addEventListener('mouseup', () => dragNode = null);
+
+        
+// PAN & ZOOM
+
+        const cWorld = document.getElementById('canvas-world'), wrapper = document.getElementById('radar-wrapper');
+        let state = { x: 0, y: 0, scale: 1 }, isPan = false, panStart = { x:0, y:0 };
+
+        
+function applyTrans() {
+
+            cWorld
+.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+
+            
+if(state.scale < 0.6) cWorld.classList.add('semantic-far'); else cWorld.classList.remove('semantic-far');
+
+        
+}
+
+        
+function centerWorld() {
+
+            state
+.scale = 0.25; state.x = (wrapper.clientWidth/2) - (0*state.scale); state.y = (wrapper.clientHeight/2) - (0*state.scale); applyTrans();
+
+        
+}
+
+        wrapper.addEventListener('mousedown', (e) => { if(dragNode) return; isPan = true; panStart = { x: e.clientX - state.x, y: e.clientY - state.y }; });
+        window
+.addEventListener('mousemove', (e) => { if(isPan) { state.x = e.clientX - panStart.x; state.y = e.clientY - panStart.y; applyTrans(); }});
+
+        window.addEventListener('mouseup', () => isPan = false);
+        wrapper.addEventListener('mouseleave', () => isPan = false);
+
+        wrapper.addEventListener('wheel', (e) => { 
+            e.preventDefault(); 
+            const newS = Math.max(0.1, Math.min(state.scale*Math.exp(e.deltaY*-0.002), 2.0)); 
+            const rect = wrapper.getBoundingClientRect(); 
+            
+const mx = e.clientX - rect.left, my = e.clientY - rect.top; 
+
+            state.x = mx - (mx - state.x)*(newS/state.scale); 
+            state
+.y = my - (my - state.y)*(newS/state.scale); 
+
+            state.scale = newS; 
+            requestAnimationFrame(applyTrans); 
+        }, { passive: false });
+
+        document.getElementById('btn-zoom-in').onclick = () => { state.scale = Math.min(state.scale*1.4, 2.0); applyTrans(); };
+        document
+.getElementById('btn-zoom-out').onclick = () => { state.scale = Math.max(state.scale*0.6, 0.1); applyTrans(); };
+
+        document.getElementById('btn-reset').onclick = centerWorld;
+
+        
+// UI L0 / L4
+
+        
+const pop = document.getElementById('glance-popover'), l4Screen = document.getElementById('l4-screen');
+
+        document
+.getElementById('glance-trigger').onclick = (e) => { e.stopPropagation(); pop.classList.toggle('active'); };
+
+        document
+.body.onclick = () => pop.classList.remove('active');
+
+        pop
+.onclick = e => e.stopPropagation();
+
+        
+const showL4 = () => { l4Screen.classList.add('active'); pop.classList.remove('active'); };
+
+        document
+.getElementById('glance-l4-btn').onclick = showL4; document.getElementById('sidebar-l4-btn').onclick = showL4;
+
+        document
+.getElementById('l4-close').onclick = () => l4Screen.classList.remove('active');
+
+        const l4Btn = document.getElementById('l4-action-btn');
+        l4Btn.onclick = () => {
+            const t = l4Btn.querySelector('.l4-action-text'); t.innerText = "✓ 验证通过，已接管"; t.style.color = "var(--c-green)"; l4Btn.style.borderColor = "var(--c-green)";
+            setTimeout(() => { l4Screen.classList.remove('active'); setTimeout(() => { t.innerText = "Touch ID 验证签名行权"; t.style.color = "var(--tx-secondary)"; l4Btn.style.borderColor = "rgba(255,255,255,0.1)"; }, 400); }, 1000);
+        
+};
+
+        // INIT
+        initGraph
+(); centerWorld(); window.addEventListener('resize', centerWorld);
+
+    </script>
+</body>
+
+</html>
+
