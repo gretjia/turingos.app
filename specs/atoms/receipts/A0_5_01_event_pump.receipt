@@ -1,0 +1,17 @@
+atom: A0_5_01_event_pump
+utc: 2026-06-10T01:54:58Z
+head: 062cad29916bfa4521ea3fed877a53cf7c1b4237
+pump-identity: PASS on all 4 fixtures (output byte-identical to fixture)
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+----------------------------------------
+SHIPGATE p0.5: PASS
