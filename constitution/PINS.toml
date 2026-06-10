@@ -18,8 +18,12 @@ facts_verified_on = "2026-06-10" # README/AGENTS.md/Cargo.toml: bins-only (no li
 
 [toolchain.stable_build_lane]
 # Repo law lane: CI and public artifacts. Core contracts MUST NOT depend on beta-only API.
-xcode = "PIN-AT-R1" # latest GM Xcode at P1 R-stage (26.x family as of 2026-06-10)
-deployment_target = "DECIDE-AT-R1" # macOS 26 or 27, decided with evidence in research/R1_memo.md
+xcode = "26.5" # latest stable; bundled Swift 6.3.2 (xcodereleases.com)
+swift = "6.3.2"
+deployment_target = "macOS 26" # user ruling 2026-06-10: design faces macOS 27, runs from 26 ("27-facing, backward compatible"); 27-only API via #available progressive enhancement only (ADR-008)
+ci_runner = "macos-26" # arm64; Xcode 26.5 preinstalled (actions/runner-images)
+verified_on = "2026-06-10"
+ratified = "user checkpoint 2026-06-10 (UpdatePins L3 approval given at R1 design-brief checkpoint)"
 
 [toolchain.design_preview_lane]
 # Exploration lane only: DESIGN.md research, Liquid Glass adaptation, snapshot prototypes.

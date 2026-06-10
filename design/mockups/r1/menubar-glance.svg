@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="560" viewBox="0 0 420 560" font-family="-apple-system, 'SF Pro Text', 'PingFang SC', sans-serif">
+  <defs>
+    <linearGradient id="glass3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#26262c" stop-opacity="0.98"/><stop offset="1" stop-color="#1b1b21" stop-opacity="0.98"/>
+    </linearGradient>
+  </defs>
+
+  <!-- macOS menu bar fragment -->
+  <rect x="0" y="0" width="420" height="34" fill="#101014"/>
+  <text x="240" y="22" fill="#9a9aa2" font-size="13">⋯</text>
+  <!-- the status item: a single dot tells overall health -->
+  <rect x="300" y="4" width="54" height="26" rx="7" fill="#ffffff" fill-opacity="0.10"/>
+  <text x="312" y="22" fill="#dfe0e6" font-size="13">⌖</text>
+  <circle cx="340" cy="17" r="5" fill="#FFCC00"/>
+  <text x="372" y="22" fill="#9a9aa2" font-size="13">10:42</text>
+
+  <!-- dropdown panel -->
+  <rect x="36" y="44" width="348" height="496" rx="18" fill="url(#glass3)" stroke="#ffffff" stroke-opacity="0.1"/>
+  <path d="M 320 44 l 10 -10 l 10 10 z" fill="#26262c"/>
+
+  <!-- Glance: zero-click answer -->
+  <text x="60" y="84" fill="#e8e9ee" font-size="15">一切健康吗？<tspan fill="#ffd60a">差一点。</tspan></text>
+  <text x="60" y="106" fill="#8e8e96" font-size="12">1 项需要注意 · 对账 2s 前 ✓</text>
+
+  <line x1="56" y1="124" x2="364" y2="124" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- three counters -->
+  <g font-size="13">
+    <circle cx="68" cy="150" r="5" fill="#0A84FF"/><text x="84" y="155" fill="#dfe0e6">1 活跃会话</text>
+    <text x="330" y="155" fill="#6e6e76" font-size="12">claude</text>
+    <circle cx="68" cy="182" r="5" fill="#FFCC00"/><text x="84" y="187" fill="#dfe0e6">2 待审提案</text>
+    <text x="306" y="187" fill="#6e6e76" font-size="12">P6 入口</text>
+    <circle cx="68" cy="214" r="5" fill="#8E8E93"/><text x="84" y="219" fill="#dfe0e6">1 未注册来源 worktree</text>
+  </g>
+
+  <line x1="56" y1="238" x2="364" y2="238" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- attention item gets one line, not a modal -->
+  <rect x="52" y="252" width="316" height="64" rx="12" fill="#FFCC00" fill-opacity="0.08" stroke="#FFCC00" stroke-opacity="0.4"/>
+  <text x="68" y="278" fill="#ffd60a" font-size="13">⚠ hotfix/crash 被两个 worktree 检出</text>
+  <text x="68" y="300" fill="#8e8e96" font-size="12">点击在 Radar 中查看证据 →</text>
+
+  <!-- mini worktree list -->
+  <g font-size="13">
+    <circle cx="68" cy="346" r="5" fill="#0A84FF"><animate attributeName="opacity" values="1;0.3;1" dur="2.4s" repeatCount="indefinite"/></circle>
+    <text x="84" y="351" fill="#dfe0e6">wt_feature_x</text><text x="250" y="351" fill="#8e8e96" font-size="12">+12 −2 · claude</text>
+    <circle cx="68" cy="378" r="5" fill="#8E8E93"/>
+    <text x="84" y="383" fill="#c9cad1">wt_main</text><text x="250" y="383" fill="#6e6e76" font-size="12">clean · 外部</text>
+  </g>
+
+  <line x1="56" y1="404" x2="364" y2="404" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- ratification queue: purple = constitutional, never buried -->
+  <rect x="52" y="418" width="316" height="56" rx="12" fill="#BF5AF2" fill-opacity="0.10" stroke="#BF5AF2" stroke-opacity="0.45"/>
+  <text x="68" y="442" fill="#d99bff" font-size="13">✦ 1 项待签 L4 仪式</text>
+  <text x="68" y="462" fill="#8e8e96" font-size="12">打开全注意力仪式屏（永不在此快捷签署）</text>
+
+  <g font-size="13" fill="#9a9aa2">
+    <text x="60" y="506">打开 Mission Control 主窗…</text>
+    <text x="60" y="532">偏好设置…</text>
+  </g>
+  <text x="252" y="532" fill="#636368" font-size="10.5">L4 永不出现"快捷批准"按钮 — 防签名疲劳</text>
+</svg>
