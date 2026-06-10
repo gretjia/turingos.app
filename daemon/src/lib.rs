@@ -5,6 +5,7 @@
 
 pub mod events;
 pub mod projection;
+pub mod registry;
 pub mod signer;
 pub mod snapshot;
 pub mod uds;
