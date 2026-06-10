@@ -1,0 +1,20 @@
+src/runtime/verify.rs:379:5: replace verify_agent_artifacts -> (bool, bool) with (true, true)
+src/runtime/verify.rs:379:5: replace verify_agent_artifacts -> (bool, bool) with (false, true)
+src/runtime/verify.rs:385:8: delete ! in verify_agent_artifacts
+src/runtime/verify.rs:431:13: delete match arm TypedTx::Verify(verify) in verify_agent_artifacts
+src/runtime/verify.rs:452:13: delete match arm TypedTx::CompleteSetMint(mint) in verify_agent_artifacts
+src/runtime/verify.rs:465:13: delete match arm TypedTx::CompleteSetRedeem(redeem) in verify_agent_artifacts
+src/runtime/verify.rs:478:13: delete match arm TypedTx::MarketSeed(seed) in verify_agent_artifacts
+src/runtime/verify.rs:495:13: delete match arm TypedTx::CompleteSetMerge(merge) in verify_agent_artifacts
+src/runtime/verify.rs:511:13: delete match arm TypedTx::CpmmPool(pool) in verify_agent_artifacts
+src/runtime/verify.rs:527:13: delete match arm TypedTx::CpmmSwap(swap) in verify_agent_artifacts
+src/runtime/verify.rs:543:13: delete match arm TypedTx::BuyWithCoinRouter(router) in verify_agent_artifacts
+src/runtime/verify.rs:425:40: replace != with == in verify_agent_artifacts
+src/runtime/verify.rs:578:5: replace decode_pubkey_hex -> Result<Vec<u8>, VerifyError> with Ok(vec![])
+src/runtime/verify.rs:578:5: replace decode_pubkey_hex -> Result<Vec<u8>, VerifyError> with Ok(vec![0])
+src/runtime/verify.rs:578:5: replace decode_pubkey_hex -> Result<Vec<u8>, VerifyError> with Ok(vec![1])
+src/runtime/verify.rs:578:22: replace != with == in decode_pubkey_hex
+src/runtime/verify.rs:578:18: replace % with / in decode_pubkey_hex
+src/runtime/verify.rs:578:18: replace % with + in decode_pubkey_hex
+src/runtime/verify.rs:595:5: replace hash_to_hex -> String with String::new()
+src/runtime/verify.rs:595:5: replace hash_to_hex -> String with "xyzzy".into()

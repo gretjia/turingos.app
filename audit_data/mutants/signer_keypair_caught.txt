@@ -1,0 +1,9 @@
+src/bottom_white/ledger/system_keypair.rs:54:9: replace SystemEpoch::get -> u64 with 0
+src/bottom_white/ledger/system_keypair.rs:54:9: replace SystemEpoch::get -> u64 with 1
+src/bottom_white/ledger/system_keypair.rs:121:9: replace serde_bytes_64::deserialize -> Result<[u8; 64], D::Error> with Ok([0; 64])
+src/bottom_white/ledger/system_keypair.rs:121:9: replace serde_bytes_64::deserialize -> Result<[u8; 64], D::Error> with Ok([1; 64])
+src/bottom_white/ledger/system_keypair.rs:314:9: replace PinnedSystemPubkeys::insert -> Option<SystemPublicKey> with None
+src/bottom_white/ledger/system_keypair.rs:319:9: replace PinnedSystemPubkeys::get -> Option<&SystemPublicKey> with None
+src/bottom_white/ledger/system_keypair.rs:387:9: replace Ed25519Keypair::sign_digest -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:396:9: replace Ed25519Keypair::secret_slice -> Result<&[u8], KeypairError> with Ok(Vec::leak(Vec::new()))
+src/bottom_white/ledger/system_keypair.rs:396:9: replace Ed25519Keypair::secret_slice -> Result<&[u8], KeypairError> with Ok(Vec::leak(vec![0]))

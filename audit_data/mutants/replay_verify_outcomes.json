@@ -1,0 +1,2867 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 81.662167542,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 22.540028166,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:98:9: replace <impl From<std::io::Error> for VerifyError>::from -> Self with Default::default()",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "<impl From<std::io::Error> for VerifyError>::from",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 97,
+                "column": 5
+              },
+              "end": {
+                "line": 99,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 98,
+              "column": 9
+            },
+            "end": {
+              "line": 98,
+              "column": 20
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__runtime__verify.rs_line_98_col_9.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_98_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 40.234560292,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:79:9: replace <impl std::fmt::Display for VerifyError>::fmt -> std::fmt::Result with Ok(Default::default())",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "<impl std::fmt::Display for VerifyError>::fmt",
+            "return_type": "-> std::fmt::Result",
+            "span": {
+              "start": {
+                "line": 78,
+                "column": 5
+              },
+              "end": {
+                "line": 91,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 79,
+              "column": 9
+            },
+            "end": {
+              "line": 90,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__runtime__verify.rs_line_79_col_9.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_79_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 28.725694791,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 22.115078958,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:104:9: replace <impl From<LedgerWriterError> for VerifyError>::from -> Self with Default::default()",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "<impl From<LedgerWriterError> for VerifyError>::from",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 103,
+                "column": 5
+              },
+              "end": {
+                "line": 105,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 104,
+              "column": 9
+            },
+            "end": {
+              "line": 104,
+              "column": 30
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__runtime__verify.rs_line_104_col_9.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_104_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 8.498516542,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:192:9: replace ReplayReport::all_indicators_pass -> bool with true",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "ReplayReport::all_indicators_pass",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 184,
+                "column": 5
+              },
+              "end": {
+                "line": 199,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 192,
+              "column": 9
+            },
+            "end": {
+              "line": 198,
+              "column": 55
+            }
+          },
+          "replacement": "true",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_192_col_9.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_192_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 29.338932375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 36.419629833,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:192:9: replace ReplayReport::all_indicators_pass -> bool with false",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "ReplayReport::all_indicators_pass",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 184,
+                "column": 5
+              },
+              "end": {
+                "line": 199,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 192,
+              "column": 9
+            },
+            "end": {
+              "line": 198,
+              "column": 55
+            }
+          },
+          "replacement": "false",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_192_col_9_001.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_192_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 53.233427625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 17.599425708,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:198:13: replace && with || in ReplayReport::all_indicators_pass",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "ReplayReport::all_indicators_pass",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 184,
+                "column": 5
+              },
+              "end": {
+                "line": 199,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 198,
+              "column": 13
+            },
+            "end": {
+              "line": 198,
+              "column": 15
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_198_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_198_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 42.590262417,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 28.10314675,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:197:13: replace && with || in ReplayReport::all_indicators_pass",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "ReplayReport::all_indicators_pass",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 184,
+                "column": 5
+              },
+              "end": {
+                "line": 199,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 197,
+              "column": 13
+            },
+            "end": {
+              "line": 197,
+              "column": 15
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_197_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_197_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 50.83958425,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 18.6158285,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:196:13: replace && with || in ReplayReport::all_indicators_pass",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "ReplayReport::all_indicators_pass",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 184,
+                "column": 5
+              },
+              "end": {
+                "line": 199,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 196,
+              "column": 13
+            },
+            "end": {
+              "line": 196,
+              "column": 15
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_196_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_196_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 46.34522925,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.279159875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:195:13: replace && with || in ReplayReport::all_indicators_pass",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "ReplayReport::all_indicators_pass",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 184,
+                "column": 5
+              },
+              "end": {
+                "line": 199,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 195,
+              "column": 13
+            },
+            "end": {
+              "line": 195,
+              "column": 15
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_195_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_195_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 63.209572292,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 18.231644292,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:194:13: replace && with || in ReplayReport::all_indicators_pass",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "ReplayReport::all_indicators_pass",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 184,
+                "column": 5
+              },
+              "end": {
+                "line": 199,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 194,
+              "column": 13
+            },
+            "end": {
+              "line": 194,
+              "column": 15
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_194_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_194_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 54.897532209,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 38.681299417,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:236:5: replace verify_chaintape -> Result<ReplayReport, VerifyError> with Ok(Default::default())",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_chaintape",
+            "return_type": "-> Result<ReplayReport, VerifyError>",
+            "span": {
+              "start": {
+                "line": 213,
+                "column": 1
+              },
+              "end": {
+                "line": 363,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 236,
+              "column": 5
+            },
+            "end": {
+              "line": 362,
+              "column": 7
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__runtime__verify.rs_line_236_col_5.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_236_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 5.613702167,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:193:13: replace && with || in ReplayReport::all_indicators_pass",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "ReplayReport::all_indicators_pass",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 184,
+                "column": 5
+              },
+              "end": {
+                "line": 199,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 193,
+              "column": 13
+            },
+            "end": {
+              "line": 193,
+              "column": 15
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_193_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_193_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 81.037589542,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 18.446469042,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:237:8: delete ! in verify_chaintape",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_chaintape",
+            "return_type": "-> Result<ReplayReport, VerifyError>",
+            "span": {
+              "start": {
+                "line": 213,
+                "column": 1
+              },
+              "end": {
+                "line": 363,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 237,
+              "column": 8
+            },
+            "end": {
+              "line": 237,
+              "column": 9
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_237_col_8.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_237_col_8.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 65.542350875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 56.445016709,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:244:28: replace != with == in verify_chaintape",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_chaintape",
+            "return_type": "-> Result<ReplayReport, VerifyError>",
+            "span": {
+              "start": {
+                "line": 213,
+                "column": 1
+              },
+              "end": {
+                "line": 363,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 244,
+              "column": 28
+            },
+            "end": {
+              "line": 244,
+              "column": 30
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_244_col_28.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_244_col_28.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 99.409202292,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 27.738689125,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:379:5: replace verify_agent_artifacts -> (bool, bool) with (true, true)",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 379,
+              "column": 5
+            },
+            "end": {
+              "line": 572,
+              "column": 6
+            }
+          },
+          "replacement": "(true, true)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_379_col_5.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_379_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 76.584965584,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.037938042,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:379:5: replace verify_agent_artifacts -> (bool, bool) with (true, false)",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 379,
+              "column": 5
+            },
+            "end": {
+              "line": 572,
+              "column": 6
+            }
+          },
+          "replacement": "(true, false)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_379_col_5_001.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_379_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 105.698054667,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 31.717883709,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:379:5: replace verify_agent_artifacts -> (bool, bool) with (false, true)",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 379,
+              "column": 5
+            },
+            "end": {
+              "line": 572,
+              "column": 6
+            }
+          },
+          "replacement": "(false, true)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_379_col_5_002.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_379_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 87.30381625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.010073166,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:379:5: replace verify_agent_artifacts -> (bool, bool) with (false, false)",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 379,
+              "column": 5
+            },
+            "end": {
+              "line": 572,
+              "column": 6
+            }
+          },
+          "replacement": "(false, false)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__runtime__verify.rs_line_379_col_5_003.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_379_col_5_003.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 123.915165416,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 35.92457475,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:385:8: delete ! in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 385,
+              "column": 8
+            },
+            "end": {
+              "line": 385,
+              "column": 9
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_385_col_8.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_385_col_8.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 101.919850833,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.003147792,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:410:13: delete match arm TypedTx::Work(work) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 410,
+              "column": 13
+            },
+            "end": {
+              "line": 430,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__runtime__verify.rs_line_410_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_410_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 130.577463167,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 41.422846084,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:431:13: delete match arm TypedTx::Verify(verify) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 431,
+              "column": 13
+            },
+            "end": {
+              "line": 444,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_431_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_431_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 112.522491292,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.017156875,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:452:13: delete match arm TypedTx::CompleteSetMint(mint) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 452,
+              "column": 13
+            },
+            "end": {
+              "line": 464,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_452_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_452_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 149.086977583,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.047371833,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:465:13: delete match arm TypedTx::CompleteSetRedeem(redeem) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 465,
+              "column": 13
+            },
+            "end": {
+              "line": 477,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_465_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_465_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 121.503161667,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.005602959,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:478:13: delete match arm TypedTx::MarketSeed(seed) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 478,
+              "column": 13
+            },
+            "end": {
+              "line": 490,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_478_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_478_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 131.335322875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.0201955,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:495:13: delete match arm TypedTx::CompleteSetMerge(merge) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 495,
+              "column": 13
+            },
+            "end": {
+              "line": 507,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_495_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_495_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 145.482826791,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.01996325,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:511:13: delete match arm TypedTx::CpmmPool(pool) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 511,
+              "column": 13
+            },
+            "end": {
+              "line": 523,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_511_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_511_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 152.007227167,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.053367792,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:527:13: delete match arm TypedTx::CpmmSwap(swap) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 527,
+              "column": 13
+            },
+            "end": {
+              "line": 539,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_527_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_527_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 169.314643167,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.009393,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:543:13: delete match arm TypedTx::BuyWithCoinRouter(router) in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 543,
+              "column": 13
+            },
+            "end": {
+              "line": 555,
+              "column": 14
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_543_col_13.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_543_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 192.469627334,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.038056875,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:425:40: replace != with == in verify_agent_artifacts",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "verify_agent_artifacts",
+            "return_type": "-> (bool, bool)",
+            "span": {
+              "start": {
+                "line": 365,
+                "column": 1
+              },
+              "end": {
+                "line": 573,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 425,
+              "column": 40
+            },
+            "end": {
+              "line": 425,
+              "column": 42
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_425_col_40.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_425_col_40.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 191.2662875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.007932417,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:578:5: replace decode_pubkey_hex -> Result<Vec<u8>, VerifyError> with Ok(vec![])",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "decode_pubkey_hex",
+            "return_type": "-> Result<Vec<u8>, VerifyError>",
+            "span": {
+              "start": {
+                "line": 577,
+                "column": 1
+              },
+              "end": {
+                "line": 592,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 578,
+              "column": 5
+            },
+            "end": {
+              "line": 591,
+              "column": 12
+            }
+          },
+          "replacement": "Ok(vec![])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_578_col_5.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_578_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 190.274710375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.050935083,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:578:5: replace decode_pubkey_hex -> Result<Vec<u8>, VerifyError> with Ok(vec![0])",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "decode_pubkey_hex",
+            "return_type": "-> Result<Vec<u8>, VerifyError>",
+            "span": {
+              "start": {
+                "line": 577,
+                "column": 1
+              },
+              "end": {
+                "line": 592,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 578,
+              "column": 5
+            },
+            "end": {
+              "line": 591,
+              "column": 12
+            }
+          },
+          "replacement": "Ok(vec![0])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_578_col_5_001.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_578_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 200.398290583,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.050989375,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:578:5: replace decode_pubkey_hex -> Result<Vec<u8>, VerifyError> with Ok(vec![1])",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "decode_pubkey_hex",
+            "return_type": "-> Result<Vec<u8>, VerifyError>",
+            "span": {
+              "start": {
+                "line": 577,
+                "column": 1
+              },
+              "end": {
+                "line": 592,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 578,
+              "column": 5
+            },
+            "end": {
+              "line": 591,
+              "column": 12
+            }
+          },
+          "replacement": "Ok(vec![1])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_578_col_5_002.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_578_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 202.337145625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.01950375,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:578:22: replace != with == in decode_pubkey_hex",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "decode_pubkey_hex",
+            "return_type": "-> Result<Vec<u8>, VerifyError>",
+            "span": {
+              "start": {
+                "line": 577,
+                "column": 1
+              },
+              "end": {
+                "line": 592,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 578,
+              "column": 22
+            },
+            "end": {
+              "line": 578,
+              "column": 24
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_578_col_22.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_578_col_22.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 218.259138291,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.032395458,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:578:18: replace % with / in decode_pubkey_hex",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "decode_pubkey_hex",
+            "return_type": "-> Result<Vec<u8>, VerifyError>",
+            "span": {
+              "start": {
+                "line": 577,
+                "column": 1
+              },
+              "end": {
+                "line": 592,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 578,
+              "column": 18
+            },
+            "end": {
+              "line": 578,
+              "column": 19
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_578_col_18.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_578_col_18.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 236.919133833,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.056906,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:578:18: replace % with + in decode_pubkey_hex",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "decode_pubkey_hex",
+            "return_type": "-> Result<Vec<u8>, VerifyError>",
+            "span": {
+              "start": {
+                "line": 577,
+                "column": 1
+              },
+              "end": {
+                "line": 592,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 578,
+              "column": 18
+            },
+            "end": {
+              "line": 578,
+              "column": 19
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_578_col_18_001.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_578_col_18_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 234.646038708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.038891959,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:595:5: replace hash_to_hex -> String with String::new()",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "hash_to_hex",
+            "return_type": "-> String",
+            "span": {
+              "start": {
+                "line": 594,
+                "column": 1
+              },
+              "end": {
+                "line": 596,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 595,
+              "column": 5
+            },
+            "end": {
+              "line": 595,
+              "column": 55
+            }
+          },
+          "replacement": "String::new()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_595_col_5.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_595_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 241.760859,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.049763875,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:595:5: replace hash_to_hex -> String with \"xyzzy\".into()",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "hash_to_hex",
+            "return_type": "-> String",
+            "span": {
+              "start": {
+                "line": 594,
+                "column": 1
+              },
+              "end": {
+                "line": 596,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 595,
+              "column": 5
+            },
+            "end": {
+              "line": 595,
+              "column": 55
+            }
+          },
+          "replacement": "\"xyzzy\".into()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Timeout",
+      "log_path": "log/src__runtime__verify.rs_line_595_col_5_001.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_595_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 258.0531565,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 60.023842167,
+          "process_status": "Timeout",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/runtime/verify.rs:614:5: replace classify_replay_error -> ReplayClassification with Default::default()",
+          "package": "turingosv4",
+          "file": "src/runtime/verify.rs",
+          "function": {
+            "function_name": "classify_replay_error",
+            "return_type": "-> ReplayClassification",
+            "span": {
+              "start": {
+                "line": 613,
+                "column": 1
+              },
+              "end": {
+                "line": 642,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 614,
+              "column": 5
+            },
+            "end": {
+              "line": 641,
+              "column": 6
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__runtime__verify.rs_line_614_col_5.log",
+      "diff_path": "diff/src__runtime__verify.rs_line_614_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 259.766860458,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=turingosv4@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 45.190108791,
+          "process_status": "Success",
+          "argv": [
+            "/Users/zephryj/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=turingosv4@0.1.0",
+            "--lib",
+            "--test",
+            "constitution_predicate_registry_replay",
+            "--test",
+            "constitution_true_suite_replay_cas_tamper_runner",
+            "--test",
+            "constitution_tape_canonical_gate",
+            "--",
+            "--skip",
+            "verify_trust_root",
+            "--skip",
+            "sandbox_cwd_is_explicit_workspace"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 38,
+  "missed": 3,
+  "caught": 12,
+  "timeout": 20,
+  "unviable": 3,
+  "success": 0,
+  "start_time": "2026-06-10T17:35:52.102935Z",
+  "end_time": "2026-06-10T18:32:23.571725Z",
+  "cargo_mutants_version": "27.1.0"
+}

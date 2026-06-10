@@ -1,0 +1,378 @@
+    Checking cfg-if v1.0.4
+    Checking stable_deref_trait v1.2.1
+    Checking typenum v1.20.0
+    Checking subtle v2.6.1
+    Checking bytes v1.11.1
+    Checking pin-project-lite v0.2.17
+    Checking futures-core v0.3.32
+    Checking writeable v0.6.3
+    Checking litemap v0.8.2
+    Checking libc v0.2.186
+    Checking smallvec v1.15.1
+    Checking itoa v1.0.18
+    Checking zerofrom v0.1.8
+    Checking zeroize v1.8.2
+    Checking serde_core v1.0.228
+    Checking utf8_iter v1.0.4
+    Checking percent-encoding v2.3.2
+    Checking once_cell v1.21.4
+    Checking icu_normalizer_data v2.2.0
+    Checking yoke v0.8.2
+    Checking icu_properties_data v2.2.0
+    Checking memchr v2.8.0
+    Checking slab v0.4.12
+    Checking rustls-pki-types v1.14.1
+    Checking untrusted v0.9.0
+    Checking http v1.4.0
+    Checking getrandom v0.2.17
+   Compiling jobserver v0.1.34
+    Checking errno v0.3.14
+    Checking mio v1.2.0
+    Checking socket2 v0.6.3
+    Checking generic-array v0.14.7
+    Checking futures-task v0.3.32
+    Checking zerovec v0.11.6
+    Checking zerotrie v0.2.4
+    Checking form_urlencoded v1.2.2
+    Checking bitflags v2.11.1
+    Checking tower-service v0.3.3
+    Checking rand_core v0.6.4
+    Checking signal-hook-registry v1.4.8
+   Compiling cc v1.2.62
+    Checking futures-util v0.3.32
+    Checking try-lock v0.2.5
+    Checking aho-corasick v1.1.4
+    Checking httparse v1.10.1
+    Checking tracing-core v0.1.36
+    Checking http-body v1.0.1
+    Checking futures-channel v0.3.32
+    Checking atomic-waker v1.1.2
+    Checking tokio v1.52.3
+    Checking regex-syntax v0.8.10
+    Checking tinystr v0.8.3
+    Checking potential_utf v0.1.5
+    Checking crypto-common v0.1.7
+    Checking block-buffer v0.10.4
+    Checking want v0.3.1
+    Checking log v0.4.29
+    Checking inout v0.1.4
+    Checking icu_collections v2.2.0
+    Checking zerocopy v0.8.48
+    Checking icu_locale_core v2.2.0
+    Checking serde v1.0.228
+    Checking tracing v0.1.44
+    Checking sync_wrapper v1.0.2
+    Checking digest v0.10.7
+    Checking tower-layer v0.3.3
+    Checking ipnet v2.12.0
+    Checking utf8parse v0.2.2
+    Checking equivalent v1.0.2
+    Checking hashbrown v0.17.1
+    Checking base64 v0.22.1
+    Checking cipher v0.4.4
+    Checking anstyle-parse v1.0.0
+    Checking zmij v1.0.21
+    Checking universal-hash v0.5.1
+    Checking regex-automata v0.4.14
+    Checking webpki-roots v1.0.7
+    Checking toml_datetime v0.6.11
+    Checking serde_spanned v0.6.9
+    Checking cpufeatures v0.2.17
+    Checking winnow v0.7.15
+    Checking is_terminal_polyfill v1.70.2
+    Checking icu_provider v2.2.0
+    Checking anstyle-query v1.1.5
+    Checking base64ct v1.8.3
+    Checking signature v2.2.0
+    Checking opaque-debug v0.3.1
+    Checking indexmap v2.14.0
+    Checking simd-adler32 v0.3.9
+   Compiling ring v0.17.14
+   Compiling libz-sys v1.1.28
+   Compiling libgit2-sys v0.18.4+1.9.3
+    Checking anstyle v1.0.14
+    Checking adler2 v2.0.1
+    Checking colorchoice v1.0.5
+    Checking icu_properties v2.2.0
+    Checking icu_normalizer v2.2.0
+    Checking ryu v1.0.23
+    Checking password-hash v0.5.0
+    Checking anstream v1.0.0
+    Checking miniz_oxide v0.8.9
+    Checking serde_urlencoded v0.7.1
+    Checking ed25519 v2.2.3
+    Checking poly1305 v0.8.0
+    Checking sha2 v0.10.9
+    Checking serde_json v1.0.149
+    Checking chacha20 v0.9.1
+    Checking curve25519-dalek v4.1.3
+    Checking crc32fast v1.5.0
+    Checking blake2 v0.10.6
+    Checking aead v0.5.2
+    Checking http-body-util v0.1.3
+    Checking jiff v0.2.24
+    Checking toml_edit v0.22.27
+    Checking regex v1.12.3
+   Compiling turingosv4 v0.1.0 (/Users/zephryj/work/.audit-scratch/turingosv4-main)
+    Checking unty v0.0.4
+    Checking idna_adapter v1.2.2
+    Checking argon2 v0.5.3
+    Checking chacha20poly1305 v0.10.1
+    Checking bincode v2.0.1
+    Checking flate2 v1.1.9
+    Checking idna v1.1.0
+    Checking ed25519-dalek v2.2.0
+    Checking env_filter v1.0.1
+    Checking secrecy v0.8.0
+    Checking hyper v1.9.0
+    Checking tower v0.5.3
+    Checking rustix v1.1.4
+    Checking getrandom v0.4.2
+    Checking tokio-stream v0.1.18
+    Checking ppv-lite86 v0.2.21
+    Checking url v2.5.8
+    Checking fastrand v2.4.1
+    Checking rand_chacha v0.3.1
+    Checking hyper-util v0.1.20
+    Checking tokio-test v0.4.5
+    Checking toml v0.8.23
+    Checking tower-http v0.6.10
+    Checking rand v0.8.6
+    Checking tempfile v3.27.0
+    Checking env_logger v0.11.10
+   Compiling rustls v0.23.40
+    Checking rustls-webpki v0.103.13
+    Checking tokio-rustls v0.26.4
+    Checking hyper-rustls v0.27.9
+    Checking reqwest v0.12.28
+    Checking git2 v0.20.4
+src/economy/monetary_invariant.rs:26:29: warning: unused imports: `MICRO_PER_COIN` and `MicroCoin`
+src/memory_kernel.rs:31:5: warning: unused imports: `B_CTL` and `B_H`
+src/runtime/agent_keypairs.rs:31:20: warning: unused import: `Sha256`
+src/runtime/audit_views.rs:27:5: warning: unused import: `std::collections::BTreeMap`
+src/runtime/audit_views.rs:32:5: warning: unused import: `crate::state::price_index::RationalPrice`
+src/runtime/audit_views.rs:33:53: warning: unused imports: `LpShareAmount` and `ShareSidePair`
+src/runtime/audit_views.rs:35:67: warning: unused import: `ShareAmount`
+src/runtime/preview_run.rs:1:40: warning: unused import: `Cid`
+src/runtime/test_run.rs:3:63: warning: unused import: `ARTIFACT_BUNDLE_SCHEMA_ID`
+src/runtime/audit_views.rs:33:80: warning: unused import: `ShareSidePair`
+src/state/price_index.rs:23:29: warning: unused imports: `AgentId` and `ShareSidePair`
+src/state/price_index.rs:24:39: warning: unused import: `NodePosition`
+src/rtool.rs:33:5: warning: unused import: `crate::token_budget::B_S`
+src/runtime/replay.rs:320:9: warning: unused import: `super::*`
+src/sdk/econ_position.rs:95:21: warning: unused import: `EconomicState`
+src/runtime/agent_keypairs.rs:31:12: warning: unused import: `Digest`
+src/bottom_white/ledger/system_keypair.rs:634:19: warning: function `sign_rejected_attempt_summary` is never used
+src/bottom_white/ledger/system_keypair.rs:645:19: warning: function `sign_system_message` is never used
+src/bottom_white/ledger/system_keypair.rs:815:19: warning: function `sign_epoch_rotation_proof` is never used
+src/bottom_white/ledger/system_keypair.rs:826:19: warning: function `sign_system_message` is never used
+src/runtime/chain_derived_run_facts.rs:242:5: warning: field `tx_id` is never read
+src/top_white/predicates/registry.rs:400:19: warning: method `register` is never used
+src/bottom_white/cas/git_chain.rs:184:19: warning: the borrowed expression implements the required traits: help: change this to: `legacy_prefix_blob_name(idx)`
+src/bottom_white/cas/git_chain.rs:195:36: warning: this expression creates a reference which is immediately dereferenced by the compiler: help: change this to: `repo_path`
+src/bottom_white/cas/store.rs:335:9: warning: doc list item without indentation
+src/bottom_white/cas/store.rs:336:9: warning: doc list item without indentation
+src/bottom_white/cas/store.rs:543:35: warning: this can be `std::io::Error::other(_)`
+src/bottom_white/ledger/rejection_evidence.rs:79:29: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try removing the `clone` call: `r.tx_payload_cid`
+src/bottom_white/ledger/rejection_evidence.rs:81:33: warning: using `clone` on type `Option<Cid>` which implements the `Copy` trait: help: try removing the `clone` call: `r.raw_diagnostic_cid`
+src/bottom_white/ledger/rejection_evidence.rs:310:5: warning: this function has too many arguments (9/7)
+src/bottom_white/ledger/rejection_evidence.rs:681:38: warning: this manual char comparison can be written more succinctly: help: consider using an array of `char`: `['\n', '\r']`
+src/bottom_white/ledger/transition_ledger.rs:99:9: warning: doc list item without indentation
+src/bottom_white/ledger/transition_ledger.rs:100:9: warning: doc list item without indentation
+src/bottom_white/ledger/transition_ledger.rs:474:1: warning: trait `LedgerWriter` has a `len` method but no (possibly inherited) `is_empty` method
+src/bottom_white/ledger/transition_ledger.rs:703:1: warning: trait `L4eReplayView` has a `len` method but no (possibly inherited) `is_empty` method
+src/bottom_white/ledger/transition_ledger.rs:752:5: warning: doc list item without indentation
+src/bottom_white/ledger/transition_ledger.rs:759:5: warning: doc list item without indentation
+src/bottom_white/ledger/transition_ledger.rs:760:5: warning: doc list item without indentation
+src/bottom_white/ledger/transition_ledger.rs:1014:23: warning: unnecessary closure used to substitute value for `Option::None`
+src/bottom_white/ledger/transition_ledger.rs:1101:19: warning: unnecessary closure used to substitute value for `Option::None`
+src/bottom_white/ledger/transition_ledger.rs:1107:19: warning: unnecessary closure used to substitute value for `Option::None`
+src/bottom_white/tools/registry.rs:165:28: warning: you seem to want to iterate on a map's values
+src/drivers/llm_http.rs:107:23: warning: the borrowed expression implements the required traits: help: change this to: `format!("{}/v1/chat/completions", self.proxy_url)`
+src/ledger.rs:50:9: warning: doc list item without indentation
+src/ledger.rs:428:5: warning: this function has too many arguments (10/7)
+src/runtime/adapter.rs:243:5: warning: doc list item without indentation
+src/runtime/adapter.rs:825:1: warning: this function has too many arguments (9/7)
+src/runtime/adapter.rs:1253:12: warning: redundant pattern matching, consider using `is_err()`
+src/runtime/verify.rs:215:5: warning: doc list item without indentation
+src/runtime/verify.rs:425:17: warning: this `if` statement can be collapsed
+src/runtime/verify.rs:578:8: warning: manual implementation of `.is_multiple_of()`: help: replace with: `!hex.len().is_multiple_of(2)`
+src/runtime/agent_keystore.rs:86:23: warning: useless conversion to the same type: `std::string::String`: help: consider removing `.into()`: `raw`
+src/runtime/proposal_telemetry.rs:187:5: warning: this function has too many arguments (9/7)
+src/runtime/chain_derived_run_facts.rs:107:1: warning: this `impl` can be derived
+src/runtime/chain_derived_run_facts.rs:217:9: warning: doc list item without indentation
+src/runtime/chain_derived_run_facts.rs:220:9: warning: doc quote line without `>` marker
+src/runtime/chain_derived_run_facts.rs:221:9: warning: doc quote line without `>` marker
+src/runtime/chain_derived_run_facts.rs:224:9: warning: doc list item without indentation
+src/runtime/chain_derived_run_facts.rs:225:9: warning: doc list item without indentation
+src/runtime/chain_derived_run_facts.rs:541:31: warning: you seem to want to iterate on a map's values
+src/runtime/chain_derived_run_facts.rs:760:5: warning: doc list item overindented: help: try using `  ` (2 spaces)
+src/runtime/chain_derived_run_facts.rs:763:5: warning: doc list item overindented: help: try using `  ` (2 spaces)
+src/runtime/chain_derived_run_facts.rs:765:5: warning: doc list item overindented: help: try using `  ` (2 spaces)
+src/runtime/chain_derived_run_facts.rs:766:5: warning: doc list item overindented: help: try using `  ` (2 spaces)
+src/runtime/chain_derived_run_facts.rs:846:20: warning: casting to the same type is unnecessary (`u64` -> `u64`): help: try: `writer.len()`
+src/runtime/chain_derived_run_facts.rs:983:21: warning: this `if let` can be collapsed into the outer `if let`
+src/runtime/evidence_capsule.rs:355:1: warning: this function has too many arguments (11/7)
+src/runtime/autopsy_capsule.rs:67:1: warning: this `impl` can be derived
+src/runtime/autopsy_capsule.rs:396:5: error: this comparison involving the minimum or maximum element for this type contains a case that is always true or always false
+src/runtime/bootstrap.rs:54:5: warning: doc list item without indentation
+src/runtime/audit_assertions.rs:785:8: warning: manual implementation of `.is_multiple_of()`: help: replace with: `!h.len().is_multiple_of(2)`
+src/runtime/audit_assertions.rs:914:33: warning: this `map_or` can be simplified
+src/runtime/audit_assertions.rs:1014:5: warning: doc list item without indentation
+src/runtime/audit_assertions.rs:1015:5: warning: doc list item without indentation
+src/runtime/audit_assertions.rs:1016:5: warning: doc list item without indentation
+src/runtime/audit_assertions.rs:1728:31: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:1774:19: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:1815:21: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:1858:31: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:1859:26: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:1865:30: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:2345:24: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:2442:22: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:2517:22: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:2570:22: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:2695:22: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:2788:22: warning: you seem to want to iterate on a map's values
+src/runtime/audit_assertions.rs:3084:17: warning: you seem to be trying to use `match` for destructuring a single pattern. Consider using `if let`
+src/runtime/audit_assertions.rs:3621:5: warning: calls to `push` immediately after creation: help: consider using the `vec![]` macro: `let r = vec![..];`
+src/runtime/attempt_telemetry.rs:137:1: warning: this `impl` can be derived
+src/runtime/attempt_telemetry.rs:188:1: warning: this `impl` can be derived
+src/runtime/attempt_telemetry.rs:260:1: warning: this `impl` can be derived
+src/runtime/wilson_ci.rs:15:19: warning: float has excessive precision
+src/runtime/audit_views.rs:161:17: warning: manual saturating arithmetic
+src/runtime/audit_views.rs:196:5: warning: doc list item without indentation
+src/runtime/audit_tamper.rs:243:5: warning: doc list item without indentation
+src/runtime/audit_tamper.rs:364:18: warning: the loop variable `i` is only used to index `chars`
+src/runtime/chain_tape_lease.rs:278:24: warning: this can be `std::io::Error::other(_)`
+src/runtime/market_decision_trace_summary.rs:166:23: warning: useless use of `format!`
+src/runtime/market_e2_candidate_verifier.rs:553:6: warning: very complex type used. Consider factoring parts into `type` definitions
+src/runtime/market_e2_candidate_verifier.rs:657:1: warning: this function has too many arguments (8/7)
+src/runtime/risk_cap_impact_report.rs:243:39: warning: this `map_or` can be simplified
+src/runtime/agent_scheduler.rs:130:1: warning: this function has too many arguments (8/7)
+src/runtime/ev_decision_trace.rs:155:1: warning: this function has too many arguments (8/7)
+src/runtime/policy_trader_trace.rs:116:8: warning: manual `!RangeInclusive::contains` implementation: help: use: `!(0..=10_000).contains(&value)`
+src/runtime/real5_roles.rs:109:1: warning: this `impl` can be derived
+src/runtime/real6_conviction_budget.rs:186:1: warning: this function has too many arguments (8/7)
+src/bottom_white/ledger/transition_ledger.rs:2148:5: warning: this function has too many arguments (8/7)
+src/bus.rs:688:27: warning: unnecessary use of `to_string`: help: use: `"tx_0_by_A0"`
+src/runtime/build_session_view.rs:266:41: warning: dereferencing a tuple pattern where every element takes a reference
+src/runtime/replay.rs:114:25: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try dereferencing it: `*cid`
+src/runtime/replay.rs:126:33: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try dereferencing it: `*cid`
+src/runtime/replay.rs:139:33: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try dereferencing it: `*cid`
+src/runtime/replay.rs:170:33: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try dereferencing it: `*cid`
+src/runtime/replay.rs:219:33: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try dereferencing it: `*cid`
+src/runtime/replay.rs:241:33: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try dereferencing it: `*cid`
+src/runtime/replay.rs:271:33: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try dereferencing it: `*cid`
+src/economy/monetary_invariant.rs:682:9: warning: field assignment outside of initializer for an instance created with Default::default()
+src/economy/monetary_invariant.rs:920:9: warning: field assignment outside of initializer for an instance created with Default::default()
+src/economy/monetary_invariant.rs:948:9: warning: field assignment outside of initializer for an instance created with Default::default()
+src/economy/monetary_invariant.rs:997:9: warning: field assignment outside of initializer for an instance created with Default::default()
+src/runtime/mod.rs:662:41: warning: this can be `std::io::Error::other(_)`
+src/runtime/mod.rs:1035:41: warning: this can be `std::io::Error::other(_)`
+src/sdk/actor.rs:18:5: warning: doc list item without indentation
+src/sdk/actor.rs:97:5: warning: you are using an explicit closure for cloning elements: help: consider calling the dedicated `cloned` method: `best.cloned()`
+src/sdk/prompt.rs:41:5: warning: doc list item without indentation
+src/sdk/prompt.rs:42:5: warning: doc list item without indentation
+src/sdk/prompt.rs:43:5: warning: doc list item without indentation
+src/sdk/prompt.rs:44:5: warning: doc list item without indentation
+src/sdk/prompt.rs:45:5: warning: doc list item without indentation
+src/sdk/prompt.rs:46:5: warning: doc list item without indentation
+src/sdk/prompt.rs:47:5: warning: doc list item without indentation
+src/sdk/prompt.rs:48:1: warning: this function has too many arguments (10/7)
+src/sdk/protocol.rs:140:33: warning: this manual char comparison can be written more succinctly: help: consider using an array of `char`: `['\n', '\r']`
+src/sdk/protocol.rs:142:33: warning: this manual char comparison can be written more succinctly: help: consider using an array of `char`: `['\n', '\r']`
+src/sdk/sanitized_runner.rs:138:22: warning: this can be `std::io::Error::other(_)`
+src/memory_kernel.rs:478:1: warning: items after a test module
+src/memory_kernel.rs:601:13: warning: you seem to be trying to use `match` for destructuring a single pattern. Consider using `if let`
+src/state/q_state.rs:447:1: warning: this `impl` can be derived
+src/state/q_state.rs:507:9: warning: doc list item without indentation
+src/state/q_state.rs:569:1: warning: this `impl` can be derived
+src/state/q_state.rs:707:1: warning: this `impl` can be derived
+src/state/q_state.rs:883:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:142:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:319:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:551:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:575:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:605:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:652:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:658:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:692:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:717:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:865:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:1229:1: warning: this `impl` can be derived
+src/runtime/autopsy_capsule.rs:978:9: warning: field assignment outside of initializer for an instance created with Default::default()
+src/state/typed_tx.rs:1389:5: warning: doc list item without indentation
+src/state/typed_tx.rs:1390:5: warning: doc list item without indentation
+src/state/typed_tx.rs:1462:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:1470:5: warning: doc list item without indentation
+src/state/typed_tx.rs:1471:5: warning: doc list item without indentation
+src/state/typed_tx.rs:1554:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:1562:5: warning: doc list item without indentation
+src/state/typed_tx.rs:1563:5: warning: doc list item without indentation
+src/state/typed_tx.rs:1581:5: warning: doc list item overindented: help: try using `     ` (5 spaces)
+src/state/typed_tx.rs:1582:5: warning: doc list item overindented: help: try using `     ` (5 spaces)
+src/runtime/markov_capsule.rs:748:9: warning: field assignment outside of initializer for an instance created with Default::default()
+src/runtime/bootstrap.rs:230:9: warning: doc list item without indentation
+src/state/typed_tx.rs:1835:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:1869:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:1883:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:1936:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:1989:1: warning: this `impl` can be derived
+src/state/typed_tx.rs:2071:1: warning: this `impl` can be derived
+src/runtime/audit_assertions.rs:3861:24: warning: you seem to want to iterate on a map's values
+src/state/typed_tx.rs:2219:5: warning: doc list item without indentation
+src/state/typed_tx.rs:2220:5: warning: doc list item without indentation
+src/state/typed_tx.rs:2279:5: warning: doc list item without indentation
+src/state/typed_tx.rs:2280:5: warning: doc list item without indentation
+src/state/typed_tx.rs:4206:1: warning: this `impl` can be derived
+src/state/sequencer.rs:890:29: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try removing the `clone` call: `w.proposal_cid`
+src/state/sequencer.rs:1287:5: error: this loop never actually loops
+src/state/sequencer.rs:1297:5: error: this loop never actually loops
+src/state/sequencer.rs:1407:1: warning: this function has too many arguments (8/7)
+src/state/sequencer.rs:1746:1: warning: this function has too many arguments (8/7)
+src/state/sequencer.rs:1932:30: warning: this `map_or` can be simplified
+src/state/sequencer.rs:3412:18: warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3415:18: warning: use of `or_insert` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3526:22: warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3529:22: warning: use of `or_insert` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3648:18: warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3651:18: warning: use of `or_insert` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3746:22: warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3749:22: warning: use of `or_insert` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3911:22: warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:3914:22: warning: use of `or_insert` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:4113:22: warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:4116:22: warning: use of `or_insert` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:4389:22: warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:4392:22: warning: use of `or_insert` to construct default value: help: try: `or_default()`
+src/state/sequencer.rs:4702:9: warning: doc list item without indentation
+src/state/sequencer.rs:4703:9: warning: doc list item without indentation
+src/state/sequencer.rs:5946:49: warning: called `Iterator::last` on a `DoubleEndedIterator`; this will needlessly iterate the entire iterator
+src/state/sequencer.rs:7072:28: warning: deref which would be done by auto-deref: help: try: `&mut q_w`
+src/state/sequencer.rs:7196:22: warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+src/state/price_index.rs:50:5: warning: doc list item without indentation
+src/state_update.rs:150:5: warning: manually reimplementing `div_ceil`: help: consider using `.div_ceil()`: `s.chars().count().div_ceil(4)`
+src/tokenizer.rs:39:13: warning: manually reimplementing `div_ceil`: help: consider using `.div_ceil()`: `chars.div_ceil(4)`
+src/distiller.rs:39:5: warning: doc list item without indentation
+src/distiller.rs:79:46: warning: this manual char comparison can be written more succinctly: help: consider using an array of `char`: `['.', ':', ';']`
+src/distiller.rs:80:9: warning: this `if` statement can be collapsed
+src/runtime/persistence_evidence.rs:681:38: warning: this call to `clone` can be replaced with `std::slice::from_ref`: help: try: `std::slice::from_ref(&q)`
+src/judges/putnam_2025_b3_judge.rs:423:8: warning: manual implementation of `.is_multiple_of()`: help: replace with: `n.is_multiple_of(2)`
+src/judges/putnam_2025_b3_judge.rs:428:12: warning: manual implementation of `.is_multiple_of()`: help: replace with: `n.is_multiple_of(divisor)`
+src/judges/swebench_test_judge.rs:131:5: warning: this loop could be written as a `for` loop: help: try: `for line in lines`
+src/runtime/peer_verify_coverage.rs:491:9: warning: field assignment outside of initializer for an instance created with Default::default()
+src/runtime/peer_verify_coverage.rs:518:9: warning: field assignment outside of initializer for an instance created with Default::default()
+src/tdma_runner.rs:337:32: warning: very complex type used. Consider factoring parts into `type` definitions
+src/top_white/predicates/registry.rs:486:29: warning: you seem to want to iterate on a map's values
+src/top_white/predicates/registry.rs:608:9: warning: calls to `push` immediately after creation: help: consider using the `vec![]` macro: `let entries = vec![..];`
+warning: `turingosv4` (lib) generated 198 warnings
+error: could not compile `turingosv4` (lib) due to 3 previous errors; 198 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+src/runtime/mod.rs:1131:9: warning: used `assert_eq!` with a literal bool
+src/state/sequencer.rs:7564:18: warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try removing the `clone` call: `expected_cid`
+src/state/sequencer.rs:9293:9: warning: you seem to be trying to use `match` for destructuring a single pattern. Consider using `if let`
+src/economy/monetary_invariant.rs:825:26: warning: useless use of `vec!`: help: you can use an array directly: `[total0; 10]`
+src/economy/money.rs:283:21: warning: useless use of `vec!`
+src/runtime/test_run.rs:405:23: warning: useless use of `vec!`
+warning: `turingosv4` (lib test) generated 211 warnings (187 duplicates)
+error: could not compile `turingosv4` (lib test) due to 3 previous errors; 211 warnings emitted

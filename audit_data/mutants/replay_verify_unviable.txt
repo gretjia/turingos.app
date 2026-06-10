@@ -1,0 +1,3 @@
+src/runtime/verify.rs:98:9: replace <impl From<std::io::Error> for VerifyError>::from -> Self with Default::default()
+src/runtime/verify.rs:104:9: replace <impl From<LedgerWriterError> for VerifyError>::from -> Self with Default::default()
+src/runtime/verify.rs:236:5: replace verify_chaintape -> Result<ReplayReport, VerifyError> with Ok(Default::default())

@@ -1,0 +1,12 @@
+anchor=1f00012d5326d08f0e6ffe05f6ecec6a391c4896 branch=main
+started=2026-06-11 01:15:33
+rustc=rustc 1.94.0 (4a4ef493e 2026-03-02)
+grep_resolved=/usr/bin/grep :: grep (BSD grep, GNU compatible) 2.6.0-FreeBSD
+=== STEP1 cargo test --workspace --no-fail-fast ===
+step1_exit=101 at 01:22:31
+=== STEP2 bash scripts/run_constitution_gates.sh ===
+step2_exit=2 at 01:22:31
+=== STEP3 cargo test --test constitution_matrix_drift ===
+step3_exit=0 at 01:22:37
+BASELINE_RESULT step1=101 step2=2 step3=0
+step2b_exit=0

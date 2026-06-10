@@ -1,0 +1,83 @@
+  43 warning: doc list item without indentation
+  30 warning: this `impl` can be derived
+  16 warning: you seem to want to iterate on a map's values
+   8 warning: use of `or_insert_with` to construct default value: help: try: `or_default()`
+   8 warning: field assignment outside of initializer for an instance created with Default::default()
+   7 warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try dereferencing it: `*cid`
+   7 warning: use of `or_insert` to construct default value: help: try: `or_default()`
+   7 warning: this function has too many arguments (8/7)
+   5 warning: this can be `std::io::Error::other(_)`
+   4 warning: this manual char comparison can be written more succinctly: help: consider using an array of `char`: `
+   4 warning: doc list item overindented: help: try using `  ` (2 spaces)
+   3 warning: you seem to be trying to use `match` for destructuring a single pattern. Consider using `if let`
+   3 warning: unnecessary closure used to substitute value for `Option::None`
+   3 warning: this function has too many arguments (9/7)
+   3 warning: this `map_or` can be simplified
+   2 warning: very complex type used. Consider factoring parts into `type` definitions
+   2 warning: useless use of `vec!`
+   2 warning: this function has too many arguments (10/7)
+   2 warning: this `if` statement can be collapsed
+   2 warning: function `sign_system_message` is never used
+   2 warning: doc quote line without `>` marker
+   2 warning: doc list item overindented: help: try using `     ` (5 spaces)
+   2 warning: calls to `push` immediately after creation: help: consider using the `vec!
+   1 warning: you are using an explicit closure for cloning elements: help: consider calling the dedicated `cloned` method: `best.cloned()`
+   1 warning: using `clone` on type `Option<Cid>` which implements the `Copy` trait: help: try removing the `clone` call: `r.raw_diagnostic_cid`
+   1 warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try removing the `clone` call: `w.proposal_cid`
+   1 warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try removing the `clone` call: `r.tx_payload_cid`
+   1 warning: using `clone` on type `Cid` which implements the `Copy` trait: help: try removing the `clone` call: `expected_cid`
+   1 warning: useless use of `vec!`: help: you can use an array directly: `
+   1 warning: useless use of `format!`
+   1 warning: useless conversion to the same type: `std::string::String`: help: consider removing `.into()`: `raw`
+   1 warning: used `assert_eq!` with a literal bool
+   1 warning: unused imports: `MICRO_PER_COIN` and `MicroCoin`
+   1 warning: unused imports: `LpShareAmount` and `ShareSidePair`
+   1 warning: unused imports: `B_CTL` and `B_H`
+   1 warning: unused imports: `AgentId` and `ShareSidePair`
+   1 warning: unused import: `super::*`
+   1 warning: unused import: `std::collections::BTreeMap`
+   1 warning: unused import: `crate::token_budget::B_S`
+   1 warning: unused import: `crate::state::price_index::RationalPrice`
+   1 warning: unused import: `ShareSidePair`
+   1 warning: unused import: `ShareAmount`
+   1 warning: unused import: `Sha256`
+   1 warning: unused import: `NodePosition`
+   1 warning: unused import: `EconomicState`
+   1 warning: unused import: `Digest`
+   1 warning: unused import: `Cid`
+   1 warning: unused import: `ARTIFACT_BUNDLE_SCHEMA_ID`
+   1 warning: unnecessary use of `to_string`: help: use: `"tx_0_by_A0"`
+   1 warning: trait `LedgerWriter` has a `len` method but no (possibly inherited) `is_empty` method
+   1 warning: trait `L4eReplayView` has a `len` method but no (possibly inherited) `is_empty` method
+   1 warning: this loop could be written as a `for` loop: help: try: `for line in lines`
+   1 warning: this function has too many arguments (11/7)
+   1 warning: this expression creates a reference which is immediately dereferenced by the compiler: help: change this to: `repo_path`
+   1 warning: this call to `clone` can be replaced with `std::slice::from_ref`: help: try: `std::slice::from_ref(&q)`
+   1 warning: this `if let` can be collapsed into the outer `if let`
+   1 warning: the loop variable `i` is only used to index `chars`
+   1 warning: the borrowed expression implements the required traits: help: change this to: `legacy_prefix_blob_name(idx)`
+   1 warning: the borrowed expression implements the required traits: help: change this to: `format!("{}/v1/chat/completions", self.proxy_url)`
+   1 warning: redundant pattern matching, consider using `is_err()`
+   1 warning: method `register` is never used
+   1 warning: manually reimplementing `div_ceil`: help: consider using `.div_ceil()`: `s.chars().count().div_ceil(4)`
+   1 warning: manually reimplementing `div_ceil`: help: consider using `.div_ceil()`: `chars.div_ceil(4)`
+   1 warning: manual saturating arithmetic
+   1 warning: manual implementation of `.is_multiple_of()`: help: replace with: `n.is_multiple_of(divisor)`
+   1 warning: manual implementation of `.is_multiple_of()`: help: replace with: `n.is_multiple_of(2)`
+   1 warning: manual implementation of `.is_multiple_of()`: help: replace with: `!hex.len().is_multiple_of(2)`
+   1 warning: manual implementation of `.is_multiple_of()`: help: replace with: `!h.len().is_multiple_of(2)`
+   1 warning: manual `!RangeInclusive::contains` implementation: help: use: `!(0..=10_000).contains(&value)`
+   1 warning: items after a test module
+   1 warning: function `sign_rejected_attempt_summary` is never used
+   1 warning: function `sign_epoch_rotation_proof` is never used
+   1 warning: float has excessive precision
+   1 warning: field `tx_id` is never read
+   1 warning: dereferencing a tuple pattern where every element takes a reference
+   1 warning: deref which would be done by auto-deref: help: try: `&mut q_w`
+   1 warning: casting to the same type is unnecessary (`u64` -> `u64`): help: try: `writer.len()`
+   1 warning: called `Iterator::last` on a `DoubleEndedIterator`; this will needlessly iterate the entire iterator
+   1 warning: build failed, waiting for other jobs to finish...
+   1 warning: `turingosv4` (lib) generated 198 warnings
+   1 warning: `turingosv4` (lib test) generated 211 warnings (187 duplicates)
+   1 error: could not compile `turingosv4` (lib) due to 3 previous errors; 198 warnings emitted
+   1 error: could not compile `turingosv4` (lib test) due to 3 previous errors; 211 warnings emitted

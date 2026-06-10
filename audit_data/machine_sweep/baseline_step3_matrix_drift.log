@@ -1,0 +1,251 @@
+   Compiling turingosv4 v0.1.0 (/Users/zephryj/work/.audit-scratch/turingosv4-main)
+warning: unused imports: `MICRO_PER_COIN` and `MicroCoin`
+  --> src/economy/monetary_invariant.rs:26:29
+   |
+26 | use crate::economy::money::{MicroCoin, MICRO_PER_COIN};
+   |                             ^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `B_CTL` and `B_H`
+  --> src/memory_kernel.rs:31:5
+   |
+31 |     B_CTL, B_D, B_DISTILL_IN, B_G, B_H, B_HEADER, B_HEADER_SCAN, B_PROMPT_MAX, B_S, B_T,
+   |     ^^^^^                          ^^^
+
+warning: unused import: `Sha256`
+  --> src/runtime/agent_keypairs.rs:31:20
+   |
+31 | use sha2::{Digest, Sha256};
+   |                    ^^^^^^
+
+warning: unused import: `std::collections::BTreeMap`
+  --> src/runtime/audit_views.rs:27:5
+   |
+27 | use std::collections::BTreeMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::state::price_index::RationalPrice`
+  --> src/runtime/audit_views.rs:32:5
+   |
+32 | use crate::state::price_index::RationalPrice;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `LpShareAmount` and `ShareSidePair`
+  --> src/runtime/audit_views.rs:33:53
+   |
+33 | use crate::state::q_state::{AgentId, EconomicState, LpShareAmount, PoolStatus, ShareSidePair};
+   |                                                     ^^^^^^^^^^^^^              ^^^^^^^^^^^^^
+
+warning: unused import: `ShareAmount`
+  --> src/runtime/audit_views.rs:35:67
+   |
+35 | use crate::state::typed_tx::{EventId, PositionKind, PositionSide, ShareAmount};
+   |                                                                   ^^^^^^^^^^^
+
+warning: unused import: `Cid`
+ --> src/runtime/preview_run.rs:1:40
+  |
+1 | use crate::bottom_white::cas::schema::{Cid, ObjectType};
+  |                                        ^^^
+
+warning: unused import: `ARTIFACT_BUNDLE_SCHEMA_ID`
+ --> src/runtime/test_run.rs:3:63
+  |
+3 | use crate::runtime::artifact_bundle::{ArtifactBundleManifest, ARTIFACT_BUNDLE_SCHEMA_ID};
+  |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AgentId` and `ShareSidePair`
+  --> src/state/price_index.rs:23:29
+   |
+23 | use crate::state::q_state::{AgentId, ChallengeStatus, EconomicState, ShareSidePair};
+   |                             ^^^^^^^                                  ^^^^^^^^^^^^^
+
+warning: unused import: `NodePosition`
+  --> src/state/price_index.rs:24:39
+   |
+24 | use crate::state::typed_tx::{EventId, NodePosition, PositionSide, ShareAmount};
+   |                                       ^^^^^^^^^^^^
+
+warning: unused import: `crate::token_budget::B_S`
+  --> src/rtool.rs:33:5
+   |
+33 | use crate::token_budget::B_S;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Digest`
+  --> src/runtime/agent_keypairs.rs:31:12
+   |
+31 | use sha2::{Digest, Sha256};
+   |            ^^^^^^
+
+warning: function `sign_rejected_attempt_summary` is never used
+   --> src/bottom_white/ledger/system_keypair.rs:634:19
+    |
+634 |     pub(crate) fn sign_rejected_attempt_summary(
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `sign_system_message` is never used
+   --> src/bottom_white/ledger/system_keypair.rs:645:19
+    |
+645 |     pub(crate) fn sign_system_message(
+    |                   ^^^^^^^^^^^^^^^^^^^
+
+warning: function `sign_epoch_rotation_proof` is never used
+   --> src/bottom_white/ledger/system_keypair.rs:815:19
+    |
+815 |     pub(crate) fn sign_epoch_rotation_proof(
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `sign_system_message` is never used
+   --> src/bottom_white/ledger/system_keypair.rs:826:19
+    |
+826 |     pub(crate) fn sign_system_message(
+    |                   ^^^^^^^^^^^^^^^^^^^
+
+warning: field `tx_id` is never read
+   --> src/runtime/chain_derived_run_facts.rs:242:5
+    |
+241 | struct WorkTxAttempt {
+    |        ------------- field in this struct
+242 |     tx_id: TxId,
+    |     ^^^^^
+    |
+    = note: `WorkTxAttempt` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `register` is never used
+   --> src/top_white/predicates/registry.rs:400:19
+    |
+390 | impl PredicateRegistry {
+    | ---------------------- method in this implementation
+...
+400 |     pub(crate) fn register(&mut self, meta: PredicateMetadata) -> Result<(), RegisterError> {
+    |                   ^^^^^^^^
+
+warning: `turingosv4` (lib) generated 19 warnings (run `cargo fix --lib -p turingosv4` to apply 12 suggestions)
+warning: unused import: `turingosv4::judges::math_step_judge::JudgeVerdict`
+  --> src/bin/tdma_rc1_nesbitt_stress.rs:39:5
+   |
+39 | use turingosv4::judges::math_step_judge::JudgeVerdict;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `NodeKind`
+  --> src/bin/tdma_rc1_nesbitt_stress.rs:44:58
+   |
+44 |     AttemptScope, ImmutableTapeLedger, MemoryTapeLedger, NodeKind,
+   |                                                          ^^^^^^^^
+
+warning: `turingosv4` (bin "tdma_rc1_nesbitt_stress") generated 2 warnings (run `cargo fix --bin "tdma_rc1_nesbitt_stress" -p turingosv4` to apply 2 suggestions)
+warning: unused import: `NodeKind`
+  --> src/bin/tdma_rc1_distiller_stress.rs:42:79
+   |
+42 | use turingosv4::ledger::{AttemptScope, ImmutableTapeLedger, MemoryTapeLedger, NodeKind};
+   |                                                                               ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable `cumulative_stderr_bytes` is assigned to, but never used
+   --> src/bin/tdma_rc1_distiller_stress.rs:179:9
+    |
+179 |     let mut cumulative_stderr_bytes = 0usize;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: consider using `_cumulative_stderr_bytes` instead
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `cumulative_stderr_bytes` is never read
+   --> src/bin/tdma_rc1_distiller_stress.rs:184:9
+    |
+184 |         cumulative_stderr_bytes += raw_stderr.len();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `turingosv4::bottom_white::cas::schema::Cid`
+    --> src/bin/turingos/cmd_llm.rs:1045:9
+     |
+1045 |     use turingosv4::bottom_white::cas::schema::Cid;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `prev_covered` is never read
+    --> src/bin/turingos/cmd_spec.rs:1240:17
+     |
+1240 |                 prev_covered = payload.covered_slots.clone();
+     |                 ^^^^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `last_turn_cid` is never read
+    --> src/bin/turingos/cmd_spec.rs:1237:17
+     |
+1237 |                 last_turn_cid = Some(turn_cid);
+     |                 ^^^^^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: field `meta_prompt` is never read
+    --> src/bin/turingos/cmd_llm.rs:1587:5
+     |
+1582 | struct PromptEvalArgs {
+     |        -------------- field in this struct
+...
+1587 |     meta_prompt: Option<PathBuf>,
+     |     ^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `outcome_from_bundle` is never used
+   --> src/bin/turingos/cmd_spec.rs:560:4
+    |
+560 | fn outcome_from_bundle(
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: field `parsed_envelope` is never read
+   --> src/bin/turingos/cmd_spec.rs:699:5
+    |
+690 | struct LlmCompleteResult {
+    |        ----------------- field in this struct
+...
+699 |     parsed_envelope: Option<serde_json::Value>,
+    |     ^^^^^^^^^^^^^^^
+
+warning: field `ok` is never read
+   --> src/bin/turingos/cmd_spec.rs:812:5
+    |
+811 | struct TriageResult {
+    |        ------------ field in this struct
+812 |     ok: bool,
+    |     ^^
+
+warning: function `suggest_workspace` is never used
+   --> src/bin/turingos/cmd_wizard.rs:392:4
+    |
+392 | fn suggest_workspace(idea: &str) -> PathBuf {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `prompt_with_default` is never used
+   --> src/bin/turingos/cmd_wizard.rs:429:4
+    |
+429 | fn prompt_with_default(label: &str, default: &str) -> Result<String, String> {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: `turingosv4` (bin "tdma_rc1_distiller_stress") generated 3 warnings (run `cargo fix --bin "tdma_rc1_distiller_stress" -p turingosv4` to apply 1 suggestion)
+warning: `turingosv4` (bin "turingos") generated 9 warnings (run `cargo fix --bin "turingos" -p turingosv4` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.19s
+     Running tests/constitution_matrix_drift.rs (target/debug/deps/constitution_matrix_drift-1ee5a523d2ead631)
+
+running 3 tests
+test allowlist_doesnt_grow_silently ... ok
+test matrix_has_drift_gated_banner ... ok
+test manifest_gates_subset_of_matrix_plus_allowlist ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

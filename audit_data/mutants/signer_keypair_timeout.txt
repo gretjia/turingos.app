@@ -1,0 +1,63 @@
+src/bottom_white/ledger/system_keypair.rs:353:28: replace != with == in Ed25519Keypair::from_plaintext
+src/bottom_white/ledger/system_keypair.rs:379:9: replace Ed25519Keypair::to_plaintext -> Result<[u8; PLAINTEXT_LEN], KeypairError> with Ok([0; PLAINTEXT_LEN])
+src/bottom_white/ledger/system_keypair.rs:379:9: replace Ed25519Keypair::to_plaintext -> Result<[u8; PLAINTEXT_LEN], KeypairError> with Ok([1; PLAINTEXT_LEN])
+src/bottom_white/ledger/system_keypair.rs:396:9: replace Ed25519Keypair::secret_slice -> Result<&[u8], KeypairError> with Ok(Vec::leak(vec![1]))
+src/bottom_white/ledger/system_keypair.rs:396:34: replace == with != in Ed25519Keypair::secret_slice
+src/bottom_white/ledger/system_keypair.rs:404:9: replace Ed25519Keypair::mlock_private_key_best_effort -> bool with true
+src/bottom_white/ledger/system_keypair.rs:404:9: replace Ed25519Keypair::mlock_private_key_best_effort -> bool with false
+src/bottom_white/ledger/system_keypair.rs:429:9: replace <impl fmt::Display for KeypairError>::fmt -> fmt::Result with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:456:5: replace default_system_keystore_path -> Result<PathBuf, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:503:5: replace canonical_digest -> [u8; 32] with [0; 32]
+src/bottom_white/ledger/system_keypair.rs:503:5: replace canonical_digest -> [u8; 32] with [1; 32]
+src/bottom_white/ledger/system_keypair.rs:592:5: replace verify_system_signature -> bool with true
+src/bottom_white/ledger/system_keypair.rs:592:5: replace verify_system_signature -> bool with false
+src/bottom_white/ledger/system_keypair.rs:611:5: replace verify_epoch_rotation_proof -> bool with true
+src/bottom_white/ledger/system_keypair.rs:611:5: replace verify_epoch_rotation_proof -> bool with false
+src/bottom_white/ledger/system_keypair.rs:613:9: replace && with || in verify_epoch_rotation_proof
+src/bottom_white/ledger/system_keypair.rs:618:5: replace verify_system_pubkeys -> Result<(), TrustRootError> with Ok(())
+src/bottom_white/ledger/system_keypair.rs:618:8: delete ! in verify_system_pubkeys
+src/bottom_white/ledger/system_keypair.rs:638:9: replace predicate_runner::sign_rejected_attempt_summary -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:649:9: replace predicate_runner::sign_system_message -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:675:9: replace terminal_summary_emitter::sign_terminal_summary -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:686:9: replace terminal_summary_emitter::sign_finalize_reward -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:697:9: replace terminal_summary_emitter::sign_task_expire -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:712:9: replace terminal_summary_emitter::sign_challenge_resolve -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:726:9: replace terminal_summary_emitter::sign_task_bankruptcy -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:741:9: replace terminal_summary_emitter::sign_event_resolve -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:749:9: replace terminal_summary_emitter::sign_predicate_binding_activate -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:760:9: replace terminal_summary_emitter::sign_map_reduce_tick -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:768:9: replace terminal_summary_emitter::sign_log_feedback_archive -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:779:9: replace terminal_summary_emitter::sign_architect_proposal -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:787:9: replace terminal_summary_emitter::sign_veto_decision -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:795:9: replace terminal_summary_emitter::sign_architect_commit -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:803:9: replace terminal_summary_emitter::sign_reinit_request -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:811:9: replace terminal_summary_emitter::sign_reinit_boot -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:819:9: replace terminal_summary_emitter::sign_epoch_rotation_proof -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:830:9: replace terminal_summary_emitter::sign_system_message -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:852:9: replace transition_ledger_emitter::sign_ledger_entry -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:863:5: replace sign_system_message_inner -> Result<SystemSignature, KeypairError> with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:870:5: replace encrypt_at_rest -> Result<Vec<u8>, KeypairError> with Ok(vec![])
+src/bottom_white/ledger/system_keypair.rs:870:5: replace encrypt_at_rest -> Result<Vec<u8>, KeypairError> with Ok(vec![0])
+src/bottom_white/ledger/system_keypair.rs:870:5: replace encrypt_at_rest -> Result<Vec<u8>, KeypairError> with Ok(vec![1])
+src/bottom_white/ledger/system_keypair.rs:900:5: replace derive_key -> Result<[u8; DERIVED_KEY_LEN], KeypairError> with Ok([0; DERIVED_KEY_LEN])
+src/bottom_white/ledger/system_keypair.rs:900:5: replace derive_key -> Result<[u8; DERIVED_KEY_LEN], KeypairError> with Ok([1; DERIVED_KEY_LEN])
+src/bottom_white/ledger/system_keypair.rs:916:5: replace write_keystore_0600 -> Result<(), KeypairError> with Ok(())
+src/bottom_white/ledger/system_keypair.rs:932:5: replace set_open_options_mode_0600 with ()
+src/bottom_white/ledger/system_keypair.rs:941:5: replace set_file_permissions_0600 -> Result<(), KeypairError> with Ok(())
+src/bottom_white/ledger/system_keypair.rs:968:5: replace read_env_u32 -> Result<u32, KeypairError> with Ok(0)
+src/bottom_white/ledger/system_keypair.rs:968:5: replace read_env_u32 -> Result<u32, KeypairError> with Ok(1)
+src/bottom_white/ledger/system_keypair.rs:973:23: replace == with != in read_env_u32
+src/bottom_white/ledger/system_keypair.rs:994:9: replace EncryptedKeypair::encode -> Result<Vec<u8>, KeypairError> with Ok(vec![])
+src/bottom_white/ledger/system_keypair.rs:994:9: replace EncryptedKeypair::encode -> Result<Vec<u8>, KeypairError> with Ok(vec![0])
+src/bottom_white/ledger/system_keypair.rs:994:9: replace EncryptedKeypair::encode -> Result<Vec<u8>, KeypairError> with Ok(vec![1])
+src/bottom_white/ledger/system_keypair.rs:1013:45: replace != with == in EncryptedKeypair::decode
+src/bottom_white/ledger/system_keypair.rs:1016:30: replace != with == in EncryptedKeypair::decode
+src/bottom_white/ledger/system_keypair.rs:1030:12: delete ! in EncryptedKeypair::decode
+src/bottom_white/ledger/system_keypair.rs:1053:9: replace Cursor<'a>::read -> Result<&'a[u8], KeypairError> with Ok(Vec::leak(Vec::new()))
+src/bottom_white/ledger/system_keypair.rs:1053:9: replace Cursor<'a>::read -> Result<&'a[u8], KeypairError> with Ok(Vec::leak(vec![0]))
+src/bottom_white/ledger/system_keypair.rs:1053:9: replace Cursor<'a>::read -> Result<&'a[u8], KeypairError> with Ok(Vec::leak(vec![1]))
+src/bottom_white/ledger/system_keypair.rs:1057:16: replace > with == in Cursor<'a>::read
+src/bottom_white/ledger/system_keypair.rs:1057:16: replace > with < in Cursor<'a>::read
+src/bottom_white/ledger/system_keypair.rs:1057:16: replace > with >= in Cursor<'a>::read
+src/bottom_white/ledger/system_keypair.rs:1066:9: replace Cursor<'a>::read_u8 -> Result<u8, KeypairError> with Ok(0)
+src/bottom_white/ledger/system_keypair.rs:1066:9: replace Cursor<'a>::read_u8 -> Result<u8, KeypairError> with Ok(1)

@@ -1,0 +1,12 @@
+src/runtime/verify.rs:192:9: replace ReplayReport::all_indicators_pass -> bool with true
+src/runtime/verify.rs:192:9: replace ReplayReport::all_indicators_pass -> bool with false
+src/runtime/verify.rs:198:13: replace && with || in ReplayReport::all_indicators_pass
+src/runtime/verify.rs:197:13: replace && with || in ReplayReport::all_indicators_pass
+src/runtime/verify.rs:196:13: replace && with || in ReplayReport::all_indicators_pass
+src/runtime/verify.rs:195:13: replace && with || in ReplayReport::all_indicators_pass
+src/runtime/verify.rs:194:13: replace && with || in ReplayReport::all_indicators_pass
+src/runtime/verify.rs:193:13: replace && with || in ReplayReport::all_indicators_pass
+src/runtime/verify.rs:237:8: delete ! in verify_chaintape
+src/runtime/verify.rs:244:28: replace != with == in verify_chaintape
+src/runtime/verify.rs:379:5: replace verify_agent_artifacts -> (bool, bool) with (true, false)
+src/runtime/verify.rs:379:5: replace verify_agent_artifacts -> (bool, bool) with (false, false)

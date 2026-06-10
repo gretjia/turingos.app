@@ -1,0 +1,7 @@
+src/bottom_white/ledger/system_keypair.rs:36:45: replace + with -
+src/bottom_white/ledger/system_keypair.rs:36:45: replace + with *
+src/bottom_white/ledger/system_keypair.rs:60:9: replace <impl From<u64> for SystemEpoch>::from -> Self with Default::default()
+src/bottom_white/ledger/system_keypair.rs:81:9: replace SystemPublicKey::fingerprint_sha256 -> [u8; 32] with [0; 32]
+src/bottom_white/ledger/system_keypair.rs:81:9: replace SystemPublicKey::fingerprint_sha256 -> [u8; 32] with [1; 32]
+src/bottom_white/ledger/system_keypair.rs:125:17: replace serde_bytes_64::deserialize::<impl Visitor<'de> for ArrVisitor>::expecting -> fmt::Result with Ok(Default::default())
+src/bottom_white/ledger/system_keypair.rs:362:51: replace != with == in Ed25519Keypair::from_plaintext

@@ -1,0 +1,6 @@
+pre-patch sha256:
+f99c8e28c3a4dd7b80ecfc531d5297699e44277a6e50ff610c3509078c784a2c  scripts/run_constitution_gates.sh
+post-patch sha256:
+c3437951f11d4c2a54e74d02810fd735b329bb6e594c4fd3747fc93d4716f2f6  scripts/run_constitution_gates.sh
+ scripts/run_constitution_gates.sh | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
