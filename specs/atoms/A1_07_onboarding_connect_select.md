@@ -2,11 +2,15 @@
 atom: A1_07_onboarding_connect_select
 phase: "1"
 intent: >
-  Onboard 三段式的 Connect+Select（四次裁决）：三级降档接入（gh CLI 登录态复用 →
-  GitHub OAuth Device Flow → 纯本地模式，每级 fail-visible 不静默）；repo 清单 =
-  GitHub /user/repos + 本地发现（remote URL 归一化去重，SSH/HTTPS 同仓识别）；
-  用户勾选纳管 = RegisterProject(L1) 批量写注册表（A1_06 格式）；无本地 clone 的勾选项
-  落注册表为 remote-only。token 只进 Keychain，永不入 tape/事件流/日志/回执。
+  Onboard（四次裁决三段式 × 五次裁决每屏一个决定）：Connect 屏 = 一个按钮 + 一句话
+  状态（自动探测 gh 登录态；降档逐级可见）；Select 屏 = 单列表每 repo 一行（名字 +
+  一句话近况）勾选即注册（写 A1_06 注册表格式）+ 拉起/连接 registry 模式 daemon；
+  完成落 Home。repo 清单 = GitHub /user/repos（经 gh token）+ 本地约定目录发现
+  （remote URL 归一化去重，SSH/HTTPS 同仓识别）；无本地 clone 的勾选项落 remote-only。
+  token 只进 Keychain，永不入 tape/事件流/日志/回执。
+  **范围裁决**：OAuth Device Flow 需要先在 GitHub 创建 OAuth App 取得 client_id
+  （用户动作）——本卡实现 gh 复用 + 纯本地两级，Device Flow 入口以"待配置"可见态占位，
+  client_id 供给列为停机磋商项。
 allowlist:
   - "app/**"
   - "research/R1_auth_memo.md"
