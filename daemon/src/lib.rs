@@ -5,9 +5,9 @@
 
 pub mod events;
 pub mod signer;
+pub mod snapshot;
 
 // Placeholders wired in later atoms (kept out of the tree until then - M1:
 // no module exists before its first real caller):
-//   snapshot  - A1_02 git2 worktree enumeration + porcelain -z parsing
 //   uds       - A1_03 event subscription server + resident aggregate projection
 //   watch     - A1_04 fs-watch dirty signals (notify crate spike)
