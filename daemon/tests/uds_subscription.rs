@@ -131,7 +131,7 @@ fn uds_reconciler_emits_drift_lifecycle() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = base_repo(tmp.path());
     let hub = EventHub::new("p");
-    let mut recon = Reconciler::new(&repo);
+    let mut recon = Reconciler::new("p", &repo);
 
     let s1 = recon.tick(&hub).unwrap();
     assert_eq!(s1.worktrees_seen, 1);
@@ -196,7 +196,7 @@ fn uds_hub_projection_conserved() {
     let hub = EventHub::new("p");
     publish_simple(&hub, EventKind::AgentSessionStarted);
     publish_simple(&hub, EventKind::ProposalSubmitted);
-    Reconciler::new(&repo).tick(&hub).unwrap();
+    Reconciler::new("p", &repo).tick(&hub).unwrap();
     publish_simple(&hub, EventKind::AgentSessionEnded);
 
     assert_eq!(
@@ -222,7 +222,7 @@ fn uds_lock_toggle_is_drift() {
     let repo = base_repo(tmp.path());
     git(&repo, &["worktree", "add", "-q", "../wt1", "-b", "feat"]);
     let hub = EventHub::new("p");
-    let mut recon = Reconciler::new(&repo);
+    let mut recon = Reconciler::new("p", &repo);
     recon.tick(&hub).unwrap();
 
     git(
@@ -253,7 +253,7 @@ fn uds_idle_markers_coalesce_in_replay() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = base_repo(tmp.path());
     let hub = EventHub::new("p");
-    let mut recon = Reconciler::new(&repo);
+    let mut recon = Reconciler::new("p", &repo);
     recon.tick(&hub).unwrap(); // discovery tick (drift marker retained)
 
     let (_, mut rx) = hub.replay_and_subscribe();
@@ -302,7 +302,7 @@ fn uds_reconciler_payload_matches_snapshot_shape() {
     std::fs::write(repo.join("dirty.txt"), "x\n").unwrap();
 
     let hub = EventHub::new("p");
-    Reconciler::new(&repo).tick(&hub).unwrap();
+    Reconciler::new("p", &repo).tick(&hub).unwrap();
     let (events, _) = hub.replay_and_subscribe();
     let via_recon = events
         .iter()

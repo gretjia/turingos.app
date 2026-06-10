@@ -1,0 +1,23 @@
+atom: A1_06_daemon_multi_repo
+utc: 2026-06-10T15:12:45Z
+head: 18259876793cacfcc9355c645571a71c5c63e0bb
+note: cargo test 52/52 x2; clippy -D warnings clean; registry_ 9/9 incl. 5 blocker regressions; S-stage dual review (both critics ran LIVE PROBES) -> 5 blockers fixed: path-repoint rebind, ghost-bucket eviction (EventHub::retire_project), canonical-path uniqueness (symlink alias too), per-project-scoped idle coalescing (steady-state conservation restored, idle log bounded <=1 marker/project), steady-state regression test added; event_project_id single helper kills paired-path drift; stats wired to stderr health line; 10/10 fix-map ALL-VERIFIED; real wire run: registry serve with hot add/remove over real socket 4/4 goals (remote-only announce, discover, hot-add discover, retire with reason); debts registered: restart re-discover storm self-heal -> P1 close-out, bucket sessions/proposals zero-by-construction until P5 emitters
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

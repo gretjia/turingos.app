@@ -51,6 +51,12 @@ impl PeerAuth for SameUid {
 struct HubState {
     events: Vec<EventEnvelope>,
     projection: AggregateProjection,
+    /// Per-project buckets (A1_06): an event lands in the bucket named by
+    /// its payload.project_id (when present) AND in the global rollup -
+    /// the compressed Global Workspace cards read buckets, the menubar
+    /// Glance reads the rollup. Conservation holds per bucket against a
+    /// filtered refold of the log.
+    buckets: BTreeMap<String, AggregateProjection>,
     /// Monotonic seq, independent of events.len(): retained-log coalescing
     /// may drop an event, and a reused seq would break the strictly-
     /// increasing guarantee live subscribers rely on.
@@ -74,6 +80,7 @@ impl EventHub {
             state: Mutex::new(HubState {
                 events: Vec::new(),
                 projection: AggregateProjection::default(),
+                buckets: BTreeMap::new(),
                 next_seq: 0,
             }),
             tx,
@@ -127,6 +134,9 @@ impl EventHub {
             payload,
         );
         st.projection.apply(&ev);
+        if let Some(pid) = event_project_id(&ev) {
+            st.buckets.entry(pid.to_string()).or_default().apply(&ev);
+        }
         st.events.push(ev.clone());
         let _ = tx.send(ev.clone()); // no subscribers yet is fine
         ev
@@ -142,14 +152,36 @@ impl EventHub {
     /// `projection == fold(log)` conservation is preserved, and seq stays
     /// strictly increasing because next_seq is independent of events.len().
     pub fn publish_reconciliation(&self, payload: serde_json::Value, idle: bool) -> EventEnvelope {
+        let pid = payload
+            .get("project_id")
+            .and_then(|v| v.as_str())
+            .map(str::to_owned);
         let mut st = self.state.lock().expect("hub lock");
         if idle {
-            let last_is_idle_marker = st.events.last().is_some_and(|e| {
-                e.kind == EventKind::ReconciliationCompleted
-                    && e.payload.get("drift_found").and_then(|v| v.as_u64()) == Some(0)
-            });
-            if last_is_idle_marker {
-                st.events.pop();
+            // Coalescing is scoped to THIS project's previous idle marker
+            // within the trailing run of idle markers (S-stage A1_06
+            // blocker: a cross-project pop deleted other projects' markers
+            // from the log while their buckets had already folded them -
+            // per-bucket conservation broke in idle steady state). The
+            // trailing-run bound keeps the idle log at <= 1 marker per
+            // project instead of growing per tick; removing a marker only
+            // ever drops an event whose sole bucket effect (as_of_seq) is
+            // dominated by the newer marker, so conservation survives.
+            let mut found: Option<usize> = None;
+            for i in (0..st.events.len()).rev() {
+                let e = &st.events[i];
+                let is_idle_marker = e.kind == EventKind::ReconciliationCompleted
+                    && e.payload.get("drift_found").and_then(|v| v.as_u64()) == Some(0);
+                if !is_idle_marker {
+                    break;
+                }
+                if event_project_id(e) == pid.as_deref() {
+                    found = Some(i);
+                    break;
+                }
+            }
+            if let Some(i) = found {
+                st.events.remove(i);
             }
         }
         Self::publish_locked(
@@ -207,11 +239,61 @@ impl EventHub {
         self.state.lock().expect("hub lock").projection.clone()
     }
 
+    /// Per-project bucket (compressed Global Workspace card data source).
+    pub fn project_projection(&self, project_id: &str) -> Option<AggregateProjection> {
+        self.state
+            .lock()
+            .expect("hub lock")
+            .buckets
+            .get(project_id)
+            .cloned()
+    }
+
+    pub fn project_ids(&self) -> Vec<String> {
+        self.state
+            .lock()
+            .expect("hub lock")
+            .buckets
+            .keys()
+            .cloned()
+            .collect()
+    }
+
     /// Conservation reference for tests/audits: fold of the retained log.
     pub fn refold(&self) -> AggregateProjection {
         let st = self.state.lock().expect("hub lock");
         AggregateProjection::fold(&st.events)
     }
+
+    /// Bucket conservation reference: fold of the log filtered to one
+    /// project's events (same extractor as the bucket router - one helper,
+    /// or the paired paths drift).
+    pub fn refold_project(&self, project_id: &str) -> AggregateProjection {
+        let st = self.state.lock().expect("hub lock");
+        AggregateProjection::fold(
+            st.events
+                .iter()
+                .filter(|e| event_project_id(e) == Some(project_id)),
+        )
+    }
+
+    /// Evict a project's bucket (registry removal: "no longer care" must
+    /// not leave a ghost card - S-stage A1_06 blocker). Call AFTER the
+    /// retire events are published; history stays in the log, only the
+    /// live bucket surface disappears.
+    pub fn retire_project(&self, project_id: &str) {
+        self.state
+            .lock()
+            .expect("hub lock")
+            .buckets
+            .remove(project_id);
+    }
+}
+
+/// The one project-attribution extractor, shared by the bucket router, the
+/// conservation refold and the idle-marker scoper (paired-path drift guard).
+pub(crate) fn event_project_id(ev: &EventEnvelope) -> Option<&str> {
+    ev.payload.get("project_id").and_then(|v| v.as_str())
 }
 
 /// Bind the subscription socket: remove a stale socket file from a previous
@@ -313,24 +395,52 @@ pub struct ReconStats {
 /// S-stage critique's blind-spot finding (locked changes went unreported) -
 /// one source of truth instead of a second lossy projection of it.
 pub struct Reconciler {
+    project_id: String,
     repo_path: PathBuf,
     last: BTreeMap<String, (serde_json::Value, String)>, // worktree_id -> (payload, path)
 }
 
 impl Reconciler {
-    pub fn new(repo_path: &Path) -> Self {
+    /// project_id is the reconciler's own identity (A1_06: one hub serves
+    /// many projects, so the hub's id no longer names the repo).
+    pub fn new(project_id: &str, repo_path: &Path) -> Self {
         Reconciler {
+            project_id: project_id.to_string(),
             repo_path: repo_path.to_path_buf(),
             last: BTreeMap::new(),
         }
     }
 
+    /// The path this reconciler is bound to (registry repoint detection).
+    pub fn repo_path(&self) -> &Path {
+        &self.repo_path
+    }
+
+    /// Retire this project's rows: every last-known worktree gets a
+    /// WorktreeRemoved (the bucket's anomaly ledger drains with them) -
+    /// a project leaving the registry must not freeze as a ghost.
+    pub fn retire(self, hub: &EventHub) {
+        for (worktree_id, (_, path)) in self.last {
+            hub.publish(
+                EventKind::WorktreeRemoved,
+                EventSource::Daemon,
+                TrustState::ObservedUnsigned,
+                serde_json::json!({
+                    "project_id": self.project_id,
+                    "worktree_id": worktree_id,
+                    "path": path,
+                    "reason": "project unregistered",
+                }),
+            );
+        }
+    }
+
     pub fn tick(&mut self, hub: &EventHub) -> Result<ReconStats, SnapshotError> {
-        let snap = snapshot_repo(hub.project_id(), &self.repo_path)?;
+        let snap = snapshot_repo(&self.project_id, &self.repo_path)?;
         let mut drift = 0u64;
         let mut current: BTreeMap<String, (serde_json::Value, String)> = BTreeMap::new();
         for row in &snap.rows {
-            let payload = worktree_discovered_payload(hub.project_id(), row);
+            let payload = worktree_discovered_payload(&self.project_id, row);
             let changed = self
                 .last
                 .get(&row.worktree_id)
@@ -364,7 +474,12 @@ impl Reconciler {
                 EventKind::WorktreeRemoved,
                 EventSource::Git,
                 TrustState::ObservedUnsigned,
-                serde_json::json!({ "worktree_id": gone_id, "path": path }),
+                serde_json::json!({
+                    "project_id": self.project_id,
+                    "worktree_id": gone_id,
+                    "path": path,
+                    "reason": "worktree gone",
+                }),
             );
         }
         self.last = current;
@@ -374,7 +489,7 @@ impl Reconciler {
         };
         hub.publish_reconciliation(
             serde_json::json!({
-                "project_id": hub.project_id(),
+                "project_id": self.project_id,
                 "worktrees_seen": stats.worktrees_seen,
                 "drift_found": stats.drift_found,
                 "method": "git_worktree_list+fs",
