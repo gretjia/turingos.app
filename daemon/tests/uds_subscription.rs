@@ -45,7 +45,7 @@ async fn uds_replay_then_live_push() {
     publish_simple(&hub, EventKind::AgentSessionStarted);
     publish_simple(&hub, EventKind::ProposalSubmitted);
 
-    let listener = bind_socket(&sock).unwrap();
+    let (listener, _lock) = bind_socket(&sock).unwrap();
     use std::os::unix::fs::PermissionsExt;
     let mode = std::fs::metadata(&sock).unwrap().permissions().mode();
     assert_eq!(mode & 0o777, 0o600, "socket must be 0600");
@@ -78,7 +78,7 @@ async fn uds_replay_then_live_push() {
 async fn uds_peer_cred_uid_and_pid() {
     let tmp = tempfile::tempdir().unwrap();
     let sock = tmp.path().join("c.sock");
-    let listener = bind_socket(&sock).unwrap();
+    let (listener, _lock) = bind_socket(&sock).unwrap();
     let accept = tokio::spawn(async move {
         let (stream, _) = listener.accept().await.unwrap();
         stream.peer_cred().unwrap()
@@ -110,7 +110,7 @@ async fn uds_denied_peer_gets_closed() {
     let sock = tmp.path().join("deny.sock");
     let hub = EventHub::new("t");
     publish_simple(&hub, EventKind::AgentSessionStarted);
-    let listener = bind_socket(&sock).unwrap();
+    let (listener, _lock) = bind_socket(&sock).unwrap();
     tokio::spawn(async move {
         let _ = serve(listener, hub, Arc::new(DenyAll)).await;
     });
@@ -319,4 +319,25 @@ fn uds_reconciler_payload_matches_snapshot_shape() {
         via_recon.payload, reference.payload,
         "one payload builder, two emit paths - they must agree byte-for-byte"
     );
+}
+
+/// S-stage A1_07 blocker regression: binding onto a LIVE daemon's socket
+/// must refuse (AddrInUse), never steal it; a dead/stale socket file is
+/// still cleaned up and bound.
+#[tokio::test]
+async fn uds_bind_refuses_live_socket_but_clears_stale() {
+    let tmp = tempfile::tempdir().unwrap();
+    let sock = tmp.path().join("live.sock");
+    let _live = bind_socket(&sock).unwrap();
+    let err = bind_socket(&sock).expect_err("must refuse to steal a live socket");
+    assert_eq!(err.kind(), std::io::ErrorKind::AddrInUse);
+
+    // stale: a socket file whose owner is gone
+    let stale = tmp.path().join("stale.sock");
+    {
+        let _dead = bind_socket(&stale).unwrap();
+        // listener dropped here - file remains, nobody accepts
+    }
+    assert!(stale.exists(), "stale socket file left behind");
+    let _rebound = bind_socket(&stale).expect("stale socket must be reclaimable");
 }

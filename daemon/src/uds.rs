@@ -308,14 +308,61 @@ pub(crate) fn event_project_id(ev: &EventEnvelope) -> Option<&str> {
 /// peer-cred same-uid check before a single event byte flows (THREAT_MODEL
 /// pairs 0600 with peer-cred precisely so neither lock stands alone), and
 /// callers are expected to place the socket in a user-private directory.
-pub fn bind_socket(path: &Path) -> std::io::Result<UnixListener> {
+/// Held for the daemon's lifetime: the flock on `<socket>.lock` is the
+/// liveness witness other binders test against. Dropping releases the
+/// flock (kernel does this on process death too) and best-effort removes
+/// the lock file.
+#[derive(Debug)]
+pub struct SocketLock {
+    _file: std::fs::File,
+    lock_path: PathBuf,
+}
+
+impl Drop for SocketLock {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.lock_path);
+    }
+}
+
+pub fn bind_socket(path: &Path) -> std::io::Result<(UnixListener, SocketLock)> {
+    // Liveness witness = flock on a sidecar lock file (S-stage A1_07
+    // blocker: blind unlink STEALS a live daemon's socket -> split brain).
+    // A connect()-probe was tried first and REJECTED by real test: on
+    // Darwin, connect to a just-closed listener's socket can transiently
+    // succeed (flaked under the parallel suite), so it is not a reliable
+    // witness. flock is: the kernel holds it exactly as long as the owning
+    // process lives, with no race window.
+    let lock_path = path.with_extension("lock");
+    let lock_file = std::fs::OpenOptions::new()
+        .create(true)
+        .truncate(false) // content is irrelevant; the flock is the witness
+        .write(true)
+        .open(&lock_path)?;
+    use std::os::fd::AsRawFd;
+    // SAFETY: flock on an owned, open fd; no preconditions beyond that.
+    let rc = unsafe { libc::flock(lock_file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) };
+    if rc != 0 {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::AddrInUse,
+            format!(
+                "another daemon holds {} - refusing to steal its socket",
+                lock_path.display()
+            ),
+        ));
+    }
     if path.exists() {
-        std::fs::remove_file(path)?;
+        std::fs::remove_file(path)?; // stale debris: the lock proves no owner
     }
     let listener = UnixListener::bind(path)?;
     use std::os::unix::fs::PermissionsExt;
     std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
-    Ok(listener)
+    Ok((
+        listener,
+        SocketLock {
+            _file: lock_file,
+            lock_path,
+        },
+    ))
 }
 
 /// Accept loop: peer-cred check first, then a per-client push task.

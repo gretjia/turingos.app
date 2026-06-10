@@ -45,7 +45,7 @@ fn main() -> ExitCode {
                 // Bind FIRST (single-threaded moment, so bind_socket's brief
                 // umask tightening cannot race other file creation), then
                 // start reconciliation.
-                let listener = turingosd::uds::bind_socket(Path::new(&socket))?;
+                let (listener, _socket_lock) = turingosd::uds::bind_socket(Path::new(&socket))?;
                 eprintln!("turingosd serving {project_id} on {socket}");
 
                 // fs-watch hints (A1_04): best-effort pulse + early tick.
@@ -171,7 +171,7 @@ fn serve_registry(registry: std::path::PathBuf, socket: String) -> ExitCode {
         }
     };
     let result: std::io::Result<()> = rt.block_on(async {
-        let listener = turingosd::uds::bind_socket(Path::new(&socket))?;
+        let (listener, _socket_lock) = turingosd::uds::bind_socket(Path::new(&socket))?;
         eprintln!(
             "turingosd serving registry {} on {socket}",
             registry.display()

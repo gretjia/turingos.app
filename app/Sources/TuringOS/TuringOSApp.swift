@@ -13,6 +13,26 @@ struct TuringOSMain {
             probeMain(socketPath: args[2])
             return
         }
+        // Headless onboarding coupling probe (A1_07): exercise the REAL
+        // catalog->entries->write path for one local repo. build_app.sh's
+        // registry wire-probe chains this with `turingosd serve --registry`
+        // and asserts the daemon announces the Swift-written project.
+        if args.count >= 4, args[1] == "--onboard-probe" {
+            let item = CatalogItem(
+                displayName: URL(fileURLWithPath: args[2]).lastPathComponent,
+                remoteKey: nil, localPath: args[2], pushedAt: nil
+            )
+            do {
+                try RegistryWriter.write(
+                    projects: RegistryWriter.entries(from: [item]),
+                    to: URL(fileURLWithPath: args[3])
+                )
+                exit(0)
+            } catch {
+                FileHandle.standardError.write(Data("onboard-probe: \(error)\n".utf8))
+                exit(1)
+            }
+        }
         TuringOSApp.main()
     }
 
@@ -73,6 +93,11 @@ final class ProbeBox: @unchecked Sendable {
 
 struct TuringOSApp: App {
     @StateObject private var store = GlanceStore()
+    @StateObject private var daemon = DaemonController()
+    /// Onboarded == the registry exists (one source of truth, no flag).
+    @State private var onboarded = FileManager.default
+        .fileExists(atPath: Workspace.registryURL.path)
+    @AppStorage("daemonBinaryPath") private var daemonBinaryPath = ""
 
     var body: some Scene {
         MenuBarExtra {
@@ -86,9 +111,22 @@ struct TuringOSApp: App {
         .menuBarExtraStyle(.window)
 
         WindowGroup("TuringOS") {
-            ContentView(store: store)
-                .preferredColorScheme(.dark)
+            if onboarded {
+                ContentView(store: store)
+                    .preferredColorScheme(.dark)
+                    .task { startWorkspace() }
+            } else {
+                OnboardingView {
+                    onboarded = true
+                    startWorkspace()
+                }
+            }
         }
+    }
+
+    private func startWorkspace() {
+        daemon.ensureRunning(daemonPath: daemonBinaryPath.isEmpty ? nil : daemonBinaryPath)
+        store.start(socketPath: Workspace.socketPath)
     }
 
     private var menubarSemantic: Tokens.Semantic {

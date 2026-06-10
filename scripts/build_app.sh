@@ -2,9 +2,10 @@
 # App lane of repo law: build + test the SwiftUI shell, assemble the .app
 # bundle, and - when the daemon binary is present - run the real UDS probe
 # end-to-end (app binary connects to a live turingosd and must receive a
-# contract envelope). macOS only by nature; the Linux shipgate lane
-# delegates this check to the macOS CI job (visible delegation, not a
-# silent skip).
+# contract envelope) plus the registry coupling probe (Swift-written
+# projects.json -> registry-mode daemon load). macOS only by nature; the
+# Linux shipgate lane delegates this check to the macOS CI job (visible
+# delegation, not a silent skip).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -27,7 +28,7 @@ swift build -c debug
 # Swift-Testing summary - a green receipt indistinguishable from zero
 # executed assertions). Capture everything, demand the XCTest pass line AND
 # a minimum executed-test count so silent runner drift turns the gate red.
-MIN_TESTS=11
+MIN_TESTS=27
 TEST_OUT="$(swift test 2>&1)" || { echo "$TEST_OUT" | tail -20; exit 1; }
 echo "$TEST_OUT" | grep -q "Test Suite 'All tests' passed" \
   || { echo "build_app: XCTest pass summary missing"; echo "$TEST_OUT" | tail -20; exit 1; }
@@ -84,6 +85,33 @@ assert e["schema_version"] == "tos.app.event.v0", e
 assert e["kind"] == "WorktreeDiscovered", e
 print("build_app: probe received real envelope kind=%s seq=%s" % (e["kind"], e["seq"]))
 '
+
+  # --- registry wire probe (A1_07): Swift-written registry -> daemon load --
+  # Chain the REAL onboarding coupling: the app binary writes projects.json
+  # through its catalog->entries->write path (--onboard-probe), a registry-
+  # mode daemon loads that exact file, and the first envelope over the wire
+  # must be the daemon ANNOUNCING the Swift-written project (ProjectRegistered
+  # precedes reconcile in RegistryRunner::tick, and replay is from seq 0).
+  "$BIN" --onboard-probe "$T/repo" "$T/projects.json"
+  "$DAEMON" serve --registry "$T/projects.json" "$T/r.sock" 2>/dev/null &
+  RPID=$!
+  trap 'kill "$RPID" 2>/dev/null || true' EXIT
+  for _ in $(seq 1 50); do [[ -S "$T/r.sock" ]] && break; sleep 0.1; done
+  RLINE="$("$BIN" --probe "$T/r.sock")"
+  kill "$RPID" 2>/dev/null || true
+  trap - EXIT
+  echo "$RLINE" | python3 -c '
+import json, os, sys
+repo = sys.argv[1]
+e = json.loads(sys.stdin.readline())
+assert e["schema_version"] == "tos.app.event.v0", e
+assert e["kind"] == "ProjectRegistered", e
+p = e["payload"]
+assert p["project_id"] == "repo", p
+assert p["local"] is True, p
+assert os.path.realpath(p["path"]) == os.path.realpath(repo), p
+print("build_app: registry probe - daemon loaded Swift-written registry (project_id=%s local=%s)" % (p["project_id"], p["local"]))
+' "$T/repo"
 else
   echo "build_app: daemon binary absent - wire probe skipped (rust lane builds it; run locally for the full check)" >&2
 fi
