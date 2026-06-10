@@ -1,0 +1,23 @@
+atom: A1_07_onboarding_connect_select
+utc: 2026-06-10T16:15:18Z
+head: ddfb41c178817c5cef603577eca3d1cd16e864dc
+note: swift test 27/27 (MIN_TESTS forensic floor matched); rust 53+1/x3 clean; clippy clean both langs; live probes closed memo unknowns (gh 2.92.0 token contract, --json hosts schema, conventional-dir scan 25ms, /user/repos shape); gh token NEVER persisted (re-derived per launch, kept out of @Published reflection surface); S-stage dual review -> 2 blockers fixed incl. the Darwin connect-after-close quirk DISCOVERED BY OUR OWN PARALLEL SUITE (connect-probe rejected by real test -> flock lockfile witness, kernel-guaranteed lifetime, regression pinned); orphan-daemon willTerminate hook; adopt-don't-spawn; registry coupling probe IS in the gate (Swift-written projects.json -> real daemon ProjectRegistered, canonical-path asserted); 10/10 fix-map ALL-VERIFIED; veto PASS; consultation item: Device Flow needs user-provisioned OAuth App client_id
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
