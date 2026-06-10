@@ -100,18 +100,11 @@ struct TuringOSApp: App {
     @AppStorage("daemonBinaryPath") private var daemonBinaryPath = ""
 
     var body: some Scene {
-        MenuBarExtra {
-            GlancePopover(store: store)
-        } label: {
-            // The dot = the whole product compressed to one pixel cluster:
-            // gray whenever the stream is not live (未对账 overrides all),
-            // else the worst triage level (red failure / yellow decision /
-            // blue ambient-or-quiet) - same derivation as home & popover.
-            Image(systemName: "circle.fill")
-                .foregroundStyle(menubarSemantic.color)
-        }
-        .menuBarExtraStyle(.window)
-
+        // WindowGroup MUST be the first scene: SwiftUI launches into the
+        // first scene in body, and a leading MenuBarExtra leaves the app
+        // running with ZERO windows (A1_10 - lsappinfo-proven on the real
+        // bundle; the headless probes never caught it because they never
+        // open a GUI).
         WindowGroup("TuringOS") {
             if onboarded {
                 ContentView(store: store)
@@ -124,6 +117,18 @@ struct TuringOSApp: App {
                 }
             }
         }
+
+        MenuBarExtra {
+            GlancePopover(store: store)
+        } label: {
+            // The dot = the whole product compressed to one pixel cluster:
+            // gray whenever the stream is not live (未对账 overrides all),
+            // else the worst triage level (red failure / yellow decision /
+            // blue ambient-or-quiet) - same derivation as home & popover.
+            Image(systemName: "circle.fill")
+                .foregroundStyle(menubarSemantic.color)
+        }
+        .menuBarExtraStyle(.window)
     }
 
     private func startWorkspace() {

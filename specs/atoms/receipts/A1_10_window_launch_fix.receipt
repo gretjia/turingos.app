@@ -1,0 +1,23 @@
+atom: A1_10_window_launch_fix
+utc: 2026-06-10T18:04:56Z
+head: 0d865a267101469292beb32cbaa8a71542e125f7
+note: D5 review blocker - app launched Foreground with ZERO windows (lsappinfo-proven; user could not open the UI). Root cause: MenuBarExtra declared before WindowGroup => SwiftUI launches into the menubar scene only. Fix = scene reorder (WindowGroup first), one file. REAL-RUN predicate: rebuilt bundle, open, osascript window count = 1 (was 0). Headless probes never catch this class - GUI launch smoke registered as debt. swift 53/53, shipgate 16/16.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
