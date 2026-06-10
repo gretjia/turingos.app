@@ -139,7 +139,7 @@ if [ -z "$hk_fail" ]; then pass "10 hooks dry-run + R-memo gate + dead links"
 else fail "10 hooks/links" "$hk_fail"; fi
 
 # --- p0.5 thin vertical slice checks (pump -> renderer pipeline) ---------------
-if [ "$PHASE" = "p0.5" ]; then
+if [ "$PHASE" = "p0.5" ] || [ "$PHASE" = "p1" ]; then
   sl_fail=""
   for f in fixtures/event_streams/*.jsonl; do
     r1=$(bash scripts/simulate_event_stream.sh "$f" | bash scripts/render_snapshot_placeholder.sh | sha256sum | cut -d' ' -f1)
@@ -153,6 +153,20 @@ if [ "$PHASE" = "p0.5" ]; then
        | bash scripts/render_snapshot_placeholder.sh | diff -q - "$g" >/dev/null 2>&1; then
     pass "12 golden snapshot match (p1 dashboard == committed golden)"
   else fail "12 golden snapshot" "regenerated render differs from $g (or golden missing)"; fi
+fi
+
+# --- p1 rust lane (CI splits this into rust.yml; locally one command runs all) --
+if [ "$PHASE" = "p1" ]; then
+  if command -v cargo >/dev/null 2>&1; then
+    if (cd daemon && cargo fmt --check >/dev/null 2>&1); then pass "13 rust fmt"
+    else fail "13 rust fmt" "cargo fmt --check has diffs"; fi
+    if (cd daemon && cargo clippy --all-targets -- -D warnings >/tmp/tos_clippy.out 2>&1); then pass "14 rust clippy (-D warnings)"
+    else fail "14 rust clippy" "$(tail -3 /tmp/tos_clippy.out | tr '\n' ' ')"; fi
+    if (cd daemon && cargo test >/tmp/tos_rtest.out 2>&1); then pass "15 rust tests (incl. fixture contract conformance)"
+    else fail "15 rust tests" "$(grep -E 'FAILED|error' /tmp/tos_rtest.out | head -3 | tr '\n' ' ')"; fi
+  else
+    fail "13-15 rust gates" "cargo not found - fail-closed (install toolchain or run in CI rust lane)"
+  fi
 fi
 
 echo "----------------------------------------"
