@@ -1,0 +1,22 @@
+atom: A1_02_worktree_snapshot
+utc: 2026-06-10T10:48:11Z
+head: 29d7ec4138462854aa266ca40b35ce65c32ded02
+note: rust 1.94.0; cargo test worktree_ 20/20 (8 lib + 12 boundary incl. S-stage critique regressions: staged/bare/basename-collision/unborn-HEAD/diff_hash-stability); clippy -D warnings clean; adversarial dual review (2 opus critics, live-repro findings) -> 12/12 fixes ALL-VERIFIED by independent checker; veto-ai clean-context audit PASS; real runs: turingos.app dirty tree, VibeInk clean tree, bare repo exit-0
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+----------------------------------------
+SHIPGATE p1: PASS
