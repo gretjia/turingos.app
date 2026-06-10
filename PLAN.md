@@ -21,7 +21,7 @@
 | Phase | 闭环目标 | 状态 |
 |---|---|---|
 | **P0 护栏与契约** | 文档 + 双层 Harness + contracts schemas + fixtures，shipgate 十检全绿 | **本期** |
-| **P0.5 Thin Vertical Slice** | fixtures → event stream → projection → 人类可读视图的极薄闭环（无 App 代码）：`scripts/simulate_event_stream.sh` + `scripts/render_snapshot_placeholder.sh`；门禁 = 渲染确定性（同 fixture 同 sha256） | P0 过闸即开 |
+| **P0.5 Thin Vertical Slice** | fixtures → event stream → projection → 人类可读视图的极薄闭环（无 App 代码）：`scripts/simulate_event_stream.sh`（泵）+ `scripts/render_snapshot_placeholder.sh`（确定性渲染）；门禁 = shipgate #11 双渲染 sha256 一致 + #12 golden 比对（`fixtures/snapshots/`） | **已交付**（R0.5 memo + 2 Atom 带回执） |
 | **P1 Worktree Radar V0**（只读） | 添加项目 → worktree 列表 → 脏 diff 流 → 渲染。R1 必须覆盖六边界：①symlink/路径穿越（canonicalize；worktree 不得逃逸 registry）②submodule ③git-lfs/binary ④untracked 与 .gitignore ⑤branch identity（detached HEAD/foreign badge；禁止两个 writer worktree 检出同一 mutable branch）⑥FSEvents 只是提示非日志。**没有 fixture 的功能不许开工**。Stable lane 部署目标在 R1 实证后定 | 待 R1 |
 | **P2 Identity & Wallet** | manifest 注册/验签/SE 钱包/GitSigner。ActorTrustState 已在 P0 锁定（`docs/TRUST_STATES.md`），P2 只实现不发明；key_kind 显式建模。门禁含 fail-closed 四态金标（accept-valid / reject-forged / reject-impostor / reject-no-manifest） | 待 R2 |
 | **P3 Ratification Center** | Class-4 签名流水线：canonical payload → §8 token → signed tag → merge guard → receipt。仪式只给 L4（`docs/RATIFICATION_POLICY.md`）。门禁：payload hash 跨机确定性；squash 篡改负向测试必拒 | 待 R3 |

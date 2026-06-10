@@ -138,6 +138,23 @@ print(';'.join(bad))")
 if [ -z "$hk_fail" ]; then pass "10 hooks dry-run + R-memo gate + dead links"
 else fail "10 hooks/links" "$hk_fail"; fi
 
+# --- p0.5 thin vertical slice checks (pump -> renderer pipeline) ---------------
+if [ "$PHASE" = "p0.5" ]; then
+  sl_fail=""
+  for f in fixtures/event_streams/*.jsonl; do
+    r1=$(bash scripts/simulate_event_stream.sh "$f" | bash scripts/render_snapshot_placeholder.sh | sha256sum | cut -d' ' -f1)
+    r2=$(bash scripts/simulate_event_stream.sh "$f" | bash scripts/render_snapshot_placeholder.sh | sha256sum | cut -d' ' -f1)
+    [ -n "$r1" ] && [ "$r1" = "$r2" ] || sl_fail="$sl_fail $f:render-nondeterministic"
+  done
+  if [ -z "$sl_fail" ]; then pass "11 slice render determinism (4 streams, double-render sha256)"
+  else fail "11 slice determinism" "$sl_fail"; fi
+  g="fixtures/snapshots/p1_worktree_radar.golden.md"
+  if [ -f "$g" ] && bash scripts/simulate_event_stream.sh fixtures/event_streams/p1_worktree_radar.jsonl \
+       | bash scripts/render_snapshot_placeholder.sh | diff -q - "$g" >/dev/null 2>&1; then
+    pass "12 golden snapshot match (p1 dashboard == committed golden)"
+  else fail "12 golden snapshot" "regenerated render differs from $g (or golden missing)"; fi
+fi
+
 echo "----------------------------------------"
 if [ "$FAIL" -eq 0 ]; then echo "SHIPGATE $PHASE: PASS"; exit 0
 else echo "SHIPGATE $PHASE: FAIL"; exit 1; fi
