@@ -34,9 +34,26 @@ UI/UX 与美学是独立且贯穿全程的一等任务。本文档与 `docs/NAVI
 
 UI 设计从草图开始共创：**执行 agent 出方案（草图/效果图，落盘 `design/mockups/<phase>/`）→ 用户参与初期设计与测试 → 认可后才开 UI 实现 Atom**。内核轨（daemon/契约/数据通路）不受此限可并行。效果图是证据不是装饰：每轮方案带变体对比与取舍说明，用户的裁定记录进对应 R-stage 简报。
 
-## Generative UI 北极星（独立调研中）
+## Generative UI 八条设计法律（R_GENUI §6，用户 2026-06-10 批准并入）
 
-用户裁定：generative UI 是 Software 3.0 人机交流的基石策略，直接面向未来设计。独立 R-stage 调研进行中（产出 `research/R_GENUI_memo.md`）；其设计法律（生成区域的信任边界、与确定性仪式屏的关系、typed 组件调色板等）经停机点确认后并入本宪章。**在此之前的既定底线**：签名仪式屏（L4）永远确定性渲染，永不生成。
+全部可机械判定；推翻任何一条须新 ADR + 对应层级批准（R1 为 L4）。判定细则见 `research/R_GENUI_memo.md` §6。
+
+- **R1 — 永久禁止 Level (c)**（模型字符串→可执行视图/eval/WebView 执行通道 grep=0；layout 只经 `layout_dsl.schema.json` 反序列化为白名单组件）。推翻须新 ADR + L4。
+- **R2 — 仪式屏永远确定性渲染**（仪式管线无 LLM 调用；`render_ceremony(payload)` 纯函数双渲染 sha256 一致；渲染输入与 §8 token 一并上 tape）。
+- **R3 — 生成区必带 `generated` 徽章 + 折叠 provenance**；用 gray 语义，禁止 green/purple；永不与 verified 混排。
+- **R4 — 生成式只在解释/编排层，永不进裁决层**（Predicate/Veto/信任徽章/签名回执渲染组件为审计白名单，数据绑定只来自 typed projection 字段）。
+- **R5 — layout DSL 必须 schema 校验 + 上 tape + fail-closed**（校验失败→不渲染+RiskFinding，禁止尽力渲染）。
+- **R6 — 生成区只引用 read-only 投影 + L≤2 action**；永不自带"已签名"语义；L3/L4 入口不得出现在 generated 子树。
+- **R7 — App Intents 仅限 L0/L1**；L3/L4 永不可被 Siri/Spotlight 一句话触发（intent 注册表 × typed_actions level 交叉校验，level≥3 有对应 intent 即门禁红）。
+- **R8 — 生成文本过语言门禁 + 必须并置原始证据**（market-claim 门禁对生成文本生效；生成摘要节点旁必有可展开证据节点）。
+
+## V6 设计北极星（用户自绘定稿，2026-06-10 批准）
+
+P1 UI 的视觉与交互语言以用户 V6 原稿为准：星系美学（项目=星云、worktree=节点卡、主干=轨道）、语义发光、语义缩放（宏观压缩/微观展开）、项目间零 Edge（独立拓扑）。原稿与规范：`design/mockups/v6/`；与本宪章诸法律的对账与立法调和：`design/V6_RECONCILIATION.md`。**对账原则**：V6 给出形态与气质，TRUST_STATES × VISUAL_SEMANTICS 给出徽章与状态色的唯一法源——冲突时法律优先，调和入法后方可实现。
+
+## Onboard 流程（用户 2026-06-10 裁定）
+
+「如何把项目交给系统」定型为三段：①**Connect**——优先无缝复用用户既有 git 体系（gh CLI 登录态 → GitHub Device Flow → 纯本地模式，逐级降档、fail-visible）；②**Select**——列出用户全部 repo（GitHub + 本地发现），用户勾选纳管哪些（开发完结的可不纳入）= 批量 RegisterProject(L1)；③**Observe**——进入 Global Workspace 全景面板，默认压缩态（语义缩放宏观视角），可整体观察、（P4+）派发任务，或点入单项目放大操作。auth token 永不入 tape/事件流。
 
 ## 平台语言与扩展姿态
 
