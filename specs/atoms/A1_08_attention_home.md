@@ -10,6 +10,9 @@ intent: >
 allowlist:
   - "app/**"
   - "scripts/shipgate.sh"
+  # 2026-06-11 留痕：法证测试下限 MIN_TESTS 随真实测试数增长，常量在 build_app.sh
+  # —— 与 A1_07 同款 M5 扩列。
+  - "scripts/build_app.sh"
 max_new_files: 12
 predicates:
   - "bash scripts/build_app.sh"
@@ -32,3 +35,33 @@ project 归属）→ AttentionItem 派生（severity 排序：失败>裁决>断�
 （确定性，表驱动，单测钉字节）；AttentionStackView 三段（空段折叠）；GlancePopover
 重写为一句话形态；"一切安静"空态全屏。测试：句子模板表驱动金标、分诊排序、
 空态/折叠逻辑、反模式守卫（视图树无三计数并排结构——以 ViewInspector 或快照断言）。
+
+# S-stage 对抗双审留痕（2026-06-11）
+
+双 Critic（带活探针）+ 清洁上下文 Veto 复核，裁定 10 项；全部修复后 38/38 测试、
+shipgate p1 16/16 全绿。逐项裁定 → 修复：
+
+1. **落地屏阻断**（blocker）：默认选中 `.worktreeRadar` 落在 A1_09 占位页，
+   atom 交付物不是用户打开看到的东西 → `ContentView.selection` 默认 `.globalOps`。
+2. **幻影项目**（blocker）：`project_id ?? "?"` 把违约事件物化成假活动行 →
+   Ledger 对缺 id 事件 guard-drop（不物化），新增 testPhantomEventsAreDropped。
+3. **同冲突 N 行 = 计数不是分诊**：同 project+branch 的冲突按组聚合为一个裁决项，
+   `sameBranchConflict(group:)` 列出全部成员名，evidence 改 `.array`（抽屉分段渲染），
+   新增 testSameBranchConflictGroupsToOneItem。
+4. **id 字符串考古**：归因集合改由 facts 直接构建，不再反解析 item.id。
+5. **灰态回归**（blocker）：connecting/disconnected 必须压灰 glance（绝不在死流
+   上戴自信的红/黄/蓝；旧项仍列在栈里）→ derive 的 connection override，
+   新增 testConnectionStateOverridesGlance + 排序测试断言改写。
+6. **Popover 截断不可见 + a11y 吞条目**：prefix(4) 后补可见溢出句
+   `popoverOverflow(hidden:)`；删除把全列表合并成单条 VoiceOver 元素的顶层
+   `.accessibilityElement(children:.combine)`，改为逐条目合并。
+7. **三处每帧重派生**：menubar 点/popover/home 改读 GlanceStore 上的单一缓存
+   `triage`（消费循环每轮派生一次）。
+8. **反模式守卫无判别力**：CJK 散文启发式升级为句子文法白名单
+   `Sentences.templates` + `matchesTemplate`，守卫测试含负对照（"活跃: 3" 必红）。
+9. **shortName 误剥尾段**：仅当尾段确为 8 位 hex digest 才剥（"wt_release_v2"
+   保全名），新增 testShortNameOnlyStripsRealDigests。
+10. **色彩单通道**：severity 增加 `iconName`（octagon/triangle/bolt），行徽章
+    图标+颜色双通道（VISUAL_SEMANTICS rule 3）。
+
+MIN_TESTS 34→38（随真实测试数增长，allowlist 已留痕扩列）。

@@ -20,9 +20,9 @@ def deny(reason):
 
 if rel == 'specs/atoms/CURRENT':  # R-stage gate on retargeting CURRENT
     content = str(ti.get('content') or ti.get('new_string') or '')
-    m = re.search(r'specs/atoms/A([0-9]+(?:_5)?)_', content)
+    m = re.search(r'specs/atoms/A([0-9]+(?:_[0-9])?)_', content)
     if m:
-        phase = m.group(1).replace('_5', '.5')
+        phase = m.group(1).replace('_', '.')
         memo = os.path.join(root, 'research', 'R%s_memo.md' % phase)
         if not os.path.exists(memo):
             deny('R-stage gate: research/R%s_memo.md missing - research precedes coding (PLAN.md R->D->S).' % phase)
