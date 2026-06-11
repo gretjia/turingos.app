@@ -63,3 +63,12 @@ Claude Code 的 WorktreeCreate/WorktreeRemove hooks **存在且可用**（2026-0
 - **级别红线**：仅 **L0/L1** action 可注册为 App Intent；**L3/L4 永不可被系统 AI 一句话触发**（与 RATIFICATION_POLICY 仪式稀缺性一致；R_GENUI R7 的谓词形态：intent 注册表 × typed_actions level 交叉校验，level≥3 有对应 intent 即门禁红）。
 - **实体投影**：暴露给系统 AI 的 entity 只来自 Projection API（read-only、携带 provenance、projection-safe 字段分级——ADR-011/PROJECTION_POLICY 原样适用）。
 - **接线时点**：P1 不实现；SwiftUI 壳的 action 分发层从第一天按 typed_actions 编排（本就是 D4 架构），届时接 App Intents 是纯增量。
+
+## ADR-015 单仓完全移植（用户 2026-06-11 终裁；取代 ADR-009 的双仓拓扑，保留其边界纪律为仓内法律）
+- **裁决**：**完整版 turingosv4（当前 main，194 门禁，含全部已并 OS 成果）作为内核进入本仓** `runtime/` 目录；turingos.app 既有的一切（daemon/SwiftUI/contracts/harness）**全部保留**——daemon 是 GUI 的投影/传输层，不是第二个宪法内核；宪法语义唯一存在于 runtime/。
+- **锚点**：当前 v4 main，具体 rev 经「锚点再验证 protocol」（干净 clone：workspace 测试 + 194 门禁 + pin 全扫 + 新红编目 + 热点 diffstat 定向核查）通过后钉入 PINS。**U 项（R1.9B：banner 回灌等）必须先于钉 rev 并入 v4 main。**
+- **导入方式**：squash 单 commit，message 记录 `turingosv4@<rev>`；可溯性 = 导入 commit + v4 原仓存档。
+- **基线棘轮**：基线 = 194 门禁绿 + workspace 绿（除再验证编目的例外红）；例外清单**只缩不扩**、每红绑 owning atom、清零后定义永久锁回"全部绿"。
+- **边界纪律（承 ADR-009，仓界变目录界）**：壳/daemon 代码 **import runtime internals = grep 谓词红线**；消费只经 `turingos` CLI（按 docs/CLI_ABI.md，非合规命令隔离适配）或显式 atom 添加的 lib facade。runtime/ 的 194 门禁 + workspace 测试成为本仓 CI lane（**内核的宪法随内核迁居**）。
+- **v4 原仓命运**：U 项落地 → 钉 rev → 导入基线绿 → PR #283 打 tag `archive/p1-realvalue-20260605` 关闭 → 本地分支清理（已授权）→ archive 只读。唯一真相自此在本仓。
+- **质量裁决存档**：S3=0（无模块需移植即重写）；五项编目债务（fail-open stub / 签名测试洞 / CI 盲区 / CLI 七律 1/29 / transition_ledger S2 + 留痕清单）拴定各自 owning atom，详见 research/R1.9_memo.md §⑤ 与 R1.9_synthesis.md。

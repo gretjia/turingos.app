@@ -1,17 +1,16 @@
-# UPSTREAM_CONTRACT — 与 turingosv4 的双仓契约（ADR-009 细则）
+# UPSTREAM_CONTRACT — 内核边界契约（ADR-015 后的仓内法律）
 
-`turingosv4` = constitutional runtime。`turingos.app` = sovereign projection & control surface。本文件防止本仓逐渐长出自己的"小 tape、小 market、小 wallet、小 replay"而成为第二部宪法。
+> 历史沿革：本文件原为双仓契约（ADR-009）。用户 2026-06-11 终裁完全移植（ADR-015）后，**仓界变为目录界**：`runtime/` = 宪法内核（完整版 turingosv4 @ PINS 钉定 rev），其余 = 主权外壳（daemon / SwiftUI / contracts / harness）。三铁律语义不变，约束对象从"两个仓"变为"一仓两域"。本文件防止外壳逐渐长出自己的"小 tape、小 market、小 wallet、小 replay"而成为第二部宪法。
 
-## 三条铁律
+## 三条铁律（仓内版）
 
-1. **不复制 canonical state logic。** ChainTape 追加、CAS 寻址、replay 验证、sequencer 裁决、market 结算的实现只存在于上游。本仓如需这些语义，调用上游接口；如上游接口不够，走车道 B 提 PR，**不在本仓重写**。
-2. **只经 pinned runtime interface 读写 receipts。** 消费的上游 rev 必须钉死在 `constitution/PINS.toml`（`[upstream.turingosv4].rev`），UNPINNED 状态下禁止消费任何上游接口。升 rev = 一次显式提交 + 兼容性验证。
-3. **任何 app-side projection 必须声明三件套**：`derive_source`（从何派生）、`schema_version`、`rebuild_command`（如何从 canonical truth 一键重建）。contracts/projection.schema.json 把这三项设为 required；shipgate #3 机械校验。无三件套的"状态"不允许存在。
+1. **外壳不复制 canonical state logic。** ChainTape 追加、CAS 寻址、replay 验证、sequencer 裁决、market 结算的实现只存在于 `runtime/`。外壳如需这些语义，调用 runtime 接口；接口不够，开 runtime 侧 atom（受其全部宪法门禁约束），**不在外壳重写**。
+2. **外壳只经声明接口消费内核。** `turingos` CLI（按 [CLI_ABI.md](CLI_ABI.md)；审计结论 1/29 全合规——非合规命令标 non-conformant 隔离适配，逐命令改造排程独立车道）或显式 atom 添加的 lib facade。**外壳代码 import runtime internals = grep 谓词红线**（A1_9_2 起 shipgate 强制）。
+3. **任何外壳投影必须声明三件套**：`derive_source` / `schema_version` / `rebuild_command`。contracts/projection.schema.json 强制；shipgate #3 机械校验。无三件套的"状态"不允许存在。
 
-## 集成车道
+## 内核域纪律
 
-- **车道 A（默认）**：`turingos` CLI-as-API，输出契约严格按 [CLI_ABI.md](CLI_ABI.md)。
-- **车道 B（演进）**：上游 lib 化（增加 `[lib]` target）PR；触及上游受限面（164 门禁覆盖区）严格走上游 Class-3/4 + §8 ratification 流程，本仓无权旁路。
+`runtime/` 的全部宪法门禁 + workspace 测试 = 本仓 CI 的 runtime lane（内核的宪法随内核迁居）；触碰 runtime 受限面（门禁覆盖区）的 atom 沿用 v4 的 Class-3/4 + §8 ratification 纪律，本仓 harness 无权旁路。
 
 ## 边界判例（先例，遇新情况类推并增补）
 
