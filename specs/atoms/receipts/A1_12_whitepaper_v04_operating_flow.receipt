@@ -1,0 +1,23 @@
+atom: A1_12_whitepaper_v04_operating_flow
+utc: 2026-06-11T19:25:32Z
+head: 2ec1268c8032615dec6e75cc9448656ed1350f74
+note: WHITEPAPER v0.4 unified rewrite on top of user-authored v0.3 draft (archived to research/WHITEPAPER_v0.3_user_draft.md per tape discipline). Architect personally read full TuringOS constitution (1259 lines) before writing - C-grade no-downgrade. R-stage fan-out: 4 parallel audits (constitution-conformance + v0.1-regression + flow-completeness -> Sonnet; mermaid/xref lint -> Haiku). CREDIBILITY TRIAGE: conformance + lint auditors read the WRONG file (cited repo v0.1 sections, not the Downloads v0.3) - their verdicts DISCARDED, constitution mapping done by architect personally; flow audit (20 gaps: 4 blockers - no terminal states / no stop-loss on both retry loops / 8-vs-3 TouchID node mismatch) and regression audit (32 items, 14 restore-grade) verified correct and consumed. v0.4 delivers: four-loop operating flow (Boot / Legislation / Execution / Meta) + attention channel, 5 mermaid charts, numbered execution nodes 11-28; constitution->product mapping (Art 0.1 four elements / 0.2 Tape Canonical via ADR-003 / 0.4 Q_t triple = git substrate path B at product layer with ChainTape canonical / Laws CTF / I.1.1 PCP+RiskFinding / II.1 rule-store broadcast / III.1 gardener / III.3 worker isolation / III.4 Goodhart shield); three-level law hierarchy (L0 sudo / L1 Init Spec / L2 task predicates); restored v0.1 assets (5 ethics, action classes 0-3, cross-cutting boundaries, per-agent hard facts, MCP-spec-gap argument, competitive honesty). S-stage: 2 opus critics (fidelity vs constitution+v0.3-intent; honesty vs FEASIBILITY) + haiku mermaid lint. Results: fidelity 0 blockers (6 constitutional checks PASS) + 5 risks; honesty 1 blocker ("git 三十年" - git is ~21yo; NOTE: error originates from constitution Art 0.4's own "git 30 年" text - flagged to user, constitution is sudo-only) + 4 risks; lint 0 issues. All 8 findings fixed: git age de-numbered, MCP quote aligned verbatim to FEASIBILITY [verified] text, 4096-token hedged to partially-verified status, Codex Cloud "完全" dropped, §14.2 ref precision, kernel-diagram market->provenance correction now explicitly noted for user ratification, restored dropped Software-3.0 directive bullet, TouchID renumbering note expanded. Atom predicates 4/4 PASS. Workflow infra note: Workflow args injection printed "undefined" in agent prompts (agents recovered by search + read-verification guard) - harness quirk logged, mitigated by mandatory readVerification field. Parallel R1.9 session active in same tree (CLAUDE.md/audit_data/.agents/.codex/AGENTS.md dirty) - untouched, only allowlisted files committed. PR left for user final review (whitepaper = user ratification domain, no ADR-012 auto-merge).
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
