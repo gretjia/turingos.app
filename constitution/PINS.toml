@@ -10,11 +10,14 @@ source = "verbatim user upload (1c451ed3, 1258 lines)"
 verified_on = "2026-06-10"
 tier = 1 # Tier-1 read-only: guarded by hook + shipgate; amendments only via Class-4 ratification upstream
 
-[upstream.turingosv4]
-repo = "https://github.com/gretjia/turingosv4"
-role = "constitutional runtime: ChainTape/CAS/replay/sequencer/market/verifier"
-rev = "UNPINNED" # pin at the first phase that consumes a runtime interface (P2 R-stage at latest); never consume unpinned
-facts_verified_on = "2026-06-10" # README/AGENTS.md/Cargo.toml: bins-only (no lib target), ed25519-dalek v2, git2 0.20, no SQLite dep
+[runtime_port] # ADR-015: full port of turingosv4 into runtime/ (user final ruling 2026-06-11)
+source_repo = "https://github.com/gretjia/turingosv4"
+anchor = "PIN-AT-REVERIFICATION" # current v4 main; exact rev pinned after the 1h anchor re-verification protocol (clean clone: workspace tests + 194 gates + pin sweep + new-red catalog), AFTER U-items land on v4 main
+import_mode = "squash single commit, message records turingosv4@<rev>"
+v4_fate = "freeze + archive after import baseline green; PR #283 tag-archived; branch cleanup authorized"
+baseline_ratchet = "exception list = re-verification red catalog; shrink-only; each red owns an atom; auto-tighten to all-green"
+audit_evidence = "research/R1.9_memo.md + R1.9B_omega_memo.md + R1.9_synthesis.md"
+ruled_on = "2026-06-11"
 
 [toolchain.dev_lane]
 # Primary development SDK (user second ruling 2026-06-10): build with Xcode 27 SDK,
