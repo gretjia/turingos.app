@@ -1,0 +1,23 @@
+atom: A1_11_agentic_os_whitepaper
+utc: 2026-06-11T15:21:32Z
+head: d1337ab5f0d5134a506bf416d213e68ab05869a4
+note: Turing Agentic OS whitepaper + feasibility (user ruling 2026-06-11: pivot to consent/visibility/approval gateway for AI agents on macOS). TWO research workflows (12 angles, 60 web-research agents total, 159 sourced claims, 48 adversarial re-checks: 44 confirmed/3 refuted/1 uncertain - ALL refutations incorporated incl. Claude Code MCP-deny gap #33106 + OpenClaw browser=group:ui + ACP-shipped-in-Xcode26); claim DB machine-rendered to research/R_agentic_os_sources.md (1041 lines); WHITEPAPER.md (ethics: voluntary-join only / draft-by-default / approval-binds-what-you-saw / honest tool results / local-first; three action classes + class zero; cross-cutting boundary disclosures: model-provider traffic invisible + gateway does not solve prompt injection); FEASIBILITY.md answers user Q1-Q3 directly (FM = GA ~9 months NOT first-batch, zero approval on-device; TouchID+SE fits w/ honest sign-bytes-not-screen limit; container = Linux-VM lane, complements shadow workspace) + 8-item empirical-test list. S-stage dual critique (honesty-vs-DB critic + skeptical-reader critic): 8 deduped blockers (BOTH independently caught my verdict-count error 45/2/1 -> 44/3/1 and the unapplied Hermes uncertain) + 19 risks - all fixed; Sonnet fix-map 15/15 ALL-VERIFIED. Gate-16 transient FAIL en route: stale turingosd binary hung at _dyld_start (differential-proven: fresh binary ok, same binary --help hung); cargo rebuild resolved; daemon source clean at HEAD; reported verbatim. Parallel R1.9 session active in same tree (commits d1337ab/4549438 + uncommitted CLAUDE.md/.agents/AGENTS.md) - untouched, only allowlisted files committed.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
