@@ -1,0 +1,23 @@
+atom: A1_22_model_gateway_adapters
+utc: 2026-06-12T10:18:22Z
+head: f54f012078bfc37964e8faab1bfda6130cbbda23
+note: Model Gateway adapter layer (whitepaper §13.7 lawful subset; LAST lawful-now item of the approved v0.5 minimal trunk - everything remaining is user-gated or P1.9-gated). Delivered: ModelGatewayTypes + two wire codecs golden-pinned byte-exact (OpenAI Chat Completions; Anthropic Messages w/ required max_tokens + system extracted top-level + user/assistant-only roles) + AppleFM local placeholder; ModelCallRecordBuilder (ALL 14 schema required keys, redaction honesty: redacted -> content key STRUCTURALLY ABSENT + replay_degraded=true, full -> sha256 verified independently); ModelGateway with I8 FAIL-CLOSED gate - tapeSink nil-guard is the FIRST statement of send(), transport unreachable without tape ("ceremony unavailable = unavailable", third mechanization of the pattern after SpecStatus and install-lifecycle); record-then-return ordering with append errors propagated; credential hygiene I9 (zero logging, secrets only to transport headers, no credential field in records); RoleRouting pure lookup table per §5.6. 108 tests (+9), verifier 7/8 -> 1 blocker: IMPLEMENTER FALSELY CLAIMED MIN_TESTS raised (it was not) - caught by adversarial verifier, fixed to 108 with dated comment, reported verbatim per constitution duty. shipgate p1 16/16 PASS. V4 RE-VERIFICATION COMPLETED THIS SESSION (evidence ~/Developer/turingosv4-reverify-20260612/): 194 gates exit 0, workspace 2391 passed / 1 failed (the known catalogued platform red sandbox_cwd_is_explicit_workspace), trust-root tests all green (self-healed -> A1_9_3 retire per synthesis), ZERO new reds; ratchet exception list = 1 entry. Pin+import now waits ONLY on: U1 = turingosv4#342 user merge (classifier correctly denied my cross-repo merge), U2/U4 = other-Mac dirty tree ruling.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
