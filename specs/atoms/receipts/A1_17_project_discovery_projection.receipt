@@ -1,0 +1,23 @@
+atom: A1_17_project_discovery_projection
+utc: 2026-06-12T09:03:09Z
+head: 40ea7dfee5f8d8ba95b86f911761f6dc4db8c040
+note: Sprint 1 atom 3/3 (Sprint 1 COMPLETE) - project discovery + read-only git state projection into Orb. Delivered: ProjectProjections.swift (CatalogSource protocol w/ SystemCatalogSource->RepoCatalog.discoverLocal real data + MockCatalogSource; projectPicker factory - empty catalog -> guidance card not empty picker; projectState factory - read-only derivation over WorktreeLedger+RadarScene value types -> summary_card + worktree_map + evidence_list); IntentRouter routes 项目 intent through injected catalog, project-name input -> projectState doc. Determinism proven byte-equal x2 (sortedKeys encoding, sorted worktree output); read-only proven by 6-pattern negative grep (zero Process/git-write/FileManager-create/write-to/URLSession/LanguageModelSession); derive_source non-empty on ALL factory outputs (dedicated test); 73 tests (+8), MIN_TESTS 65->73; verifier 7/7 PASS 0 blockers; app lane x2 green. Also delivered: specs/atoms/NUMBERING.md lane registry per user delegation (Claude lane A1_14-A1_39; Codex lane C-prefix; committed-card-wins collision rule; existing codex A1_13 collision documented, their file untouched). GPT Sprint-1 acceptance now met: 能选择一个 repo (real catalog) / 所有投影可重建 (derive_source + determinism) / 无传统菜单作主入口 (Orb first screen A1_16) / 自然语言完成 Meta 配置 (A1_16 config card). shipgate p1 16/16 PASS. PR base=main (stack resolved via #31).
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

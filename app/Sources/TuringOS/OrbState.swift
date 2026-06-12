@@ -124,22 +124,57 @@ public struct OrbReducer: Sendable {
 /// Deterministic intent router: maps user text to template projections.
 /// NO model calls. Same input always produces byte-identical output (pure function).
 /// Implements discoverability escape hatch per docs/02 §4.
+///
+/// A1_17: catalog and ledger/scene state are injected via protocols so tests
+/// can supply mock data without hitting disk or the network.
 public enum IntentRouter {
     /// Route input text to a deterministic ViewIRDocument.
     /// If `runtimeKind == .degraded`, the result is prefixed with a degradedNotice.
-    public static func route(input: String, runtimeKind: FacilitatorRuntimeKind) -> ViewIRDocument {
+    /// `catalog` supplies the project list; `ledger`+`radarScene` supply project state.
+    public static func route(
+        input: String,
+        runtimeKind: FacilitatorRuntimeKind,
+        catalog: any CatalogSource = SystemCatalogSource(),
+        ledger: WorktreeLedger = WorktreeLedger(),
+        radarScene: RadarScene = RadarScene.derive(ledger: WorktreeLedger())
+    ) -> ViewIRDocument {
         let lower = input.lowercased()
-        let base = routeBase(lower: lower)
+        let base = routeBase(lower: lower, catalog: catalog, ledger: ledger, radarScene: radarScene)
         if runtimeKind == .degraded {
             return prefixWithDegradedNotice(base)
         }
         return base
     }
 
-    private static func routeBase(lower: String) -> ViewIRDocument {
-        // Project picker intent
+    private static func routeBase(
+        lower: String,
+        catalog: any CatalogSource,
+        ledger: WorktreeLedger,
+        radarScene: RadarScene
+    ) -> ViewIRDocument {
+        // Project state: check whether the input matches a known project name
+        // (by display name) before the generic picker intent — more specific first.
+        let catalogItems = catalog.items()
+        if let matched = catalogItems.first(where: {
+            lower == $0.displayName.lowercased()
+                || lower == URL(fileURLWithPath: $0.localPath ?? "").lastPathComponent.lowercased()
+        }) {
+            // Derive the project_id the same way RepoCatalog/ProjectProjections do.
+            let projectId = matched.id
+            // Display name is the catalog display name; fall back to last path component.
+            let displayName = matched.displayName
+            return ProjectProjections.projectState(
+                projectId: projectId,
+                displayName: displayName,
+                ledger: ledger,
+                radarScene: radarScene,
+                deriveSource: catalog.deriveSourceTag
+            )
+        }
+
+        // Project picker intent (generic: no specific project matched above)
         if lower.contains("项目") || lower.contains("project") {
-            return TemplateProjections.projectPicker(from: sampleProjects())
+            return ProjectProjections.projectPicker(from: catalog)
         }
         // Morning ritual intent
         if lower.contains("早") || lower.contains("morning") {
@@ -166,12 +201,6 @@ public enum IntentRouter {
             deriveSource: (notice.deriveSource + doc.deriveSource).removingDuplicates(),
             blocks: combined
         )
-    }
-
-    private static func sampleProjects() -> [(name: String, path: String)] {
-        [
-            (name: "TuringOS", path: "/Users/zephryj/Developer/turingos.app"),
-        ]
     }
 
     private static func isoToday() -> String {
