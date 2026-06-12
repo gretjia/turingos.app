@@ -1,0 +1,23 @@
+atom: A1_28_capability_eval_harness
+utc: 2026-06-12T12:06:34Z
+head: a6fc1e0982fb2e3925f705a7afadedce7b121851
+note: Registry execution-order next step (GPT ruling §二-2: manifest schema -> tape install -> action_class enforcement -> EVAL HARNESS -> 2-3 official skills -> library). A1_21 built manifest+enforcement; this builds the eval harness - the step I initially MISSED when declaring exhaustion (re-scan found it). Lawful: pure deterministic evaluation, no tape, no arbitrary code exec. Delivered: EvalSpec (4 kinds structural/determinism/schemaConformance/golden); CandidateRunner protocol w/ MockCandidateRunner (pure Swift callCount arithmetic, controllable stable/drift/throw) + NotYetAvailableCandidateRunner (DEFAULT live path THROWS candidateExecutionUnavailable - live capability exec awaits sandbox/runtime, building it here would run untrusted code); EvalHarness.run -> EvalReport {results, qualified} output domain mechanical {pass,fail}, fail-closed: any required eval fail/drift/throw -> qualified=false, MISSING-EVAL RULE: manifest declares install/replay evals but spec absent/unrunnable -> synthetic_coverage FAIL (a manifest promising evals it cannot run is unqualified); EvalReportProjection (risk_list+summary_card existing blocks, ViewIR.swift git-diff empty). 203 tests (+30), MIN_TESTS 173->203 (implementer reported truthfully this time - 4th round, verifier still independently re-confirmed per the 3-prior-lies discipline). Verifier 8/8 PASS 0 blockers. shipgate p1 16/16 PASS. Session total 53->203 tests across 9 v0.5 atoms A1_20..A1_28. Remaining registry order step (2-3 official skills as activated entries) is tape-gated; the eval harness is the last tape-free registry component.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
