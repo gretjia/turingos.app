@@ -1,0 +1,23 @@
+atom: A1_29_turing_skill_model
+utc: 2026-06-12T12:22:33Z
+head: 73c2e1c66395ea97710db04652cf81acb5269f48
+note: Turing Skill model (whitepaper §13.9; GPT registry order: eval harness -> 2-3 official skills -> library; this builds the Skill MODEL prerequisite + the 2-3 official skills as TEMPLATE DATA). Lawful draft-domain: parse + validate + package; activation = state transition = runtime tape, so SkillStatus has NO activated case (type-level, A1_18 precedent). Delivered: SkillMD.swift (minimal YAML frontmatter parser + body, progressive-disclosure L1+L2 semantics; scripts/resources are path strings NEVER executed); TuringSkill.swift (SKILL.md core + law shell: allowedActionClasses[A1_21 enum]/credentialScopes/receiptSchemaRef/evals/failureModes; skillHash canonical sortedKeys sha256 status-excluded); SkillValidator.swift (required frontmatter + FAIL-CLOSED reusing A1_21: no/empty/invalid allowedActionClasses -> class_3 + classDeclaredRequired flag, NEVER permissive); 3 official SKILL.md fixtures (markdown_to_doc / failure_certificate_root_cause / github_pr_review) parsed+validated as DRAFT templates (status==draft, none activated); SkillProjection (existing blocks, ViewIR.swift git-diff empty). 211 tests (+8), MIN_TESTS 203->211 (truthful). Verifier 9 checks: 8 PASS + 1 FAIL (audit_data dirty from PARALLEL R1.9 mutant process appending TIMEOUT lines during my run - NOT my edit; fix agent reverted; I also re-reverted at ship - this file belongs to the parallel session, never staged). shipgate p1 16/16 PASS. Session total 53->211 tests across 10 v0.5 atoms A1_20..A1_29. GPT registry order tape-free portion now COMPLETE (manifest A1_21 -> enforce A1_21 -> eval harness A1_28 -> official skills A1_29); remaining registry step (install/update/remove ON TAPE + full library) is tape-gated/deferred.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
