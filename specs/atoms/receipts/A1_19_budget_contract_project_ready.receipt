@@ -1,0 +1,39 @@
+atom: A1_19_budget_contract_project_ready
+shipped_at: 2026-06-12T13:09:00Z
+git_head: 1c6fee73235a437a0cc7f5b49864b2813434e298
+gate: bash scripts/shipgate.sh p1
+
+note: Budget + Autonomy Contract draft domain (A1_19). Constitutional boundary identical to A1_18 (SpecPackage): BudgetContractStatus has EXACTLY {draft, awaitingRatification} — NO ratified case (type-level enforcement, CaseIterable.allCases.count==2 test). budgetHash = SHA256 over limits+autonomy (sortedKeys canonical JSON, excludes status/projectId — same pattern as specHash in A1_18). BudgetContractBuilder.buildEnvelope() wraps A1_23 ApprovalEnvelopeBuilder with signatureNode=2; pure, deterministic, zero tape writes. BudgetProjections: budgetDraftCard (uses A1_15 BudgetCardPayload) + projectReadyPendingCard — both derive_source non-empty, schema_version non-empty, deterministic ×2. BudgetContractValidator: rejects tokenLimit<=0, wallClockSecs<=0, empty projectId, etc. 17 new tests (211→228, MIN_TESTS updated). First shipgate attempt: gate 16 probe timed out (transient — residual turingosd PID 23523 from earlier app launch caused system load; killed daemon, retried, PASS). Manual probe confirmed binary works (exit 0, WorktreeDiscovered envelope received).
+
+Predicate coverage:
+  P1: BudgetContractStatus.allCases.count==2, no rawValue "ratified" or "activated" ✓
+  P2: budgetHash determinism ×2; content change→different hash; status/projectId change→stable hash ✓
+  P3: Builder signatureNode==2; budgetHash matches contract.budgetHash (sha256: prefix) ✓
+  P4: Projection determinism ×2; derive_source non-empty; schema_version non-empty ✓
+  P5: Validator accepts valid; rejects tokenLimit=0; rejects wallClockSecs=-1; rejects empty projectId ✓
+  P6: T3 hostThreatLevel → BuildRefusal.hostThreatLevelT3NotSupported forwarded from A1_23 ✓
+  P6 (MIN_TESTS): 228 tests, 0 failures ✓
+
+Remaining whitepaper v0.5 gaps after this atom:
+  A1_9_02: CI runtime lane (blocked on P1.9 user-gated import of turingosv4 runtime)
+  P1.9: Requires user to (1) merge turingosv4 PR #342, (2) resolve U2/U4 (AGENTS.md §14b),
+        then I execute A1_9_01 squash import + pin PINS.toml, enabling A1_9_02.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

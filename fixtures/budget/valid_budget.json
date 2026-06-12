@@ -1,0 +1,19 @@
+{
+  "schema_version": "tos.app.budget_contract.v0",
+  "project_id": "fixture-project",
+  "status": "draft",
+  "limits": {
+    "token_limit": 100000,
+    "wall_clock_secs": 86400,
+    "tool_calls_limit": 500,
+    "ci_cycles_limit": 20,
+    "reviewer_burden_hours": 2.0,
+    "external_dispatch_limit": 5,
+    "stop_loss_line": "halt_on_3_consecutive_ci_failures"
+  },
+  "autonomy": {
+    "max_retry_before_halt": 3,
+    "require_human_review_before_merge": true,
+    "notification_channels": ["attention_channel"]
+  }
+}
