@@ -39,7 +39,7 @@ v0.4 在此之上完成三项工作：
 v0.5 依用户 8 条评审完成**定位升级：Apple-native → Apple-native × protocol-native**，闭合三个缺口：
 
 1. **生态接口系统化。** MCP / A2A / MCP Apps / A2UI / AG-UI / SKILL.md / 模型 API 不再是零散集成点，而是一个有铁律的协议层（§13.6）+ Model Gateway（§13.7）+ View IR（§6.6）。原则一句话：**外部协议负责互操作；TuringOS 负责法律、谓词、签名、审计、状态迁移。**
-2. **能力面白盒化。** 不做传统插件市场，做 **Capability Registry**（§13.8）：每个工具/技能/连接器都是带 manifest、权限、动作类、eval 与回执的可审计对象——Install ≠ trust。Skill Library（§13.9）与 Live Software 3.0 回路（§13.10）让系统在使用中演化白盒脚手架。
+2. **能力面底层白盒化。** 不做传统插件市场，做 **Capability Registry**（§13.8）：每个工具/技能/连接器都是带 manifest、权限、动作类、eval 与回执的可审计对象——Install ≠ trust。Skill Library（§13.9）与 Live Software 3.0 回路（§13.10）让系统在使用中演化白盒脚手架。术语纪律：反奥利奥架构是**顶层白盒（谓词与管理）/ 中间黑盒（agent）/ 底层白盒（工具）**三层——本文凡称"白盒工具/白盒能力"，一律指**底层白盒**，与顶层白盒严格分层、不得混称。
 3. **安全模型升维。** Touch ID + SE 是 v0.x 的本地批准层；面对"宿主 OS 被完全攻破"的 AGI 威胁模型，v0.5 写入 **Hostile Host 公理**与两层安全架构（§9.1），不夸大 Secure Enclave 的能力边界。
 
 ---
@@ -612,11 +612,11 @@ Apple Developer Program → Developer ID 证书 → Hardened Runtime → notaryt
 
 - 凭证存 Keychain / SE 保护项；tape 只记 `credential_scope_hash`；prompt 不得含凭证。
 - 每次模型调用写 ModelCall 节点入带：provider、model、cost、latency、policy，**默认含输入输出全文**（tape 在用户自己的机器上，全文才支撑可回放）；用户可启用脱敏档改记内容哈希——**脱敏即如实标注该段回放降级**，不假装仍可全量重建。
-- 模型路由遵循 §5.6 判据清晰度律；Gateway 是白盒管道，不做任何放行裁决。
+- 模型路由遵循 §5.6 判据清晰度律；Gateway 是**底层白盒**管道（工具层），不做任何放行裁决——放行裁决属顶层白盒。
 
-### 13.8 Capability Registry：白盒能力注册表
+### 13.8 Capability Registry：底层白盒能力注册表
 
-不做传统插件市场——agentic 能力不是 UI 扩展，是**可行动作面**（OpenClaw 技能生态的供应链事故是已付学费，§15）。TuringOS 的市场体验之下是一张白盒注册表，对象包括：工具、技能、连接器、模型供应方、agent adapter、view renderer、执行 profile。
+不做传统插件市场——agentic 能力不是 UI 扩展，是**可行动作面**（OpenClaw 技能生态的供应链事故是已付学费，§15）。TuringOS 的市场体验之下是一张**底层白盒**注册表（注册的全部是反奥利奥架构的工具层对象，与顶层白盒的谓词/管理严格分层），对象包括：工具、技能、连接器、模型供应方、agent adapter、view renderer、执行 profile。
 
 每个能力必须有 manifest，机器可校验：
 
@@ -647,7 +647,7 @@ evals: { install: tests/install.yaml, replay: tests/replay.yaml }
 
 ### 13.9 Skill Library
 
-Skills 是一等白盒能力包，不是 prompt 模板。格式上**兼容 SKILL.md 开放标准**（Anthropic 2025-12-18 发布，渐进披露三级加载；2026-03 已 32 个工具支持——这正是 Art. III.2 封装细节的业界收敛），外加 Turing 法律外壳：
+Skills 是一等**底层白盒**能力包，不是 prompt 模板。格式上**兼容 SKILL.md 开放标准**（Anthropic 2025-12-18 发布，渐进披露三级加载；2026-03 已 32 个工具支持——这正是 Art. III.2 封装细节的业界收敛），外加 Turing 法律外壳：
 
 > **Turing Skill = SKILL.md（instructions + scripts + schemas）+ 权限 + 动作类 + 回执 schema + replay 规则 + evals + failure_modes**
 
@@ -657,7 +657,7 @@ Skills 是一等白盒能力包，不是 prompt 模板。格式上**兼容 SKILL
 
 ### 13.10 Live Software 3.0 回路
 
-让系统在使用中变活——但**自我迭代的对象是白盒脚手架，永远不是黑盒任意自我变异**。这不是新机制，是回路 3（§7.4）的数据飞轮扩展：
+让系统在使用中变活——但**自我迭代的对象是白盒脚手架（底层白盒工具、顶层白盒谓词与投影模板），永远不是中间黑盒的任意自我变异**。这不是新机制，是回路 3（§7.4）的数据飞轮扩展：
 
 ```text
 tape 产生原料：FailureNode / 拒绝记录 / 工具回执 / CI 修复史 / 用户纠正 / 重复 WorkGraph 模式
