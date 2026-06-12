@@ -1,24 +1,26 @@
 # TuringOS v4 — Quick Start (人工测试指南)
 
+> **副本说明**：此文件从 turingosv4 导入 runtime/ 的副本（ADR-015），路径已按 turingos.app 布局更新。二进制位于 `~/Developer/turingos.app/runtime/target/debug/turingos`；.env 不再适用，请直接 `export DEEPSEEK_API_KEY=...`。
+
 > 5 分钟内从零到交付一个浏览器小游戏。所有命令复制粘贴即可。
 
 ## 你需要什么
 
 - Linux / macOS shell (bash 或 zsh)
 - 网络能连 `api.deepseek.com`
-- `.env` 文件里已有的两把 DeepSeek key (Plan v4 已经放好)
+- 两把 DeepSeek key（通过 `export DEEPSEEK_API_KEY=...` 直接设置；.env 在 turingos.app 布局中不再适用）
 
 ## 二进制位置
 
 ```bash
-TURINGOS=/home/zephryj/projects/turingosv4/target/debug/turingos
+TURINGOS=~/Developer/turingos.app/runtime/target/debug/turingos
 ```
 
-或者直接用绝对路径调用：`/home/zephryj/projects/turingosv4/target/debug/turingos`
+或者直接用绝对路径调用：`~/Developer/turingos.app/runtime/target/debug/turingos`
 
 如果 `target/debug/turingos` 不存在，先编译：
 ```bash
-cd /home/zephryj/projects/turingosv4 && cargo build --bin turingos
+cd ~/Developer/turingos.app/runtime && cargo build --bin turingos
 ```
 
 ---
@@ -30,10 +32,9 @@ cd /home/zephryj/projects/turingosv4 && cargo build --bin turingos
 每次新开 shell 都要做一次（这是 Plan v4 next charter 要修的 setup friction）：
 
 ```bash
-# 1. 加载 .env 里的 DeepSeek 双 key
-set -a
-source /home/zephryj/projects/turingosv4/.env
-set +a
+# 1. 设置 DeepSeek 双 key（turingos.app 布局：直接 export，无 .env）
+export DEEPSEEK_API_KEY="sk-..."
+export DEEPSEEK_API_KEY_WORKER="sk-..."
 
 # 2. 告诉 turingos 用 DeepSeek 而不是 SiliconFlow
 export TURINGOS_SILICONFLOW_ENDPOINT="https://api.deepseek.com/v1/chat/completions"
@@ -226,10 +227,11 @@ $TURINGOS --help
 #!/bin/bash
 set -e
 
-# Step 0
-set -a; source /home/zephryj/projects/turingosv4/.env; set +a
+# Step 0（turingos.app 布局：无 .env，直接 export key）
+export DEEPSEEK_API_KEY="sk-..."
+export DEEPSEEK_API_KEY_WORKER="sk-..."
 export TURINGOS_SILICONFLOW_ENDPOINT="https://api.deepseek.com/v1/chat/completions"
-TURINGOS=/home/zephryj/projects/turingosv4/target/debug/turingos
+TURINGOS=~/Developer/turingos.app/runtime/target/debug/turingos
 WS=/tmp/turingos-manual-$$
 mkdir -p $WS
 echo "Workspace: $WS"
@@ -279,9 +281,9 @@ welcome → init --provider deepseek → 写 answers.json → spec → generate 
 每次开新 shell 你都得重复 Step 0 的 3 个 export。临时绕开：把这 4 行加进你的 `~/.bashrc` 或 `~/.zshrc`：
 
 ```bash
-# TuringOS v4 quick setup
-export TURINGOS=/home/zephryj/projects/turingosv4/target/debug/turingos
-alias load-turingos='set -a; source /home/zephryj/projects/turingosv4/.env; set +a; export TURINGOS_SILICONFLOW_ENDPOINT="https://api.deepseek.com/v1/chat/completions"'
+# TuringOS v4 quick setup（turingos.app 布局：无 .env，直接 export key）
+export TURINGOS=~/Developer/turingos.app/runtime/target/debug/turingos
+alias load-turingos='export DEEPSEEK_API_KEY="sk-..."; export DEEPSEEK_API_KEY_WORKER="sk-..."; export TURINGOS_SILICONFLOW_ENDPOINT="https://api.deepseek.com/v1/chat/completions"'
 ```
 
 然后每次只要 `load-turingos` 就齐活。

@@ -60,6 +60,22 @@ pub(crate) fn shell_quote_path(path: &Path) -> String {
 /// kernel operations. The "lean_" prefix is historical — the wrapped
 /// operations are NOT Lean-specific.
 ///
+/// BUILD STATUS (as of turingos.app import): `lean_market` lives in
+/// `runtime/experiments/minif2f_v4/src/bin/lean_market.rs` and is the
+/// only binary that implements the `view-wallet`, `view-positions`, and
+/// `view-bankruptcy` subcommands consumed by `report wallet/positions/bankruptcy`.
+/// However, `experiments/minif2f_v4` is EXCLUDED from the main workspace
+/// (`runtime/Cargo.toml`: `exclude = ["experiments/minif2f_v4"]`), so
+/// `cargo build --workspace` does NOT produce `lean_market`. To use
+/// `report wallet/positions/bankruptcy`, build it separately:
+///   cd runtime/experiments/minif2f_v4 && cargo build --bin lean_market
+/// then set `TURINGOS_BIN_DIR` to its `target/debug/` directory, or copy
+/// the binary into the same directory as the `turingos` binary.
+///
+/// NOTE: `lean_market_agent` (the main workspace binary) does NOT handle
+/// `view-wallet` / `view-positions` / `view-bankruptcy`. Do NOT change
+/// this constant to `lean_market_agent` — that would be incorrect.
+///
 /// Phase 7+ generalization plan: these operations move into a generic
 /// `agent_runner` binary. When that lands, this constant is the single
 /// point of change.

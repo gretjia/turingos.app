@@ -1,0 +1,156 @@
+---
+atom: A1_37_runtime_cli_report_backend_fix
+timestamp_utc: 2026-06-12T17:23:37Z
+git_head: ad799a8d712f514960027ff64ac0991f4ef281c3
+implementer: claude-sonnet-4-6
+---
+
+# BUG 1 判定：CASE-B
+
+## 决策树调查过程
+
+1. `grep -rn "view-wallet" runtime/src/bin/` 结果：
+   - 唯一调用方：`cmd_report_wallet.rs:43` — `vec!["view-wallet".to_string()]` prepend 后 shell-out 到 `TASK_RUNNER_BIN`
+   - 无任何二进制在 `runtime/src/bin/` 内部 parse/dispatch `view-wallet`
+
+2. `grep -n "view-wallet" runtime/src/bin/lean_market_agent.rs` — **0 命中**
+   - 实测：`./target/debug/lean_market_agent view-wallet` → 输出 `lean_market_agent: unexpected arg view-wallet`，exit 0（不认识该子命令，不是 CASE-A）
+
+3. `find . -name "lean_market.rs"` → `runtime/experiments/minif2f_v4/src/bin/lean_market.rs`
+   - 该文件 main() 分发：`"view-wallet" => cmd_view_wallet(...)`, `"view-positions" => cmd_view_positions(...)`, `"view-bankruptcy" => cmd_view_bankruptcy(...)`
+   - **这是处理这三个子命令的唯一二进制**
+
+4. `grep -n "minif2f" runtime/Cargo.toml` → `exclude = ["experiments/minif2f_v4"]`
+   - minif2f_v4 **被排除在主 workspace 之外**，`cargo build --workspace` 不产生 `lean_market` 二进制
+   - `ls target/debug/lean_market*` → 只有 `lean_market_agent`，无 `lean_market`
+
+## CASE-B 结论
+
+`TASK_RUNNER_BIN = "lean_market"` 命名正确——它指向 `experiments/minif2f_v4` 中的
+`lean_market` 二进制，该二进制实现了 `view-wallet/view-positions/view-bankruptcy`。
+常量不是笔误，也不是应改成 `lean_market_agent`（后者不处理这些子命令）。
+根本问题：`experiments/minif2f_v4` 被 excluded 出主 workspace，所以这三个 report
+子命令在当前布局下需要单独构建 lean_market。
+
+## BUG 1 修法（CASE-B）
+
+**不改常量值**（`lean_market` 是正确的目标名）。
+
+在 `runtime/src/bin/turingos/common.rs` 的 `TASK_RUNNER_BIN` doc comment 中
+增加"BUILD STATUS"段落，准确说明：
+- `lean_market` 在 `experiments/minif2f_v4/src/bin/lean_market.rs`
+- 该 crate 被 `exclude` 出主 workspace，`cargo build --workspace` 不构建它
+- 如需使用 report wallet/positions/bankruptcy，需手动 `cd experiments/minif2f_v4 && cargo build`
+- `lean_market_agent` 不处理这些子命令，不得改常量为该名
+
+**allowlist 内，只改 doc comment，不改代码逻辑，不改常量值。**
+
+## real-run 证明（CASE-B：lean_market_agent 不认 view-wallet 的原文）
+
+```
+$ ./target/debug/lean_market_agent view-wallet
+lean_market_agent: unexpected arg view-wallet
+exit: 0
+
+$ ./target/debug/turingos report wallet --repo /tmp/a137_g0_92550/runtime_repo --cas /tmp/a137_g0_92550/cas
+turingos: a required backend binary for this command is not available.
+
+  Resolution paths:
+    1. Build all workspace binaries (recommended):
+         cargo build --workspace
+    2. If you only want to preview UI views (no backend needed):
+         turingos render --fixture <path-to-fixture.json>
+       Fixtures: experiments/tisr_ui_spike/fixtures/
+    3. If you have a custom build directory, set:
+         TURINGOS_BIN_DIR=<dir>
+report wallet exit: 2
+```
+
+g0 fixture 生成成功（exit 0，13 agents，manifest `/tmp/a137_g0_92550/r.json`）。
+report wallet exit 2 = backend not available（`lean_market` 不在 PATH/sibling dir）。
+CASE-A 条件不满足，无需 exit-0 通过标准。
+
+---
+
+# BUG 2：QUICKSTART.md macOS 路径
+
+## 修法
+
+1. 文件顶部加副本说明段落（ADR-015，路径已按 turingos.app 布局更新）
+2. 全局替换：`/home/zephryj/projects/turingosv4` → `~/Developer/turingos.app/runtime`（8 处）
+3. 更新 `.env` 引用：改为直接 `export DEEPSEEK_API_KEY=...`（文件开头说明 + Step 0 + 一键脚本 Step 0 + ~/.bashrc 段落）
+
+## 验收
+
+```
+$ grep -c "/home/zephryj" runtime/QUICKSTART.md
+0
+```
+
+0 命中，通过。
+
+---
+
+# 过闸记录
+
+## cargo build
+```
+warning: `turingosv4` (bin "turingos") generated 9 warnings ...
+Finished `dev` profile [unoptimized + debuginfo] target(s) in 19.21s
+```
+干净（无新错误）。
+
+## check_runtime_workspace
+```
+check_runtime_workspace: running cargo test --workspace --no-fail-fast in runtime/ ...
+failures:
+    sandbox_cwd_is_explicit_workspace
+test result: FAILED. 8 passed; 1 failed; 0 ignored; ...
+```
+`sandbox_cwd_is_explicit_workspace` 在 baseline_exceptions.list（macOS /private/var
+symlink 正规化，A1_9_02 编目）。无新红。exit 0 = **PASS**。
+
+## shipgate p1.9（全 19 门）
+```
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
+[PASS] 17 boundary grep (daemon/app zero runtime-internal imports)
+[PASS] 18 runtime gate count (194 files == 194 manifest == PINS baseline)
+[PASS] 19 exceptions ratchet (all non-comment lines have owned-by atom)
+----------------------------------------
+SHIPGATE p1.9: PASS
+```
+
+---
+
+# 结构化 JSON
+
+```json
+{
+  "case": "B",
+  "bug1_fix": "common.rs TASK_RUNNER_BIN doc comment 增加 BUILD STATUS 段落：说明 lean_market 在 experiments/minif2f_v4（excluded 出主 workspace），cargo build --workspace 不产生该二进制；lean_market_agent 不处理 view-wallet，常量值不变",
+  "bug2_quickstart_linux_paths_remaining": 0,
+  "report_wallet_realrun_exit": 2,
+  "report_wallet_output_excerpt": "turingos: a required backend binary for this command is not available.\n  Resolution paths: 1. cargo build --workspace ...",
+  "check_runtime_workspace": "PASS（唯一红 sandbox_cwd_is_explicit_workspace 属 baseline_exceptions.list，A1_9_02 编目，非新红）",
+  "shipgate_p19": "PASS（19/19 门全绿）",
+  "out_of_allowlist_needed": "无",
+  "notes": "lean_market_agent view-wallet 返回 'unexpected arg view-wallet' exit 0 — 实证排除 CASE-A。常量名 lean_market 正确，问题是该 crate 被 exclude 出主 workspace。如需 report wallet 真正可用，需 architect 决策：将 minif2f_v4 加回 workspace 或 Phase 7 generalization（agent_runner 接管这些 view-* 子命令）。"
+}
+```
