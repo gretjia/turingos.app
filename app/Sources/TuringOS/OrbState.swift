@@ -188,6 +188,10 @@ public enum IntentRouter {
         if lower.contains("设置") || lower.contains("setup") || lower.contains("meta") {
             return TemplateProjections.metaAIConfigCard(config: MetaAIConfigStore.load())
         }
+        // Portfolio radar / stump tree intent (A1_24)
+        if let portfolioDoc = routePortfolio(lower: lower) {
+            return portfolioDoc
+        }
         // Unknown → intent suggestions (discoverability escape hatch §4)
         return intentSuggestionsDoc()
     }

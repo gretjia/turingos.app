@@ -1,0 +1,23 @@
+atom: A1_24_strategy_observe_only
+utc: 2026-06-12T10:51:07Z
+head: fc843341fce278fd74fc0c3c34359417a2e4f77a
+note: First-phase strategy layer exactly as the user-approved execution verdict §二-1 prescribes ("Portfolio Radar / Project Stumps / observe-only statistics / manual strategy branching" - NO market economy, NO auto MCTS). Delivered: ProjectStump (7 stump kinds per whitepaper §11; StumpStatus exactly {proposed,active,pruned} - no auto_activated case representable; metaAISuggestion stumps are DATA starting proposed - Live-Software suggestion-only standard 7); StumpForest pure functional tree ops (add/prune/reactivate return new forests, cycle/self-parent rejected); StumpStore draft-domain persistence w/ 三件套 envelope; ObserveOnlyStatistics (5 pure stat functions per Art. I.2 - budget by worktree, repeated failures by reject_class w/ recurrence flag, CI cost, worker success as exact rationals "2/3" not floats, review burden; all sorted deterministic); PortfolioProjections (portfolio radar + stump tree IR docs, existing block types only, ViewIR.swift md5-identical to HEAD). Verifier greps: zero reward/score/optimize/UCB/mcts logic, zero wallet/balance/price/settle. 132 tests (+18), MIN_TESTS 114->132 (raised correctly), verifier 7/7 PASS 0 blockers. shipgate p1 16/16 PASS. With this atom the lawful-now implementable surface of WHITEPAPER v0.5 is COMPLETE - remaining items are (a) staged by v0.5's own text as deferred/TBD/roadmap (market settlement = "另行裁决不提前承诺" §12, MCTS = TBD §11, Tier-2 = 远期研究 §9.1, Touch ID+SE = M2, integrations+canvas = M4) or (b) gated on user inputs (turingosv4#342 merge, U2/U4 other-Mac ruling, D5 visual review).
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
