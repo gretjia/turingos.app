@@ -1,0 +1,23 @@
+atom: A1_27_shadow_workspace_staging
+utc: 2026-06-12T11:47:54Z
+head: 6e34933df7ddef49c57bde9ed63126ded4bf3cf8
+note: Whitepaper §13.3 Shadow Workspace v1 (Class-1 reversible-local staging substrate; ADR-002 git-semantics not private format; zero entitlement user-space). SAFETY-CRITICAL atom (real git + filesystem) - scoped to app-owned staging copies ONLY, never user repos. Delivered: ShadowWorkspace.swift (GitCommandSpec commands-as-data whitelist - 16 specs, verbs init/config/add/commit/diff/stash/checkout/status/rev-parse/rm--cached; forbiddenVerbs {push,remote,clone,fetch,pull,submodule,worktree} - stash:push extracts primary verb "stash" not "push"; LiveGitRunner asserts working dir inside staging root before EVERY call w/ symlink-resolved path-traversal guard; create/stageEdit/pendingDiff/restorePoint/discard/restore all containment-checked); StagedEdit.swift (NO promote/apply-to-real method - TYPE-LEVEL absence is the tape-gating: promote-to-real = approval ceremony = runtime tape, out of scope); ShadowProjections.swift (staged diff -> diff_view+summary_card existing blocks, ViewIR.swift git-diff empty, derive_source non-empty, deterministic x2). 173 tests (+21), MIN_TESTS 152->173. Verifier 7/7 PASS 0 blockers - SPECIAL ATTENTION check 3: tests use FileManager.temporaryDirectory + UUID, defer-cleanup, XCTSkip if git absent; project repo git status UNCHANGED after 2 build runs (no commits/stashes/files leaked to real repo); ../escape path rejected. shipgate p1 16/16 PASS. GOAL ACCOUNTING: across 4 goal-hook rounds the lawful-now-implementable surface of WHITEPAPER v0.5 is now genuinely exhausted - 8 atoms A1_20..A1_27 (tests 132->173 this round-set; 53->173 total session). Every remaining v0.5 item is either (a) DEFERRED BY v0.5's OWN TEXT / the user-approved execution ruling (Market settlement §12, auto-MCTS §11 TBD, Tier-2 hardware §9.1, full rendering+export, external deep integrations M4 - implementing these NOW would VIOLATE the user's ruling) or (b) GATED ON USER INPUT (turingosv4#342 merge, U2/U4 ruling -> P1.9 import -> A1_19 ceremony recording = the ONLY remaining gate for the whole signing/Q-advance closure, all upstream capability already built: envelope A1_23 + signer A1_25 + classifier A1_21 + gateway A1_22 wait on the tape sink alone).
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
