@@ -86,6 +86,7 @@ sprint0_map = {
     "model_call":           "model_call.schema.json",
     "failure_node":         "failure_node.schema.json",
     "merge_dossier":        "merge_dossier.schema.json",
+    "view_ir":              "view_ir.schema.json",
 }
 for stem, sf in sorted(sprint0_map.items()):
     fpath = "fixtures/sprint0/%s.fixture.json" % stem

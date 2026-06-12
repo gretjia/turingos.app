@@ -29,3 +29,4 @@ App 消费什么事件、显示什么状态、哪些 action 合法——在写�
 | `model_call.schema.json` | Model Gateway 底层白盒管道记录；每次调用入 tape；隐私脱敏诚实降级 replay |
 | `failure_node.schema.json` | 失败即状态（Art. 0.2）；verified 固定为 false；nearest_failed_predicate 命名触发的 PASS/FAIL 门 |
 | `merge_dossier.schema.json` | 合并门禁证据包；CI 绿是外部谓词之一非全部；risk_findings 为主观 RiskFinding 通道，不携带 verdict |
+| `view_ir.schema.json` | 模型输出契约：View IR 文档信封（schema_version/kind/derive_source/blocks）；14 种 block type 枚举；模型只产生 IR，永不产生可执行 HTML/JS（执行裁决红线 1）；未知 block type 由第一方 renderer 渲染为惰性通知行 |
