@@ -28,7 +28,7 @@ swift build -c debug
 # Swift-Testing summary - a green receipt indistinguishable from zero
 # executed assertions). Capture everything, demand the XCTest pass line AND
 # a minimum executed-test count so silent runner drift turns the gate red.
-MIN_TESTS=203  # raised 2026-06-12 A1_28: 203 tests now passing (was 173; +30 EvalHarnessTests)
+MIN_TESTS=211  # raised 2026-06-12 A1_29: 211 tests now passing (was 203; +8 SkillModelTests)
 TEST_OUT="$(swift test 2>&1)" || { echo "$TEST_OUT" | tail -20; exit 1; }
 echo "$TEST_OUT" | grep -q "Test Suite 'All tests' passed" \
   || { echo "build_app: XCTest pass summary missing"; echo "$TEST_OUT" | tail -20; exit 1; }
