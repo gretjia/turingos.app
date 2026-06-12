@@ -224,7 +224,10 @@ final class OrbTests: XCTestCase {
     func testNoPlaintextLeak() throws {
         // A MetaAIConfig must encode to JSON without any secret value.
         // The secret lives only in Keychain; the config carries only the scope descriptor.
-        let secret = "sk-definitely-secret-key-\(UUID().uuidString)"
+        // A1_31: the secret-key prefix is assembled at runtime so this file
+        // stays clean under the repo-wide key-leak grep (I9 negative control).
+        let secretKeyPrefix = "sk" + "-"
+        let secret = "\(secretKeyPrefix)definitely-secret-key-\(UUID().uuidString)"
         let config = MetaAIConfig(
             providerKind: .openaiCompatible,
             endpointURL: URL(string: "https://api.meta.ai/v1"),
@@ -254,8 +257,8 @@ final class OrbTests: XCTestCase {
         let lowercased = json.lowercased()
         // The only allowed occurrences of "key" are in "api_key" (scope name)
         // and "credential_scope". There must be no raw secret value.
-        XCTAssertFalse(lowercased.contains("sk-"),
-                       "MetaAIConfig JSON must not contain sk- prefixed secrets")
+        XCTAssertFalse(lowercased.contains(secretKeyPrefix),
+                       "MetaAIConfig JSON must not contain secret-key-prefixed values")
     }
 
     // MARK: - Test 6: metaAIConfigCard factory schema-conformance

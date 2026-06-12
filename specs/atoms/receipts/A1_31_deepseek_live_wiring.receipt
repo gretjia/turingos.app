@@ -1,0 +1,43 @@
+atom: A1_31_deepseek_live_wiring
+shipped_at: 2026-06-12T15:30:00Z
+git_head: 95885e2c (pre-ship)
+gate: bash scripts/shipgate.sh p1
+
+note: User ruling 2026-06-12 — Facilitator AI = deepseek-v4-flash (thinking
+disabled), Meta AI = deepseek-v4-pro (thinking enabled), one API key, OpenAI-
+compatible wire. All four A1_22 reserved injection points now live.
+
+DELIVERED:
+- ThinkingMode enum + GatewayRequest.thinkingMode (optional, default nil —
+  backward compatible; nil → "thinking" key ABSENT, byte-identical encodings).
+- OpenAI codec: {"thinking":{"type":"enabled"|"disabled"}} only when set;
+  decodeResponse tolerates reasoning_content.
+- LiveURLSessionTransport: ModelTransport via URLSession, non-2xx → providerError
+  (200-char body prefix, headers never echoed — I9), 120s timeouts, zero logging.
+- FileTapeSink: shell-side append-only JSONL observation record (UPSTREAM_CONTRACT
+  header: does NOT advance Q / record ratifications; canonical ChainTape in
+  runtime/). NSLock-serialized, seekToEnd, never truncates.
+- DeepSeekPresets: facilitator→(deepseek-v4-flash,.disabled), meta→(deepseek-
+  v4-pro,.enabled), others nil; credentialScope="deepseek-api" (scope name only,
+  key lives in Keychain); endpoint https://api.deepseek.com/chat/completions.
+- 10 DeepSeekWiringTests; 245 total (was 235), MIN_TESTS raised.
+
+EXTERNAL FACTS (verified 2026-06-12): model names + thinking param shape from
+api-docs.deepseek.com (WebFetch) + real-key double probe (FLASH_OK no reasoning /
+PRO_OK with reasoning_content). deepseek-chat/reasoner deprecate 2026-07-24.
+
+PROCESS NOTE: first implement agent died mid-flight (API ECONNRESET) after
+completing all 4 source pieces (build green); finish agent wrote the tests.
+Also fixed 3 pre-existing "sk-" grep hits in OrbTests testNoPlaintextLeak
+(clean@HEAD attribution noted; runtime "sk"+"-" assembly preserves semantics).
+
+VERIFY LENSES (independent, no implementer transcript): golden-schema PASS
+(14 required keys counted from real contracts file at runtime; goldens both
+shapes + nil omission; 3 GatewayRequest call sites spot-checked) / invariants
+PASS (I8 guard still first statement; A1_22 suite 9/9; zero non-comment
+URLSession in tests; append-only verified) / key-leak-hunt PASS (zero sk-;
+record type has no auth field by construction; fixture synthetic; error-path
+RiskFinding: provider error text persists only 200-char response-body prefix —
+request headers structurally excluded).
+---
+SHIPGATE p1: PASS (16/16)

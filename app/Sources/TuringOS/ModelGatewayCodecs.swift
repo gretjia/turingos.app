@@ -44,6 +44,12 @@ public enum OpenAIChatCompletionsCodec {
         if let temperature = request.temperature {
             body["temperature"] = temperature
         }
+        // A1_31: thinking-mode toggle (DeepSeek wire shape, verified 2026-06-12).
+        // CRITICAL: when thinkingMode is nil the "thinking" key is ABSENT —
+        // encodings of pre-A1_31 requests stay byte-identical (golden-pinned).
+        if let thinkingMode = request.thinkingMode {
+            body["thinking"] = ["type": thinkingMode.rawValue]
+        }
         // sortedKeys requires NSMutableDictionary-compatible input; use JSONSerialization
         // with .sortedKeys option for consistent byte output.
         return try JSONSerialization.data(
@@ -57,6 +63,10 @@ public enum OpenAIChatCompletionsCodec {
     /// Decodes the OpenAI Chat Completions response JSON into a GatewayResponse.
     /// Reads choices[0].message.content, choices[0].finish_reason,
     /// usage.prompt_tokens, usage.completion_tokens.
+    ///
+    /// A1_31: thinking-capable providers (DeepSeek pro probe 2026-06-12) add
+    /// message["reasoning_content"] alongside content. It is TOLERATED
+    /// (ignored) — content extraction is unchanged and decode must not throw.
     public static func decodeResponse(_ data: Data, latencyMs: Int) throws -> GatewayResponse {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw GatewayError.codecError("Response is not a JSON object")

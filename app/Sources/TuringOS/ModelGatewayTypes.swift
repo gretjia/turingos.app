@@ -59,6 +59,20 @@ public struct GatewayMessage: Codable, Sendable, Equatable {
     }
 }
 
+// MARK: - ThinkingMode
+
+/// Thinking-mode switch for providers that expose an explicit reasoning toggle
+/// (A1_31: DeepSeek `{"thinking":{"type":"enabled"|"disabled"}}` wire shape,
+/// verified_on 2026-06-12 against api-docs.deepseek.com + live probe).
+///
+/// nil on GatewayRequest = field absent from the wire (backward compatible —
+/// contracts evolution rule 2: adding an optional field never changes the
+/// encoding of existing requests).
+public enum ThinkingMode: String, Codable, Sendable {
+    case enabled  = "enabled"
+    case disabled = "disabled"
+}
+
 // MARK: - GatewayRequest
 
 /// A model call request passed to the gateway. Provider-agnostic.
@@ -74,17 +88,22 @@ public struct GatewayRequest: Sendable, Equatable {
     public let maxTokens: Int?
     /// Sampling temperature (provider default if nil).
     public let temperature: Double?
+    /// Provider thinking-mode toggle (A1_31). nil = absent from the wire —
+    /// existing request encodings stay byte-identical.
+    public var thinkingMode: ThinkingMode?
 
     public init(
         role: ModelRole,
         messages: [GatewayMessage],
         maxTokens: Int? = nil,
-        temperature: Double? = nil
+        temperature: Double? = nil,
+        thinkingMode: ThinkingMode? = nil
     ) {
-        self.role        = role
-        self.messages    = messages
-        self.maxTokens   = maxTokens
-        self.temperature = temperature
+        self.role         = role
+        self.messages     = messages
+        self.maxTokens    = maxTokens
+        self.temperature  = temperature
+        self.thinkingMode = thinkingMode
     }
 }
 

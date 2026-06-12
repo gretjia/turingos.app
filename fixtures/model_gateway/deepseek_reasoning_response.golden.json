@@ -1,0 +1,22 @@
+{
+  "id": "chatcmpl-fixture-a1-31",
+  "object": "chat.completion",
+  "created": 1781222400,
+  "model": "deepseek-v4-pro",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Hello! How can I help you today?",
+        "reasoning_content": "The user greeted me; a short friendly reply is appropriate."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 17,
+    "completion_tokens": 9,
+    "total_tokens": 26
+  }
+}
