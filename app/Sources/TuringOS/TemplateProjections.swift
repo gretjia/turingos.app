@@ -94,4 +94,18 @@ public enum TemplateProjections {
             blocks: [.summaryCard(card)]
         )
     }
+
+    /// A1_36: deterministic placeholder while the detached CI observation
+    /// runs. Pure data — no Date()/UUID(); byte-identical across calls.
+    public static func ciCheckingNotice() -> ViewIRDocument {
+        let card = SummaryCardPayload(
+            title: "CI 检查中…",
+            body: "正在以只读命令观测仓库的 PR 与 check 状态（git/gh，零写入）。结果就绪后将替换本卡。"
+        )
+        return ViewIRDocument(
+            kind: "ci_checking",
+            deriveSource: ["user_input", "ci_observation:pending"],
+            blocks: [.summaryCard(card)]
+        )
+    }
 }

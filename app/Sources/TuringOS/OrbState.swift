@@ -366,6 +366,10 @@ public final class OrbViewModel: ObservableObject {
     /// Exposed read-only so tests can await the async proposal deterministically.
     public private(set) var metaTask: Task<Void, Never>?
 
+    /// A1_36: in-flight CI observation task (nil when nothing pending).
+    /// Exposed read-only so tests can await the async replacement deterministically.
+    public private(set) var ciTask: Task<Void, Never>?
+
     private let probe: any FacilitatorRuntimeProbe
     /// A1_34: optional live Facilitator dialogue service. nil = escape-hatch
     /// only (all pre-A1_34 behavior unchanged — every existing test sees nil).
@@ -377,15 +381,23 @@ public final class OrbViewModel: ObservableObject {
     /// Production wiring injects MetaDrafting.production() ONLY at the app
     /// entry path (TuringOSApp → OrbView).
     private let metaDrafting: MetaDrafting?
+    /// A1_36: optional CI observation source factory. nil = deterministic
+    /// CIUnavailableNotice (pre-A1_36 behavior). Production closure resolves
+    /// the first local catalog project to a LiveRepoObservationSource (read-
+    /// only git/gh commands per A1_20's no-write predicate) — injected ONLY
+    /// at the app entry path. The CI path NEVER touches the model gateway.
+    private let ciObservationProvider: (@Sendable () -> (any RepoObservationSource)?)?
 
     public init(
         probe: any FacilitatorRuntimeProbe = SystemFacilitatorProbe(),
         dialogue: FacilitatorDialogue? = nil,
-        metaDrafting: MetaDrafting? = nil
+        metaDrafting: MetaDrafting? = nil,
+        ciObservationProvider: (@Sendable () -> (any RepoObservationSource)?)? = nil
     ) {
         self.probe = probe
         self.dialogue = dialogue
         self.metaDrafting = metaDrafting
+        self.ciObservationProvider = ciObservationProvider
     }
 
     /// Resolve runtime kind and transition accordingly.
@@ -441,6 +453,34 @@ public final class OrbViewModel: ObservableObject {
         if intentLower.contains("批准") || intentLower.contains("approval")
             || intentLower.contains("审批") {
             currentProjection = TemplateProjections.approvalDraftDemo()
+            return
+        }
+
+        // A1_36: CI observation intent — live read-only git/gh observation
+        // (A1_20 source, first UI wiring). Deterministic placeholder shows
+        // IMMEDIATELY; the blocking command run happens in a detached task
+        // (never on the MainActor); the projection is replaced on arrival.
+        // ZERO model calls on this path. With no provider injected, the
+        // deterministic CIUnavailableNotice preserves pre-A1_36 behavior.
+        if intentLower.contains("ci") || intentLower.contains("检查")
+            || intentLower.contains("check") {
+            guard let provider = ciObservationProvider else {
+                currentProjection = CIUnavailableNotice.make()
+                return
+            }
+            currentProjection = TemplateProjections.ciCheckingNotice()
+            ciTask?.cancel()
+            ciTask = Task { [weak self] in
+                let doc = await Task.detached(priority: .userInitiated) {
+                    IntentRouter.routeCIIntent(
+                        lower: intentLower,
+                        observationSource: provider(),
+                        projectContext: nil
+                    ) ?? CIUnavailableNotice.make()
+                }.value
+                guard !Task.isCancelled else { return }
+                self?.currentProjection = doc
+            }
             return
         }
 

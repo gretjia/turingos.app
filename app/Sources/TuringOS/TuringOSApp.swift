@@ -124,7 +124,14 @@ struct TuringOSApp: App {
                     OrbView(
                         store: store,
                         dialogue: FacilitatorDialogue.production(),
-                        metaDrafting: MetaDrafting.production()
+                        metaDrafting: MetaDrafting.production(),
+                        // A1_36: CI observation = first local catalog project,
+                        // read-only git/gh (A1_20 command table, zero writes).
+                        ciObservationProvider: {
+                            guard let path = SystemCatalogSource().items()
+                                .compactMap(\.localPath).first else { return nil }
+                            return LiveRepoObservationSource(repoPath: path)
+                        }
                     )
                         .preferredColorScheme(.dark)
                         .task { startWorkspace() }

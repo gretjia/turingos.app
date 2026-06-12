@@ -35,10 +35,12 @@ public struct OrbView: View {
         store: GlanceStore,
         probe: any FacilitatorRuntimeProbe = SystemFacilitatorProbe(),
         dialogue: FacilitatorDialogue? = nil,
-        metaDrafting: MetaDrafting? = nil
+        metaDrafting: MetaDrafting? = nil,
+        ciObservationProvider: (@Sendable () -> (any RepoObservationSource)?)? = nil
     ) {
         _vm = StateObject(wrappedValue: OrbViewModel(
-            probe: probe, dialogue: dialogue, metaDrafting: metaDrafting
+            probe: probe, dialogue: dialogue, metaDrafting: metaDrafting,
+            ciObservationProvider: ciObservationProvider
         ))
         self.store = store
     }

@@ -1,0 +1,21 @@
+atom: A1_36_ci_live_observation
+shipped_at: 2026-06-12T16:25:00Z (UTC; local 2026-06-13 00:25 CST)
+git_head: aa949c44 (pre-ship)
+gate: bash scripts/shipgate.sh p1
+
+note: CI observation loop closed — A1_20's LiveRepoObservationSource first
+wired into the UI. ci/检查/check intent → deterministic "CI 检查中…"
+placeholder IMMEDIATELY → Task.detached (never blocks MainActor) runs the
+read-only git/gh observation (A1_20 command table, no-write predicate on
+record) → projection replaced with CIStatusProjection (real PR + check runs,
+derive_source carries pr number) or honest CIUnavailableNotice (no PR / no gh).
+Injection: ciObservationProvider closure, default nil = pre-A1_36 deterministic
+notice (all existing tests unchanged); production = first local catalog project
+→ LiveRepoObservationSource, wired ONLY at the TuringOSApp entry site.
+ZERO model calls on the CI path (negative test with live dialogue injected:
+transport count == 0). routeBase's ci branch retained as menu fallback —
+A1_34 zero-call predicate does not regress.
+6 new tests; 277 total (was 271), MIN_TESTS raised.
+Architect-direct implementation (async pattern proven by A1_34/35).
+---
+SHIPGATE p1: PASS (16/16)
