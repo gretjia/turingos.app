@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.merge_dossier.v0",
+  "title": "MergeDossier",
+  "description": "The evidentiary package that gates a merge or equivalent irreversible transition. CI green is one external predicate, never the whole gate; 'CI green' alone is not evidence — the dossier pins WHAT was green (exact commit, workflow hash, branch protection snapshot, required checks at the moment of evaluation). risk_findings is the subjective RiskFinding channel: items here are advisory, never predicates, and never produce a verdict field. approval_route='autonomy_contract' means the merge is within the agent's pre-ratified autonomy scope; 'signature_5' requires a human-signed approval_envelope at node 5.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "dossier_id",
+    "project_id",
+    "spec_delta",
+    "ci_evidence",
+    "changed_files",
+    "risk_findings",
+    "rollback_plan",
+    "budget_used",
+    "provenance_level",
+    "receipts",
+    "known_limitations",
+    "approval_route"
+  ],
+  "properties": {
+    "schema_version": { "const": "tos.app.merge_dossier.v0" },
+    "dossier_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "spec_delta": { "type": "object" },
+    "ci_evidence": {
+      "type": "object",
+      "required": [
+        "commit_sha",
+        "merge_base",
+        "check_run_ids",
+        "workflow_file_hash",
+        "branch_protection_snapshot",
+        "required_checks_at_time",
+        "runner_type",
+        "conclusion"
+      ],
+      "properties": {
+        "commit_sha": { "type": "string" },
+        "merge_base": { "type": "string" },
+        "check_run_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "workflow_file_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{8,64}$" },
+        "branch_protection_snapshot": { "type": "object" },
+        "required_checks_at_time": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "runner_type": { "type": "string" },
+        "conclusion": { "type": "string" }
+      }
+    },
+    "changed_files": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "risk_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["dimension", "note"],
+        "properties": {
+          "dimension": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "rollback_plan": { "type": "string" },
+    "budget_used": { "type": "object" },
+    "provenance_level": { "enum": ["FULL", "REPO_LEVEL", "PARTIAL", "OUTSIDE_GOVERNANCE"] },
+    "receipts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "known_limitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "approval_route": { "enum": ["autonomy_contract", "signature_5"] }
+  }
+}

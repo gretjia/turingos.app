@@ -191,3 +191,49 @@
 3. "Apple MCP/ACP 确认面仅 Xcode 27" → 复核发现 **ACP 已随 WWDC26 当天的 Xcode 26 更新先行出货**，Xcode 27 为扩展（已修正入 I-6 #3）。
 
 1 条 uncertain（Hermes 的 GitHub API `open_issues_count` 含 open PR，网页端实际 open issues 约 5k+）已按保守口径写入 II-3（含字段语义说明，不再以该数字推断工程状态）。完整论断库与逐条来源：[research/R_agentic_os_sources.md](research/R_agentic_os_sources.md)。
+
+---
+
+## Part IV · v0.5 协议层与生态层补充（A1_13 四路调研，2026-06-12）
+
+> 完整论断库（41 条，33 verified / 6 partially-verified / 1 refuted / 1 unverified，逐条原文证据与 URL）：[research/R_v05_protocol_live_sources.md](research/R_v05_protocol_live_sources.md)。本节只列改变设计的要点。
+
+### IV-1 协议层
+
+- [verified] **MCP**：现行稳定规范仍为 2025-11-25；下一版 RC 已发布、定稿日 2026-07-28（写承诺前留意版本切换）。治理 = Linux Foundation 旗下 Agentic AI Foundation（Anthropic/Block/OpenAI 共同发起）。
+- [verified] **MCP Apps**：2026-01-26 成为**首个 official MCP extension**（工具返回交互式 UI 组件入会话）；与 OpenAI **联合制定**——Apps SDK 明确要求 app 必须有 MCP server。两者是同一 UI 面，不是两套标准。
+- [verified] **A2A**：Google 2025-04-09 发布 → 2025-06-23 捐 Linux Foundation → **2026-03 达 v1.0（首个生产级版本）**；"150+ 组织"为 LF 口径（Google 同日博客称 100+，计数口径不同，引用须带说明）[partially-verified]。
+- [refuted] "A2A 与 MCP 正在合并"：两者互补（agent 间 vs agent-工具），无合并迹象。
+- [verified] **A2UI**：Google 2025-12-15 公开，官方自述 early-stage，版本 v0.8——只做 adapter 不锁定。**AG-UI 属 CopilotKit**（非 Google），MIT，事件流式 agent↔前端协议，AWS Bedrock AgentCore 2026-03 已支持。
+
+### IV-2 模型接入经济学
+
+- [verified] ChatGPT Plus/Pro/Business **不含 API 用量**（两套独立计费体系）；Codex 含于全部 ChatGPT 计划（含 Free），滚动 5 小时窗限额，2026-04 起按 token 对齐计价。
+- [partially-verified] **订阅 OAuth 接入第三方**：OpenClaw 2026-05-02 经 **Codex OAuth 端点**让 ChatGPT 订阅者直用 GPT-5.4（Altman 官宣）——是 de-facto 通道，**不是面向任意第三方的官方 SDK**；Apps SDK 货币化条款另有限制。设计上支持、措辞上不承诺。
+- [partially-verified] **Anthropic 2026-06-15 分账**：交互式 Claude Code 留在订阅内；**Agent SDK / `claude -p` / 第三方 app 改走专属月度 credit 池**（Pro $20 / Max5x $100 / Max20x $200，不滚存）。TuringOS 若经 Agent SDK 用用户订阅，消耗的是该池。
+- [verified] Gemini 官方 OpenAI 兼容端点（beta，特性不全）；[partially-verified] xAI：OpenAI SDK 一手确认，Anthropic SDK 仅 Cloudflare 网关二手。
+- [partially-verified] API 标准实为**三个面**：OpenAI Chat Completions（普适事实标准）/ OpenAI Responses（agent 向新形态）/ Anthropic Messages（原生）。Gateway 按三面设计。
+
+### IV-3 Skills 与 Live Software
+
+- [verified] **SKILL.md 已是开放标准**（Anthropic 2025-12-18 发布；48 小时内 VS Code 与 Codex CLI 接入；2026-03 已 32 个工具支持，含 Gemini CLI/Cursor/Copilot/Goose）。Turing Skill 兼容 SKILL.md = 顺势而为。注意：各 surface 的自定义 Skills 不互通同步。
+- [verified] **Apple adapter 训练官方就是 LoRA**（开发者文档原文 "PEFT approach known as LoRA"）——v0.4 评审中"不要随意等同 LoRA"的提醒经查反向不成立，用户原表述正确。部署需 Foundation Models Framework Adapter Entitlement（训练与本地测试不需要）。
+- [verified] **adapter 逐基模型版本绑定**：每个 adapter 只兼容一个特定系统模型版本，OS 升级即须重训——这是持续运营税，路线图必须预算。
+- [verified] 端侧模型约 3B，Apple 明言"非通用世界知识 chatbot"；WWDC26 自带模型 = **LanguageModel（声明能力）+ LanguageModelExecutor（执行推理）双协议**。
+- [verified] 先例：Hermes 自我改进循环（经验→技能→使用中改进→持久化→FTS5 检索）；**MiMo Code**（小米，2026-06-10，OpenCode 二次开发，MIT，长程任务 + SQLite FTS5 记忆 + `/distill`、`/dream` 技能蒸馏）；研究线 SEAL（MIT，自编辑权重）/ AlphaEvolve（DeepMind，生产级进化搜索）/ SAGE（Amazon，技能库+GRPO）。
+
+### IV-4 Freeform 与 Hostile Host
+
+- [verified] **Freeform 自动化面 = 仅一个 Shortcuts 动作**（"Add Files to Board"，iOS 26 引入）；无创建看板动作、无 AppleScript 字典、无 URL scheme、无公开文件格式。"直接调用 Freeform 呈现"不可行，只能做导出/分享桥。
+- [verified] 嵌入式画布：**Excalidraw MIT**（可自由商用嵌入）优于 tldraw（v4 生产部署需 license key，hobby 档带水印）。
+- [verified] Hostile-host 先例：硬件钱包 WYSIWYS（签名与显示同一安全域）；银行 **chipTAN**（独立设备显示交易内容，PC 被木马也无法篡改已确认交易）；**Foundation Passport Prime**（2026-05-22，自称首个 "Human Authority Hardware"，明确以 AI agent 批准为场景——品类已被市场验证）。
+- [verified] 反面边界：FIDO2/WebAuthn 交易确认扩展 **2025-04-02 关闭未合并**（现役硬件 key 无可信显示）；[partially-verified] Apple Watch `deviceOwnerAuthenticationWithWatch` 只能弹**通用批准 UI**，第三方无法在表上显示自定义动作详情，亦无第三方 SE 签名 API——Watch 是在场因子，不是 WYSIWYS 面。
+- [verified] Audit Anchor 模式先例：Sigstore Rekor（Merkle 包含证明 + 追加式日志 + 独立监督者）。学术线（OAP，arXiv 2603.20953）明确自陈不防 compromised runtime——hostile-host 在文献中仍是 open problem。
+
+### Part III 增补（v0.5 新增待实证项）
+
+9. **Codex OAuth 端点第三方接入**：OpenClaw 路径的可复制性、条款边界与稳定性（决定 Model Gateway 订阅档措辞）。
+10. **Anthropic Agent SDK credit 池实测**（2026-06-15 生效后）：订阅 OAuth 在第三方 app 内的真实计量与限额行为。
+11. **Excalidraw 嵌入 WKWebView**：离线打包、性能、导出链路（Canvas Projection 的工程底座）。
+12. **Apple Watch 批准链路实测**：`deviceOwnerAuthenticationWithWatch` 在菜单栏 app / daemon 架构下的真实弹出面与限制。
+13. **OpenClaw/Hermes 社区粘性与切换成本评估**（评审第 8 条明确要求"社区调研而非主观感受"）：用户留存信号、贡献者速度、迁移成本、用户群体规模——本版未做，列为独立调研项；做完之前白皮书 §14.4 的"真实用户规模"门槛条件不下结论。

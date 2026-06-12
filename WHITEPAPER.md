@@ -1,20 +1,24 @@
-# Turing Agentic OS 白皮书 v0.4
+# Turing Agentic OS 白皮书 v0.5
 
-**Apple-native 个人 Agentic OS：让 AI 在你的法律下自治**
+**Apple-native × protocol-native 个人 Agentic OS：让 AI 在你的法律下自治**
 
-版本 v0.4 · 2026-06-12 · 状态：在用户 v0.3 草案（[原稿存档](research/WHITEPAPER_v0.3_user_draft.md)）基础上统稿——补全 operating flow 四回路、宪法→产品逐条映射、回收 v0.1 的操守与边界诚实资产。本版取代 v0.1 与 v0.3。
+版本 v0.5 · 2026-06-12 · 状态：在 v0.4 基础上完成定位升级（依用户 8 条评审与对谈，[原文存档](research/REVIEW_v04_user_gpt_dialogue.md)）——新增 Agentic 协议层、Model Gateway、Capability Registry、Skill Library、Live Software 3.0 回路、Hostile Host 安全模型、Canvas Projection 与外部 Agent Adapter Contract。本版取代 v0.1 / v0.3 / v0.4。
 
-> 配套文档：[FEASIBILITY.md](FEASIBILITY.md)（159 条外部论断的核验状态与来源）· [research/R_agentic_os_sources.md](research/R_agentic_os_sources.md)（完整论断库）。本版凡引外部事实，仅限该库内已核条目，不新增。
+> 配套文档：[FEASIBILITY.md](FEASIBILITY.md)（外部论断核验状态与来源，含 v0.5 调研附录 Part IV）· [research/R_agentic_os_sources.md](research/R_agentic_os_sources.md)（A1_11 论断库）· [research/R_v05_protocol_live_sources.md](research/R_v05_protocol_live_sources.md)（v0.5 论断库，41 条）。本版凡引外部事实，仅限两库内已核条目，措辞强度不超过其核验状态。
 
 ---
 
 ## 0. 一句话
 
-**Turing Agentic OS 是一个 Apple-native 的个人 Agentic OS。它以 Facilitator AI 的动态气泡作为入口，以 Meta AI 编译用户意图，以 TuringOS Kernel 管理 Spec、预算、谓词、工作树、回执与人类签名，让内部或外部 Agent 在用户批准的法律下自治。**
+**Turing Agentic OS 是一个 Apple-native、protocol-native 的个人 Agentic OS。它以 Facilitator AI 的动态气泡作为入口，以 Meta AI 编译用户意图，以 TuringOS Kernel 管理 Spec、预算、谓词、工作树、回执与人类签名，把外部模型、工具、技能与 Agent 全部变成受法律约束、有回执背书、可由人类签名的状态迁移。**
 
 它不是另一个传统 macOS 应用，也不是另一个聊天机器人。它是一个把「人类意图 → 可执行法律 → Agent 行动 → 机器验证 → 人类签名 → 可回放状态变更」连成闭环的操作层。
 
 > **AI 已经会动手。TuringOS 让它在你的法律下动手。**
+>
+> TuringOS is an Apple-native, protocol-native personal Agentic OS that turns external models, tools, skills, and agents into law-bound, receipt-backed, human-signable state transitions.
+
+三权分明：**Apple-native 是产品体验与本地可信能力；protocol-native 是生态扩展能力；ChainTape、Predicate Gate、人类签名与 provenance 是 TuringOS 自己不可让渡的主权。**
 
 ---
 
@@ -31,6 +35,12 @@ v0.4 在此之上完成三项工作：
 1. **宪法对齐。** TuringOS 宪法（Art. 0 图灵机原教旨 / Tape Canonical / Q_t 三元组 / 量化·广播·屏蔽 / 三权分立）逐条映射到产品层（§4），凡宪法已有裁决处不发明新教义。
 2. **Operating Flow 补全。** v0.3 的单线流程图缺终止态、止损护栏、并发语义、异步批准与 Meta 演化回路（审计判定 4 项 blocker + 13 项 major）。v0.4 以**四回路 + 一条注意通道**重画（§7）。
 3. **回收 v0.1 诚实资产。** 操守五条、三类动作风险地图、覆盖边界横切声明、逐 agent 硬事实（Claude Code MCP-deny 缺口、Codex Cloud 例外等）在 v0.3 升级定位时丢失；产品形态变大，这些声明只会更必要，全部回收（§3 / §10 / §14 / §15）。
+
+v0.5 依用户 8 条评审完成**定位升级：Apple-native → Apple-native × protocol-native**，闭合三个缺口：
+
+1. **生态接口系统化。** MCP / A2A / MCP Apps / A2UI / AG-UI / SKILL.md / 模型 API 不再是零散集成点，而是一个有铁律的协议层（§13.6）+ Model Gateway（§13.7）+ View IR（§6.6）。原则一句话：**外部协议负责互操作；TuringOS 负责法律、谓词、签名、审计、状态迁移。**
+2. **能力面底层白盒化。** 不做传统插件市场，做 **Capability Registry**（§13.8）：每个工具/技能/连接器都是带 manifest、权限、动作类、eval 与回执的可审计对象——Install ≠ trust。Skill Library（§13.9）与 Live Software 3.0 回路（§13.10）让系统在使用中演化白盒脚手架。术语纪律：反奥利奥架构是**顶层白盒（谓词与管理）/ 中间黑盒（agent）/ 底层白盒（工具）**三层——本文凡称"白盒工具/白盒能力"，一律指**底层白盒**，与顶层白盒严格分层、不得混称。
+3. **安全模型升维。** Touch ID + SE 是 v0.x 的本地批准层；面对"宿主 OS 被完全攻破"的 AGI 威胁模型，v0.5 写入 **Hostile Host 公理**与两层安全架构（§9.1），不夸大 Secure Enclave 的能力边界。
 
 ---
 
@@ -227,6 +237,21 @@ Software 3.0 的另一半不是"问什么答什么"，而是"什么时候打扰�
 
 人类不是菜单操作员。人类是：意图提供者、Spec 批准者、预算批准者、不可逆动作批准者、高风险 merge 批准者、宪法维护者、异常与例外的裁决者。所有日常微操作都应由系统在已批准法律下自动推进。
 
+### 6.6 Turing View IR：生成式界面的统一中间表示
+
+生态正在收敛到"工具/agent 返回界面"：MCP Apps 已成为首个 official MCP extension（2026-01；与 OpenAI 联合制定，Apps SDK 即建于 MCP 之上）；Google 的 A2UI（v0.8，官方自述 early-stage）与 CopilotKit 的 AG-UI 是另两条路线。TuringOS 的姿态：
+
+- 所有外来 UI 描述（MCP Apps 组件 / A2UI / AG-UI / 未来格式）先翻译为 **Turing View IR**，再由第一方渲染器投影——适配在边缘，渲染权在内核。MCP Apps 为优先适配目标；A2UI/AG-UI 只做 adapter，不深度锁定。
+- View IR 投影与一切投影同律（§4.2）：声明 `derive_source`，可重建，可与 tape 对账。
+- **第三方生成的 UI 是不可信内容**——它可以呈现信息，但有两条铁律：① **批准卡永远由第一方渲染器绘制，任何第三方 view 组件不得承载批准仪式**（否则"批准时所见"的哈希就建立在对手可控的像素上）；② 第三方 view 发起的动作请求与其它通道的动作请求同等过门——分类、谓词、签名一个不少。
+
+### 6.7 Canvas Projection：无边界呈现的诚实路径
+
+无边界画布是对的阅读形态，但路径必须诚实（来源见 FEASIBILITY Part IV）：**Apple Freeform 当前的全部公开自动化面只有一个 Shortcuts 动作（Add Files to Board）**——无创建看板 API、无 AppleScript 字典、无公开文件格式。所以：
+
+1. **v1 自建 Canvas Projection**：Markdown AST → 布局图 → 第一方渲染（嵌入式画布候选 Excalidraw，MIT 可自由商用；tldraw 生产部署需商业 license，列为次选）。每个画布节点带 `derive_source`，派生自 Markdown / Spec / ChainTape / Receipt——画布不是第二事实源。可导出 PDF/PNG/HTML/Markdown。
+2. **Freeform 只做导出/分享桥**（用户手动），若 Apple 日后开放官方 API 再建 bridge。**不逆向 Freeform 私有格式**——那违背可维护性与分发诚实。
+
 ---
 
 ## 7. Operating Flow v4：四回路 + 一条注意通道
@@ -354,7 +379,7 @@ flowchart TD
 - **13 屏蔽层（Goodhart）**：Worker 收到"做什么、有什么工具"，不收到谓词阈值与评分内部。公开的 CI 按其本性公开；内核侧验收检查保持在 Worker 不可读区域。
 - **14 并发与隔离**：每个 worktree 独立走 15→21 的全程，**谓词门逐 worktree 触发**；一个 worktree 的失败不中止其余（组合层面的中止由止损护栏与用户裁决）。隔离是宪法义务（Art. III.3）：独立上下文、独立会话，失败叙事不横向传染。
 - **15B' 外部派发的再入**：复制给 Codex/Claude Code 的任务不会"自动出现"在流程里——内核以观测触发再入：轮询 git remote 发现新分支，或用户把产物粘回；校验分支存在、diff 范围、标注 `provenance=partial` 后才进入动作分类。**外部 Agent 若不经 TuringOS 通道执行，只能生成 repo 级 / PR 级回执，不得声称拥有动作级回执。**
-- **16 动作分类**：声明式，工具签名即类别（§10 三类动作）。模型产出的摘要与标签仅用于呈现，永不进入分类与放行路径。
+- **16 动作分类**：声明式，工具签名即类别（§10 三类动作）。模型产出的摘要与标签仅用于呈现，永不进入分类与放行路径。来自 Capability Registry 的第三方能力以其 manifest 声明的类别入门；**未声明或无法核验类别的能力 fail-closed——按三类（不可逆外部）处置或直接拒绝**（§13.8）。
 - **staged 诚实（操守 #4）**：DRAFT 与 REJ 节点的回边是流程的一部分——agent 同步收到 `status=staged/rejected`，据此绕开该动作继续规划，而不是重试同一动作。
 - **20 止损护栏**：CI 修复回路（18→19→11）与谓词失败回路（22→20→11）共用同一护栏——尝试次数、CI 预算、token 预算任一触线即 HALT-止损，失败证书入 tape，人类在注意通道裁决：修法（回路 1）、换路（策略回路）、或关闭。**没有无界重试。**
 - **21 谓词门**：CI 绿只是外部谓词之一。门内是 predicate product：任何一项 FAIL 则 ∏p=0，Q 不前进。partial provenance 的候选**不允许纯谓词放行**——强制升格为人工确认（24 路由至签名 #5）。
@@ -378,7 +403,7 @@ flowchart TD
     GARD["园丁职责（定期）<br>清扫过期规则/陈旧文档/死分支<br>清扫回执入 tape"] --> BCAST
 ```
 
-这是 v0.3 流程图完全缺失的回路：系统的自我进化不混在任务流里，而是独立的三权分立回路——ArchitectAI 提案（突变）、Veto-AI 审查（选择）、宪法与签名（机制）。修复规则库由此回路维护，回路 2 只消费。
+这是 v0.3 流程图完全缺失的回路：系统的自我进化不混在任务流里，而是独立的三权分立回路——ArchitectAI 提案（突变）、Veto-AI 审查（选择）、宪法与签名（机制）。修复规则库由此回路维护，回路 2 只消费。**Live Software 3.0（§13.10）不是新回路，而是本回路的数据飞轮扩展**：tape 上的失败与使用数据经本地小模型聚类后，成为 ArchitectAI 提案的输入——入口不变、闸门不变。
 
 ### 7.5 注意通道与 Morning Ritual
 
@@ -463,6 +488,26 @@ if ∏p = 0: Q_t 不变，失败以 verified=false 入 tape
 - macOS 27 起 App Attest 登陆 Mac 并在 attestation 证书携带 SE 访问控制条件，为未来第三方审计方确认"这把钥匙确为生物识别门控"提供升级路径。
 - **过渡说明**：v0.x 早期版本以应用内明确批准门控（非生物识别），draft-by-default 自第一版即生效；Touch ID + SE 签名按路线图（§18）升级——能力边界如实分版本陈述。
 
+### 9.1 Hostile Host 安全模型：威胁阶梯与两层架构
+
+签名仪式防什么，必须按威胁分级说清（先例与来源见 FEASIBILITY Part IV）：
+
+| 威胁级 | 对手 | 防御 | 状态 |
+|---|---|---|---|
+| **T0** 善意故障 | bug、误操作 | 谓词门 + draft-by-default + 还原点 | v0.x 全覆盖 |
+| **T1** 恶意能力 | 恶意 skill/工具/MCP server | Capability Registry fail-closed + 动作分类 + 签名#4/#5 | v0.x 覆盖（限通道内） |
+| **T2** 被注入/被劫持的 agent | prompt injection、被攻陷的外部 agent | 有后果动作过门 + 批准卡第一方渲染 + provenance 阈值 | v0.x 覆盖（限通道内；注入本身不可根除，§14.2） |
+| **T3** 敌意宿主 | 宿主 OS 被 AGI/恶意软件完全控制 | **本机任何 UI、哈希、验签都可被篡改**——需要宿主之外的锚 | v0.x **不防，且如实声明不防** |
+
+**Hostile Host 公理（写进产品而不是藏起来）**：若批准的验证、审计的记录或最终的执行只发生在可能被攻破的宿主 OS 之内，TuringOS 不得宣称 AGI 级 sudo 安全。Secure Enclave 保护的是私钥，不能在宿主被完全攻破时保证"你真实看到的 UI"与"被签名的字节"一致（WYSIWYS）。
+
+两层架构：
+
+- **Tier 1 · Mac 本地批准签名器（v0.x，§9 正文）**：SE + Touch ID + 所见哈希入负载。覆盖 T0–T2，是消费级威胁下的正解。Apple Watch 的 `deviceOwnerAuthenticationWithWatch` 可作为在场因子叠加，但表上只能显示通用批准 UI、无法呈现自定义动作详情——它增强在场性，不构成独立可信显示，我们如实归入 Tier 1。
+- **Tier 2 · 外部 Sudo-Anchor（路线图远期，T3 答案）**：独立显示 + 物理确认按键的宿主外设备；Audit Anchor（Merkle 包含证明的追加式日志，Sigstore Rekor 模式）；独立于宿主的 Execution Gate；批准 token 绑定 HEAD_t、audit_head_t、gate_id、nonce、计数器与时效；**无审计包含证明则不执行（no-audit-no-execution）**。
+
+Tier 2 不是空想，是成熟模式在 agent 时代的重述：硬件钱包的安全屏（签名与显示同一安全域）、银行 chipTAN（独立设备显示交易内容，PC 被木马也改不了已确认的交易）已验证此路三十年；2026-05 面世的 Foundation Passport Prime 自称首个 "Human Authority Hardware"，证明品类正在成形。反面边界同样如实：FIDO2 的交易确认扩展已关闭未合并（现役硬件 key 无可信显示），学术界（OAP 等）自陈不防 compromised runtime——T3 仍是 open problem，TuringOS 把它列为路线图研究项，不列为已解承诺。
+
 ---
 
 ## 10. 三类动作：一张诚实的风险地图
@@ -508,9 +553,9 @@ v0.4 维持 v0.3 的裁决：先采用 **portfolio search + 可见策略树**，
 
 ---
 
-## 13. Apple-native 技术策略
+## 13. 技术底座：Apple-native × protocol-native
 
-深度拥抱 Apple 生态，但不伪装成系统级监控软件。以下每项能力都只需标准开发者资格，**没有任何一项依赖 Apple 的特批**；逐条来源与核验状态见 [FEASIBILITY.md](FEASIBILITY.md)，待真机实证的 8 项清单在其 Part III。
+深度拥抱 Apple 生态（§13.1–13.5），但不伪装成系统级监控软件；同时以协议层（§13.6–13.10）接入整个 agentic 生态——最大化利用外部优秀产品与服务，不从零重造。以下 Apple 能力每项都只需标准开发者资格，**没有任何一项依赖 Apple 的特批**；逐条来源与核验状态见 [FEASIBILITY.md](FEASIBILITY.md)（Part III 待实证清单 + Part IV v0.5 调研附录）。
 
 ### 13.1 Foundation Models
 
@@ -540,6 +585,93 @@ GitHub 继续负责 PR、CI、branch protection、merge commit——TuringOS 不
 ### 13.5 分发
 
 Apple Developer Program → Developer ID 证书 → Hardened Runtime → notarytool 公证 → 装订。自 macOS Sequoia 起未公证软件已无右键绕行，正经公证是唯一体面的分发方式。Hardened Runtime 禁止注入其他进程——**不注入**正是本产品的设计原则，两者天然相容。后台项经 SMAppService 注册时系统会通知用户并要求批准——OS 级可见性与我们的同意哲学同向。
+
+### 13.6 Agentic 协议层
+
+外部协议是传输与能力面，不是事实源。分层与取舍（生态事实截至 2026-06，见 FEASIBILITY Part IV）：
+
+| 协议位 | 选择 | 依据与姿态 |
+|---|---|---|
+| **工具协议** | **MCP（核心）** | LF/Agentic AI Foundation 治理，现行规范 2025-11-25（新版 2026-07-28 定稿在即）；TuringOS 既做 MCP client（吃进外部工具）也做 MCP server（把网关工具供给外部 agent） |
+| **Agent 间协议** | **A2A（适配层）** | 2026-03 达 v1.0 生产级、LF 托管；**出站委托先行**（把工单交给外部 agent）；入站受托（别的 agent 把活派给 TuringOS）牵涉"谁是委托人"的同意问题，缓议 |
+| **UI 扩展协议** | **MCP Apps（优先）** | 首个 official MCP extension（2026-01），与 OpenAI 联合制定（Apps SDK 即建于 MCP）；与本产品 Generative 投影同构 |
+| **生成式 UI 格式** | A2UI / AG-UI（仅 adapter） | A2UI 官方自述 early-stage（v0.8）；AG-UI 属 CopilotKit（MIT）——一律经 View IR 翻译（§6.6），不深度锁定 |
+| **技能格式** | SKILL.md 兼容（§13.9） | 已是开放标准，2026-03 已 32 个工具支持 |
+| **模型协议** | 三面 Gateway（§13.7） | OpenAI Chat Completions / OpenAI Responses / Anthropic Messages |
+
+**协议层铁律**：任何外部协议都不得绕过 ChainTape、Predicate Gate、动作分类、provenance 标注与人类签名路由。外部协议负责互操作；TuringOS 负责法律、谓词、签名、审计、状态迁移。
+
+### 13.7 Model Gateway
+
+两类接入面，严格区分（经济学事实见 FEASIBILITY Part IV-2）：
+
+- **A 类 · 模型 API 供应方**：OpenAI / Anthropic / Gemini / xAI / 本地（Apple FM 与自托管）。按 provider 凭证计费。Gateway 内置三种 API 形态适配：OpenAI Chat Completions（普适事实标准）、OpenAI Responses（agent 向新形态）、Anthropic Messages（原生）；Gemini 官方提供 OpenAI 兼容端点（beta），xAI 一手确认 OpenAI SDK 兼容。
+- **B 类 · 外部 app/agent 委托面**：Codex、Claude Code、OpenClaw、Hermes、MiMo Code 等——用户自己登录第三方产品，TuringOS 经 Git / MCP / CLI / hooks 治理边界（§14.4）。**订阅不是隐形模型供应方**：ChatGPT 订阅不含 API 用量（两套计费体系）；Codex 含于 ChatGPT 各计划属 B 类事实。订阅 OAuth 直连（OpenClaw 经 Codex 端点的先例）与 Anthropic 据报道自 2026-06-15 起实施的 Agent SDK credit 池，Gateway 按"出现即支持"设计、不写进承诺（待实证项 9/10）。
+
+恒定规则：
+
+- 凭证存 Keychain / SE 保护项；tape 只记 `credential_scope_hash`；prompt 不得含凭证。
+- 每次模型调用写 ModelCall 节点入带：provider、model、cost、latency、policy，**默认含输入输出全文**（tape 在用户自己的机器上，全文才支撑可回放）；用户可启用脱敏档改记内容哈希——**脱敏即如实标注该段回放降级**，不假装仍可全量重建。
+- 模型路由遵循 §5.6 判据清晰度律；Gateway 是**底层白盒**管道（工具层），不做任何放行裁决——放行裁决属顶层白盒。
+
+### 13.8 Capability Registry：底层白盒能力注册表
+
+不做传统插件市场——agentic 能力不是 UI 扩展，是**可行动作面**（OpenClaw 技能生态的供应链事故是已付学费，§15）。TuringOS 的市场体验之下是一张**底层白盒**注册表（注册的全部是反奥利奥架构的工具层对象，与顶层白盒的谓词/管理严格分层），对象包括：工具、技能、连接器、模型供应方、agent adapter、view renderer、执行 profile。
+
+每个能力必须有 manifest，机器可校验：
+
+```yaml
+id: com.example.github.pr
+kind: tool | skill | connector | model_provider | agent_adapter | view_renderer
+version: 1.2.0
+vendor: verified | community | local   # verified = 发布者签名身份经注册表核验，非品质背书
+action_classes:            # 声明式：工具签名即类别（§10）
+  default: class_1_reversible_local
+  escalation:
+    protected_branch_write: signature_5
+permissions:               # 文件域 / 网络域 / 凭证 scope，最小授权
+credentials: [github_oauth_repo_read]
+provenance: { action_receipt: true, replay: true }
+sandbox: { container_lane: optional }
+evals: { install: tests/install.yaml, replay: tests/replay.yaml }
+```
+
+**Install ≠ trust** 的机械含义：
+
+1. manifest 无效 → 不可启用；
+2. 权限与动作类未向用户呈现 → 不可启用；
+3. **未声明或无法核验动作类 → fail-closed，按三类处置或拒绝**（§7.3 节点 16）；
+4. 凭证 scope 与 prompt 上下文隔离；
+5. 安装、升级、移除全部入带（ToolInstall / ToolUpdate / ToolRemove 节点），可回放、可回滚；
+6. 回执不可回放的能力必须显式标注 partial——谓词门按 provenance 阈值对待。
+
+### 13.9 Skill Library
+
+Skills 是一等**底层白盒**能力包，不是 prompt 模板。格式上**兼容 SKILL.md 开放标准**（Anthropic 2025-12-18 发布，渐进披露三级加载；2026-03 已 32 个工具支持——这正是 Art. III.2 封装细节的业界收敛），外加 Turing 法律外壳：
+
+> **Turing Skill = SKILL.md（instructions + scripts + schemas）+ 权限 + 动作类 + 回执 schema + replay 规则 + evals + failure_modes**
+
+- Skill 的权威只来自项目 Spec、Capability Registry、Predicate Gate 与 ChainTape 回执——不来自它自己的文字。
+- Skill 可由用户创建，也可由 ArchitectAI 提案（§13.10）；**激活是状态迁移，必须入带**。
+- 初始库 12 类（按日常工作场景预置）：Project Init/Retro-Init、GitHub PR/CI Repair、Merge Dossier、Markdown→文档/幻灯、表格/CSV 分析、调研引证、邮件草稿、日程草稿、浏览器调研、Xcode Build/Test、Canvas 投影、Failure Certificate/根因。
+
+### 13.10 Live Software 3.0 回路
+
+让系统在使用中变活——但**自我迭代的对象是白盒脚手架（底层白盒工具、顶层白盒谓词与投影模板），永远不是中间黑盒的任意自我变异**。这不是新机制，是回路 3（§7.4）的数据飞轮扩展：
+
+```text
+tape 产生原料：FailureNode / 拒绝记录 / 工具回执 / CI 修复史 / 用户纠正 / 重复 WorkGraph 模式
+  → 本地小模型做聚类·摘要·检索（分类/路由/failure clustering/skill retrieval——判据清晰档）
+  → ArchitectAI 产出候选白盒工件：候选 Skill / 候选谓词 / 候选投影模板 / 候选工具包装 / 候选路由规则 / 候选 adapter 训练集
+  → Veto-AI {PASS, VETO} 违宪审查
+  → eval 验证（候选 Skill 必须在留出案例上通过——只对历史失败过拟合的"修复"是 Goodhart，Art. III.4）
+  → 契约要求时人类签名（#7）
+  → 激活入带，版本化，可回滚
+```
+
+Apple 端侧底座的事实边界（FEASIBILITY Part IV-3）：adapter 训练官方即 LoRA（用户 v0.3 评审中的原始表述经查正确）；部署需专项 entitlement（训练与本地测试不需要）；**每个 adapter 绑定特定基模型版本，OS 升级即须重训——这是持续运营税，路线图按年度预算**；端侧约 3B，定位摘要/抽取/分类而非世界知识；WWDC26 的 LanguageModel + LanguageModelExecutor 双协议允许把任意本地或云端模型接入同一框架。adapter 产物与一切模型产物同律：**仅用于呈现与路由辅助，永不获得 Predicate Gate 权威**。
+
+先例与师承：Hermes 的"经验→技能→使用中改进→持久化→检索"循环、小米 MiMo Code（2026-06-10，MIT）的 `/distill` 技能蒸馏与 SQLite FTS5 跨会话记忆、研究线的 SEAL / AlphaEvolve / SAGE——技能库式自进化正在工业化。TuringOS 的差异：**别人的 agent 自己学；TuringOS 让学习产物过宪法的门。**
 
 ---
 
@@ -576,6 +708,23 @@ MCP 已是多厂商开放标准（LF Projects 治理）。最关键的一句话�
 - **Claude Code**：hooks 强，但 **PreToolUse 的 deny 对 MCP 工具调用不强制执行**（官方 issue 关闭为 not-planned）；云会话跑在托管 VM 上，本机 hooks 不随行。
 - **Codex**：hooks 新生且官方自述拦截不完整；**Codex Cloud 任务在本机网关之外**（OpenAI 托管环境，按云端 per-environment 设置管网络）。
 
+### 14.4 External Agent Adapter Contract
+
+外部 agent（OpenClaw / Hermes / Claude Code / Codex / MiMo Code / …）以统一契约接入，不逐家深度定制：
+
+```text
+ExternalAgentAdapter
+  ├── input:      WorkOrderPackage（任务、范围 allowlist、验收谓词、预算、边界声明）
+  ├── handoff:    Git branch / PR · MCP task · CLI 受监督会话 · prompt 包 ·（可用时）A2A
+  ├── output:     观测到的 diff / PR / 回执 / 日志摘要（再入观测触发，§7.3 节点 15B'）
+  ├── provenance: full | partial（partial 不得纯谓词放行）
+  └── boundary_card: 通道内动作面 + 绕过面 + 收窄方法 + 版本与核验日期（§14.3）
+```
+
+**Git 是首选公共底座**——宪法本就要求 Q_t 是 version-controlled 状态：外部 agent 只要交付 branch / commit / diff / PR / CI result，就能进入谓词门，零定制成本。深度定制仅当四条件同时成立：真实用户规模、能给动作级回执、维护成本不损内核抽象、边界卡能保持最新。开放性原则不变：作为 OS 原则上支持运行各种优秀 agentic 程序，但统一抽象优先于逐家优化。
+
+**如实声明一项未竟调研**：各 agent 社区的用户粘性、切换成本与用户群体规模评估（评审要求"社区调研而非主观感受"）本版**尚未进行**——已列入 FEASIBILITY Part III 增补第 13 项跟踪；上文"真实用户规模"作为深度定制门槛条件，其判定依据即该项调研的产出，做完之前不下结论。
+
 ---
 
 ## 15. 需求证据与竞品诚实
@@ -606,11 +755,11 @@ MCP 已是多厂商开放标准（LF Projects 治理）。最关键的一句话�
 
 面向公众：
 
-> **TuringOS is the Apple-native Agentic OS that lets AI work under your law.**
+> **TuringOS is the Apple-native, protocol-native Agentic OS that lets AI work under your law.**
 
 面向开发者：
 
-> **TuringOS turns agent work into Spec-bound, CI-aware, receipt-backed, human-signable state changes.**
+> **TuringOS turns external models, tools, skills, and agents into Spec-bound, CI-aware, receipt-backed, human-signable state transitions.**
 
 中文主张：
 
@@ -620,12 +769,14 @@ MCP 已是多厂商开放标准（LF Projects 治理）。最关键的一句话�
 
 ## 18. 路线图
 
-1. **v0.4-alpha：Software 3.0 Shell** —— Dynamic Orb；Facilitator AI（本地 FM + API fallback + 降级模式）；Meta AI 配置；Generative HTML 原型；项目发现；Git 只读状态。
-2. **v0.4-beta：Project Ready** —— Init Spec；Retro-Init；预算与自治契约；凭证域声明；应用内批准（过渡形态）；WorkGraph 生成。
-3. **v0.5：Execution Loop** —— 内部 Worker；外部 prompt 派发与再入观测；三类动作支路 + draft-by-default；GitHub PR/CI 观测；修复回路 + 止损护栏；Merge Dossier。
-4. **v0.6：Kernel Receipt Loop** —— ChainTape/回执 schema + 哈希链；provenance 分级；Predicate Gate；Failure Certificate；Morning Ritual；Touch ID + SE 签名升级。
-5. **v0.7：Strategy Loop** —— Project Stumps；portfolio search；Market observe-only；MCTS-lite 实验。
-6. **v0.8：首批外部集成** —— 按接入面厚度排序：OpenClaw → Hermes → Claude Code → Codex（experimental 档）；每个集成附边界卡（§14.3）。
+单梯递进；v0.5 的协议/能力/安全新层并入既有阶梯，不另起炉灶：
+
+1. **alpha：Software 3.0 Shell** —— Dynamic Orb；Facilitator AI（本地 FM + API fallback + 降级模式）；Meta AI 配置；Generative 投影原型（View IR 雏形）；项目发现；Git 只读状态。
+2. **beta：Project Ready** —— Init Spec；Retro-Init；预算与自治契约；凭证域声明；应用内批准（过渡形态）；WorkGraph 生成。
+3. **M1：Execution Loop + Protocol Gateway** —— 内部 Worker；MCP client/server 网关；Model Gateway 三面适配（OpenAI-compatible / Responses / Anthropic Messages + Apple FM 本地）；Git-first 外部 agent 交接与再入观测；三类动作支路 + draft-by-default；GitHub PR/CI 观测；修复回路 + 止损护栏；Merge Dossier。
+4. **M2：Kernel Receipt Loop + Capability Registry** —— ChainTape/回执 schema + 哈希链；provenance 分级；Predicate Gate；Failure Certificate；Morning Ritual；Touch ID + SE 签名升级；能力 manifest schema + 安装/升级/移除入带 + 初始 Skill 库（12 类）+ Skill eval harness。
+5. **M3：Strategy Loop + Live Software 3.0** —— Project Stumps；portfolio search；Market observe-only；MCTS-lite 实验；FailureNode 聚类 → 候选 Skill/谓词提案流 → Veto + eval 激活；adapter 训练数据集导出（实训依 Part IV-3 运营税评估后再启动）。
+6. **M4：首批外部集成 + Hostile Host 原型** —— 集成按接入面厚度排序：OpenClaw → Hermes → Claude Code → Codex（experimental 档），每个附边界卡（§14.3）；Canvas Projection（Excalidraw 底座）；外部 Sudo-Anchor PoC + Audit Anchor（Rekor 模式）+ no-audit-no-execution 不变量实验（§9.1 Tier 2）。
 
 ---
 
@@ -647,6 +798,11 @@ MCP 已是多厂商开放标准（LF Projects 治理）。最关键的一句话�
 14. 修复回路必须有止损护栏；没有无界重试。
 15. 并行 Worker 上下文相互隔离；原始失败日志不群发。
 16. 谓词内部与评分细节对 Worker 屏蔽；主观判断走 RiskFinding，不冒充谓词。
+17. 任何外部协议（MCP / A2A / UI 扩展 / 模型 API）不得绕过 ChainTape、Predicate Gate、动作分类、provenance 与签名路由。
+18. 批准卡永远由第一方渲染器绘制；第三方 view 组件不得承载批准仪式。
+19. 未声明或无法核验动作类的外部能力 fail-closed；Install ≠ trust，安装/升级/移除必须入带。
+20. 模型与 adapter 的产物仅用于呈现与路由辅助，永不获得 Predicate Gate 权威；Live 回路的候选工件必须过 Veto + 留出 eval 才能激活。
+21. 在 Tier 2 Sudo-Anchor 落地之前，不宣称任何 hostile-host（T3）级安全；威胁分级如实写在产品里。
 
 ---
 

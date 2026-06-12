@@ -1,0 +1,36 @@
+{
+  "schema_version": "tos.app.model_call.v0",
+  "call_id": "mc_sprint0_0001",
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-6",
+  "role": "worker",
+  "privacy_mode": "full",
+  "input_record": {
+    "mode": "full",
+    "content_hash": "sha256:aabb1122334455ccdd6677eeff008899",
+    "content": "Write the tape_node schema for TuringOS Sprint 0."
+  },
+  "output_record": {
+    "mode": "full",
+    "content_hash": "sha256:bbcc2233445566ddee7788ff0011aabb",
+    "content": "{\"$schema\": \"https://json-schema.org/draft/2020-12/schema\", ...}"
+  },
+  "latency_ms": 3200,
+  "cost": {
+    "input_tokens_usd": 0.002,
+    "output_tokens_usd": 0.006,
+    "total_usd": 0.008
+  },
+  "token_usage": {
+    "input": 800,
+    "output": 400,
+    "total": 1200
+  },
+  "policy": {
+    "max_tokens": 4096,
+    "temperature": 0
+  },
+  "project_id": "proj_turingos_sprint0",
+  "replay_degraded": false,
+  "work_order_id": "wo_sprint0_contracts_0001"
+}

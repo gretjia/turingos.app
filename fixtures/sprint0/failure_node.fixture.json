@@ -1,0 +1,21 @@
+{
+  "schema_version": "tos.app.failure_node.v0",
+  "failure_id": "fail_sprint0_0001",
+  "project_id": "proj_turingos_sprint0",
+  "reject_class": "predicate_fail",
+  "nearest_failed_predicate": "bash scripts/validate_contracts.sh exits 0",
+  "attempt_summary": "First draft of tape_node.schema.json was missing the 'verified' required field. Validator reported '[FAIL] schema well-formed: contracts/tape_node.schema.json'.",
+  "budget_used": {
+    "tokens": 1200,
+    "usd": 0.008
+  },
+  "suggested_repair": "Add 'verified' to the required array in tape_node.schema.json and re-run validate_contracts.sh.",
+  "provenance": {
+    "call_id": "mc_sprint0_0001",
+    "tape_head": "sha256:1122334455667788aabbccddeeff0011"
+  },
+  "verified": false,
+  "work_order_id": "wo_sprint0_contracts_0001",
+  "worktree": "worktrees/sprint0",
+  "recurrence_count": 0
+}
