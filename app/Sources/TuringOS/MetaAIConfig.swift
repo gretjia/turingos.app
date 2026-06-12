@@ -40,6 +40,21 @@ public struct MetaAIConfig: Codable, Equatable, Sendable {
 
     public static let defaultCredentialScope = "meta_ai_api_key"
 
+    /// A1_32: user-ruled default (2026-06-12) — Meta AI runs on DeepSeek
+    /// deepseek-v4-pro via the OpenAI-compatible wire. credentialScope is
+    /// DeepSeekPresets.credentialScope so the scope shown on the config card
+    /// is byte-identical to the scope the ModelGateway resolves (closes the
+    /// A1_31 integration seam: UI saved under meta_ai_api_key while the
+    /// gateway read deepseek-api).
+    public static func deepSeekDefault() -> MetaAIConfig {
+        MetaAIConfig(
+            providerKind: .openaiCompatible,
+            endpointURL: DeepSeekPresets.endpoint,
+            credentialScope: DeepSeekPresets.credentialScope,
+            displayName: "Meta AI (DeepSeek v4 Pro)"
+        )
+    }
+
     public init(
         providerKind: MetaAIProviderKind = .openaiCompatible,
         endpointURL: URL? = nil,
@@ -74,11 +89,12 @@ public enum MetaAIConfigStore {
     }()
     private static let decoder = JSONDecoder()
 
-    /// Loads the saved config, or returns a default if none exists.
+    /// Loads the saved config, or returns the user-ruled DeepSeek default
+    /// (A1_32) if none exists. Previously-saved configs are untouched.
     public static func load() -> MetaAIConfig {
         guard let data = UserDefaults.standard.data(forKey: key),
               let config = try? decoder.decode(MetaAIConfig.self, from: data) else {
-            return MetaAIConfig()
+            return MetaAIConfig.deepSeekDefault()
         }
         return config
     }

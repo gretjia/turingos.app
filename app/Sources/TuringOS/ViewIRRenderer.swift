@@ -529,11 +529,17 @@ struct IntentSuggestionsView: View {
 
 /// Renders a credential_field block using macOS SecureField.
 /// Iron law: isSecure=true, no plaintext default (docs/02 §7.1).
+/// A1_32: submit wires to Keychain via CredentialSubmitHandler (injected,
+/// testable). On success the field is CLEARED — the secret never lingers
+/// in view state; only the saved-confirmation line remains.
 struct CredentialFieldView: View {
     let payload: CredentialFieldPayload
+    var handler: CredentialSubmitHandler = .keychain()
     // SecureField binding — value goes directly to Keychain; never surfaced
     // to model context (docs/02 §7.1 / white paper §9 / §13.7).
     @State private var secureValue: String = ""
+    @State private var savedScope: String?
+    @State private var saveError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -542,16 +548,52 @@ struct CredentialFieldView: View {
                 .foregroundStyle(Tokens.Text.primary)
             // SecureField only — no TextEditor/TextField fallback.
             // isSecure = true prevents screenshot API capture (§7.1).
-            SecureField("", text: $secureValue)
-                .font(Tokens.Typography.ui(13))
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 320)
-            Text("scope：\(payload.credentialScope)")
-                .font(Tokens.Typography.mono(10))
-                .foregroundStyle(Tokens.Text.tertiary)
+            HStack(spacing: 8) {
+                SecureField("", text: $secureValue)
+                    .font(Tokens.Typography.ui(13))
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 320)
+                    .onSubmit(submit)
+                Button("存入 Keychain", action: submit)
+                    .disabled(secureValue.isEmpty)
+            }
+            if let savedScope {
+                Text("已存入 Keychain · scope：\(savedScope)")
+                    .font(Tokens.Typography.mono(10))
+                    .foregroundStyle(Tokens.Semantic.blue.color)
+            } else if let saveError {
+                Text("保存失败：\(saveError)")
+                    .font(Tokens.Typography.mono(10))
+                    .foregroundStyle(Tokens.Semantic.red.color)
+            } else {
+                Text("scope：\(payload.credentialScope)")
+                    .font(Tokens.Typography.mono(10))
+                    .foregroundStyle(Tokens.Text.tertiary)
+            }
         }
         .padding(14)
         .background(Tokens.Space.glassBase, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func submit() {
+        switch handler.submit(scope: payload.credentialScope, secret: secureValue) {
+        case .success(let scope):
+            secureValue = ""   // secret never lingers in view state
+            savedScope = scope
+            saveError = nil
+        case .failure(let err):
+            saveError = errorLabel(err)
+        }
+    }
+
+    /// Error label — NEVER includes the secret (CredentialSubmitError carries
+    /// only saver descriptions, which KeychainStore keeps secret-free).
+    private func errorLabel(_ err: CredentialSubmitError) -> String {
+        switch err {
+        case .emptySecret:        return "输入为空"
+        case .emptyScope:         return "scope 缺失"
+        case .saverFailed(let d): return d
+        }
     }
 }
 
