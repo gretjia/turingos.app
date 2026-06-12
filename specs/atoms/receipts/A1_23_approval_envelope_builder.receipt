@@ -1,0 +1,23 @@
+atom: A1_23_approval_envelope_builder
+utc: 2026-06-12T10:36:21Z
+head: 2cfee279ec9bdf130189b44249c11b35c53ed0c8
+note: Red line 2 delivered ("ApprovalEnvelope before pretty Touch ID UI") - construction + what-you-saw binding; ceremony recording still lawfully blocked on runtime tape. Delivered: ApprovalCardContent (9 displayed fields, canonical sortedKeys serialization, visibleCardHash sha256); ApprovalEnvelopeDraft (ALL 20 schema required keys + Tier-2 optional slots; type named Draft deliberately - unsigned envelope is never a ratification; init internal so no builder bypass); ApprovalEnvelopeBuilder pure static (nonce/expiry injected, zero Date/UUID; visible_card_hash computed FROM content INSIDE build() - caller structurally cannot inject an arbitrary hash, 操守3+红线2 binding is type-enforced); FAIL-CLOSED refusals: hostThreatLevel T3 -> refused (v0.x does not claim T3, §9.1), signature node outside 1-8 -> refused, class_3 + node<4 -> refused (reuses A1_21 SignatureNode.class3Minimum), required_signature_level NOT a parameter - hardcoded app_approval (touch_id_se/external_anchor unreachable until M2: capability not present = not claimable). Per-field hash sensitivity test mutates ALL 9 content fields (verifier counted fields vs mutations). 114 tests (+6), MIN_TESTS 108->114 (raised correctly this time), verifier 8/8 PASS 0 blockers. shipgate p1 16/16 PASS.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
