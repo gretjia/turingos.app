@@ -1,0 +1,23 @@
+atom: A1_15_view_ir_renderer
+utc: 2026-06-12T05:02:23Z
+head: d7c043989ed7940f479cda9909073abfcabccea6
+note: Sprint 1 atom 1/3 - View IR v0 (execution-ruling red line 1 engineering body). Delivered: contracts/view_ir.schema.json (14 block types literal-matched to docs/02 §3.3 incl. credential_field) + fixture; ViewIR.swift Codable model (unknown block type -> .unknown inert, decode never throws, payload never interpreted); ViewIRRenderer.swift first-party SwiftUI renderer (exhaustive switch, NO default fallback - approval_request renders ONLY via ApprovalCard; credential_field ONLY via SecureField w/ empty default, value->Keychain never to model context; ProvenanceLine unconditionally first - every doc surfaces derive_source); TemplateProjections.swift deterministic degraded-mode factories (morningRitual/projectPicker/degradedNotice, pure functions, no Date/UUID/random); ViewIRTests.swift +6 tests incl. malicious-script-block negative control; MIN_TESTS 53->59. Verifier independently re-ran negative control (html_embed+<script> -> .unknown inert), red-line greps (zero WKWebView/HTML/JS surface), determinism x2, full app lane x2 green. 1 blocker: scope violation - validate_contracts.sh modified but absent from atom allowlist (orchestrator's card-writing omission, not implementer misconduct; the edit was functionally necessary for fixture wiring) - remedied per CLAUDE.md 铁律 2 by dated retroactive allowlist amendment on the atom card; reported verbatim here. shipgate p1 16/16 PASS. Branch stacked: claude/a1-15-view-ir -> claude/a1-14-sprint0-kernel-spine -> claude/a1-12-whitepaper-v04 (v0.5, PR #27 awaiting user) -> main.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
