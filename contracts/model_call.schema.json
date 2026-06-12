@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.model_call.v0",
+  "title": "ModelCall",
+  "description": "Model Gateway is a bottom-whitebox pipe; every call enters the tape — there is no unlogged model traffic. privacy_mode=redacted means personally-identifying or secret content is replaced with hashes before tape entry; replay_degraded=true is the honest acknowledgement that a redacted call cannot be fully replayed. Privacy redaction honestly degrades replay rather than silently blocking it. cost and token_usage are mandatory for budget accounting even when zero.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "call_id",
+    "provider",
+    "model",
+    "role",
+    "privacy_mode",
+    "input_record",
+    "output_record",
+    "latency_ms",
+    "cost",
+    "token_usage",
+    "policy",
+    "project_id",
+    "replay_degraded"
+  ],
+  "properties": {
+    "schema_version": { "const": "tos.app.model_call.v0" },
+    "call_id": { "type": "string" },
+    "provider": { "type": "string" },
+    "model": { "type": "string" },
+    "role": { "enum": ["facilitator", "meta", "worker", "veto", "architect", "gardener"] },
+    "privacy_mode": { "enum": ["full", "redacted"] },
+    "input_record": {
+      "type": "object",
+      "required": ["mode", "content_hash"],
+      "properties": {
+        "mode": { "enum": ["full", "hash"] },
+        "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{8,64}$" },
+        "content": { "type": "string" }
+      }
+    },
+    "output_record": {
+      "type": "object",
+      "required": ["mode", "content_hash"],
+      "properties": {
+        "mode": { "enum": ["full", "hash"] },
+        "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{8,64}$" },
+        "content": { "type": "string" }
+      }
+    },
+    "latency_ms": { "type": "integer", "minimum": 0 },
+    "cost": { "type": "object" },
+    "token_usage": { "type": "object" },
+    "policy": { "type": "object" },
+    "project_id": { "type": "string" },
+    "replay_degraded": { "type": "boolean" },
+    "work_order_id": { "type": "string" }
+  }
+}

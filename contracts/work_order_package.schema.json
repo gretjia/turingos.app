@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.work_order_package.v0",
+  "title": "WorkOrderPackage",
+  "description": "The complete dispatch unit handed to an execution agent: spec reference, scope allowlist, acceptance predicates, budget slice, and the prompt. allowed_files and forbidden_files are path glob arrays — a work order without both lists is unscoped and MUST be rejected by the execution harness. acceptance_predicates are machine-verifiable PASS/FAIL judgements (subjective opinions go to risk_findings in the merge dossier, never here). provenance_requirement drives whether a full chain tape is mandatory or whether partial + human confirmation suffices.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "work_order_id",
+    "project_id",
+    "spec_ref",
+    "worktree_scope",
+    "allowed_files",
+    "forbidden_files",
+    "objective",
+    "expected_outputs",
+    "acceptance_predicates",
+    "budget_slice",
+    "provenance_requirement",
+    "prompt"
+  ],
+  "properties": {
+    "schema_version": { "const": "tos.app.work_order_package.v0" },
+    "work_order_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "spec_ref": { "type": "string" },
+    "worktree_scope": { "type": "string" },
+    "allowed_files": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "forbidden_files": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "objective": { "type": "string" },
+    "expected_outputs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "acceptance_predicates": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "budget_slice": { "type": "object" },
+    "provenance_requirement": { "enum": ["full", "partial_with_human_confirm"] },
+    "prompt": { "type": "string" },
+    "repair_context": { "type": "object" },
+    "external_agent_target": { "type": "string" }
+  }
+}

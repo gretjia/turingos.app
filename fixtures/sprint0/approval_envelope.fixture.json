@@ -1,0 +1,22 @@
+{
+  "schema_version": "tos.app.approval_envelope.v0",
+  "envelope_id": "env_sprint0_0001",
+  "signature_node": 2,
+  "action_class": 1,
+  "actor": "agent_claude_01",
+  "project_id": "proj_turingos_sprint0",
+  "spec_hash": "sha256:aabb1122ccdd3344eeff5566778899aa",
+  "budget_hash": "sha256:bbcc2233ddee4455ff0011223344aabb",
+  "policy_hash": "sha256:ccdd3344eeff55660011223344aabbcc",
+  "payload_hash": "sha256:ddee4455ff00112233445566778899dd",
+  "visible_card_hash": "sha256:eeff556677889900aabbccdd11223344",
+  "human_readable_summary": "Create a new worktree for sprint-0 contract work. Scope: contracts/ and fixtures/ only. No runtime changes.",
+  "consequence_statement": "A new git worktree is created at ~/Developer/turingos.app/worktrees/sprint0. Reversible: worktree can be removed.",
+  "reversibility": "reversible",
+  "target_resource_hash": "sha256:ff0011223344aabbccdd55667788eeff",
+  "expiry_utc": "2026-06-12T06:00:00Z",
+  "nonce": "nonce-sprint0-env-0001",
+  "prev_tape_head": "sha256:1122334455667788aabbccddeeff0011",
+  "required_signature_level": "app_approval",
+  "host_threat_level": "T0"
+}

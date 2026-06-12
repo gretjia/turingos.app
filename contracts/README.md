@@ -22,3 +22,10 @@ App 消费什么事件、显示什么状态、哪些 action 合法——在写�
 | `signature_receipt.schema.json` | 验签回执（verified=false 也是合法回执——失败即状态） |
 | `ratification_payload.schema.json` | L4 canonical payload（human_readable_summary 为 required） |
 | `predicate_result.schema.json` | verdict 锁死 {PASS,FAIL}；RiskFinding 独立通道 |
+| `tape_node.schema.json` | Shell 侧 tape 条目信封；canonical ChainTape 语义在 runtime 上游，本文件 NOT 重实现 |
+| `approval_envelope.schema.json` | 泛化 ratification_payload.v0 至签名节点 #1-#8；visible_card_hash 绑定用户所见；Tier-2 字段保留（v0.x 写 null） |
+| `capability_manifest.schema.json` | 工具/技能/连接器能力声明；fail-closed：缺失 action_classes 按 class_3 处理；vendor_tier verified = 身份证明非质量背书 |
+| `work_order_package.schema.json` | 发往执行 agent 的完整调度包：规格引用、范围 allowlist、验收谓词、预算切片、prompt |
+| `model_call.schema.json` | Model Gateway 底层白盒管道记录；每次调用入 tape；隐私脱敏诚实降级 replay |
+| `failure_node.schema.json` | 失败即状态（Art. 0.2）；verified 固定为 false；nearest_failed_predicate 命名触发的 PASS/FAIL 门 |
+| `merge_dossier.schema.json` | 合并门禁证据包；CI 绿是外部谓词之一非全部；risk_findings 为主观 RiskFinding 通道，不携带 verdict |

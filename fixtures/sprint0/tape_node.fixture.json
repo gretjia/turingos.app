@@ -1,0 +1,12 @@
+{
+  "schema_version": "tos.app.tape_node.v0",
+  "node_id": "nd_genesis_0001",
+  "kind": "genesis",
+  "utc": "2026-06-12T00:00:00Z",
+  "author": "runtime",
+  "payload_hash": "sha256:aa00bb11cc22dd33ee44ff5500112233",
+  "prev_node_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "node_hash": "sha256:1122334455667788aabbccddeeff0011",
+  "verified": true,
+  "project_id": "proj_turingos_sprint0"
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "tos.app.capability_manifest.v0",
+  "id": "tool_grep_v1",
+  "kind": "tool",
+  "version": "1.0.0",
+  "vendor_tier": "local",
+  "action_classes": {
+    "default": "class_0_read"
+  },
+  "permissions": {
+    "filesystem": ["read"]
+  },
+  "credential_scopes": {},
+  "provenance": {
+    "action_receipt": true,
+    "replay": true
+  },
+  "evals": {
+    "install": "bash scripts/evals/tool_grep_install.sh",
+    "replay": "bash scripts/evals/tool_grep_replay.sh"
+  },
+  "audit_nodes": {
+    "install": "nd_tool_install_grep_0001"
+  }
+}

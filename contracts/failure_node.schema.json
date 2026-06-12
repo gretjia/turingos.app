@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.failure_node.v0",
+  "title": "FailureNode",
+  "description": "Failure is state, the asset of the next search round (Art. 0.2). A failure node is never hidden, never retried silently, and never softened into an advisory — it goes on tape with verified=false as a hard statement of what happened. nearest_failed_predicate names the exact PASS/FAIL gate that fired; suggested_repair is advisory only (RiskFinding channel) and does not constitute a predicate.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "failure_id",
+    "project_id",
+    "reject_class",
+    "nearest_failed_predicate",
+    "attempt_summary",
+    "budget_used",
+    "suggested_repair",
+    "provenance",
+    "verified"
+  ],
+  "properties": {
+    "schema_version": { "const": "tos.app.failure_node.v0" },
+    "failure_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "reject_class": { "type": "string" },
+    "nearest_failed_predicate": { "type": "string" },
+    "attempt_summary": { "type": "string" },
+    "budget_used": { "type": "object" },
+    "suggested_repair": { "type": "string" },
+    "provenance": { "type": "object" },
+    "verified": { "const": false },
+    "work_order_id": { "type": "string" },
+    "worktree": { "type": "string" },
+    "recurrence_count": { "type": "integer" }
+  }
+}

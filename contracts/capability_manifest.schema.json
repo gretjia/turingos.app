@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.capability_manifest.v0",
+  "title": "CapabilityManifest",
+  "description": "Declares what a tool/skill/connector/model can do and at what action class. This schema is fail-closed: an instance with missing/invalid action_classes MUST be treated as class 3 (irreversible external) or denied — the system never assumes a lower-privilege default from an incomplete manifest. vendor_tier 'verified' = publisher identity attested by registry signature, NOT a quality endorsement; 'community' and 'local' carry no attestation. The escalation sub-object in action_classes is reserved for future per-operation overrides; consumers that cannot parse it MUST deny the installation.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "kind",
+    "version",
+    "vendor_tier",
+    "action_classes",
+    "permissions",
+    "credential_scopes",
+    "provenance",
+    "evals",
+    "audit_nodes"
+  ],
+  "properties": {
+    "schema_version": { "const": "tos.app.capability_manifest.v0" },
+    "id": { "type": "string" },
+    "kind": {
+      "enum": [
+        "tool",
+        "skill",
+        "connector",
+        "model_provider",
+        "agent_adapter",
+        "view_renderer",
+        "execution_profile"
+      ]
+    },
+    "version": { "type": "string" },
+    "vendor_tier": { "enum": ["verified", "community", "local"] },
+    "action_classes": {
+      "type": "object",
+      "required": ["default"],
+      "properties": {
+        "default": {
+          "enum": [
+            "class_0_read",
+            "class_1_reversible_local",
+            "class_2_remote_draft",
+            "class_3_irreversible_external"
+          ]
+        },
+        "escalation": { "type": "object" }
+      }
+    },
+    "permissions": { "type": "object" },
+    "credential_scopes": {
+      "type": "object"
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["action_receipt", "replay"],
+      "properties": {
+        "action_receipt": { "type": "boolean" },
+        "replay": { "type": "boolean" }
+      }
+    },
+    "evals": {
+      "type": "object",
+      "required": ["install", "replay"],
+      "properties": {
+        "install": { "type": "string" },
+        "replay": { "type": "string" }
+      }
+    },
+    "audit_nodes": { "type": "object" },
+    "sandbox": { "type": "object" },
+    "skill_md_path": { "type": "string" }
+  }
+}
