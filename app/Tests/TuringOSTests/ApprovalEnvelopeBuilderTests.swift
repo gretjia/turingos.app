@@ -22,7 +22,9 @@
 //            node 9 → refused;
 //            class 3 + node 3 → refused;
 //            class 3 + node 4 → ok;
-//            required_signature_level is always "app_approval" in output.
+//            required_signature_level is "app_approval" for probe-less builds
+//            (capability defaults to .appApprovalOnly; A1_25 capability-derived
+//            level tested in EnvelopeSignerTests.testCapabilityDerivedSignatureLevel).
 //
 //   5. testDeterminismBytEqual
 //          — same inputs x2 → byte-equal encoded envelope.
@@ -135,10 +137,11 @@ final class ApprovalEnvelopeBuilderTests: XCTestCase {
                        "tos.app.approval_envelope.v0",
                        "schema_version must be the const value")
 
-        // Verify required_signature_level is always "app_approval" in v0.x.
+        // Verify required_signature_level is "app_approval" when no capability is injected.
+        // (A1_25: capability defaults to .appApprovalOnly → "app_approval".)
         XCTAssertEqual(decoded["required_signature_level"] as? String,
                        "app_approval",
-                       "required_signature_level must be 'app_approval' in all v0.x envelopes")
+                       "required_signature_level must be 'app_approval' for probe-less v0.x envelopes")
     }
 
     // MARK: - Test 2: visible_card_hash binding (bi-directional)
@@ -360,14 +363,15 @@ final class ApprovalEnvelopeBuilderTests: XCTestCase {
         XCTAssertEqual(c3n4Draft.signatureNode, 4)
         XCTAssertEqual(c3n4Draft.actionClass, 3)
 
-        // 4f. required_signature_level is ALWAYS "app_approval" in all valid outputs.
+        // 4f. required_signature_level is "app_approval" when no capability is injected
+        //     (default = .appApprovalOnly; A1_25 amendment, backward-compatible).
         XCTAssertEqual(c3n4Draft.requiredSignatureLevel, "app_approval",
-                       "required_signature_level must always be 'app_approval' in v0.x")
+                       "required_signature_level must be 'app_approval' for probe-less builds (A1_25 default)")
 
         // Also verify this holds for a normal class-1 build.
         let normalDraft = Self.makeSuccessfulDraft()
         XCTAssertEqual(normalDraft.requiredSignatureLevel, "app_approval",
-                       "required_signature_level must always be 'app_approval' in v0.x (class 1)")
+                       "required_signature_level must be 'app_approval' for probe-less builds (class 1)")
     }
 
     // MARK: - Test 5: determinism — same inputs x2 → byte-equal encoded envelope
