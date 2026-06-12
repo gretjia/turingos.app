@@ -97,3 +97,16 @@ final class CredentialSaveTests: XCTestCase {
         XCTAssertEqual(loaded, MetaAIConfig.deepSeekDefault())
     }
 }
+
+// MARK: - A1_33: probe scope follows config
+
+extension CredentialSaveTests {
+    func testProbeDefaultScopeFollowsCurrentConfig() {
+        MetaAIConfigStore.clear()
+        let probe = SystemFacilitatorProbe()
+        XCTAssertEqual(probe.metaAIKeyScope, MetaAIConfigStore.load().credentialScope,
+            "Probe must look where the key is actually saved (A1_33)")
+        XCTAssertEqual(probe.metaAIKeyScope, DeepSeekPresets.credentialScope,
+            "With no saved config, that is the user-ruled DeepSeek scope")
+    }
+}

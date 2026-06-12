@@ -48,7 +48,12 @@ public struct SystemFacilitatorProbe: FacilitatorRuntimeProbe, Sendable {
     /// Only the scope string (never the secret) is used here.
     public let metaAIKeyScope: String
 
-    public init(metaAIKeyScope: String = MetaAIConfig.defaultCredentialScope) {
+    /// A1_33: the probe follows the CURRENT config's scope, not the legacy
+    /// constant. After A1_32 the key is saved under the configured scope
+    /// (deepseek-api by user-ruled default) — probing the old constant meant
+    /// a saved key was invisible and the app stayed degraded after restart
+    /// (found by the 2026-06-12 computer-use real-GUI test).
+    public init(metaAIKeyScope: String = MetaAIConfigStore.load().credentialScope) {
         self.metaAIKeyScope = metaAIKeyScope
     }
 
