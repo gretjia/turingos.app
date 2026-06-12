@@ -139,7 +139,7 @@ public enum IntentRouter {
         radarScene: RadarScene = RadarScene.derive(ledger: WorktreeLedger())
     ) -> ViewIRDocument {
         let lower = input.lowercased()
-        let base = routeBase(lower: lower, catalog: catalog, ledger: ledger, radarScene: radarScene)
+        let base = routeBase(lower: lower, rawInput: input, catalog: catalog, ledger: ledger, radarScene: radarScene)
         if runtimeKind == .degraded {
             return prefixWithDegradedNotice(base)
         }
@@ -148,6 +148,7 @@ public enum IntentRouter {
 
     private static func routeBase(
         lower: String,
+        rawInput: String,
         catalog: any CatalogSource,
         ledger: WorktreeLedger,
         radarScene: RadarScene
@@ -191,6 +192,10 @@ public enum IntentRouter {
         // Portfolio radar / stump tree intent (A1_24)
         if let portfolioDoc = routePortfolio(lower: lower) {
             return portfolioDoc
+        }
+        // Canvas projection intent (A1_26)
+        if let canvasDoc = routeCanvas(lower: lower, rawInput: rawInput) {
+            return canvasDoc
         }
         // Unknown → intent suggestions (discoverability escape hatch §4)
         return intentSuggestionsDoc()
