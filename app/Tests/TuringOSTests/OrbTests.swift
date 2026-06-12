@@ -111,14 +111,23 @@ final class OrbTests: XCTestCase {
     // MARK: - Test 3: IntentRouter determinism
 
     func testIntentRouterDeterminism() {
+        // Use a mock catalog with one entry so the "项目" picker branch always
+        // has a project to list — regardless of what is or isn't on disk in CI.
+        let mockCatalog = MockCatalogSource(items: [
+            CatalogItem(displayName: "TuringOS",
+                        remoteKey: "github.com/zephryj/turingos.app",
+                        localPath: "/Users/zephryj/Developer/turingos.app",
+                        pushedAt: nil)
+        ], tag: "catalog:mock")
+
         // Same input -> identical ViewIRDocument (pure function law)
         let input = "项目列表"
-        let doc1 = IntentRouter.route(input: input, runtimeKind: .localFM)
-        let doc2 = IntentRouter.route(input: input, runtimeKind: .localFM)
+        let doc1 = IntentRouter.route(input: input, runtimeKind: .localFM, catalog: mockCatalog)
+        let doc2 = IntentRouter.route(input: input, runtimeKind: .localFM, catalog: mockCatalog)
         XCTAssertEqual(doc1, doc2, "IntentRouter must be deterministic: same input -> identical output")
 
         // "项目" / "project" -> project_picker kind
-        let projDoc = IntentRouter.route(input: "查看项目", runtimeKind: .localFM)
+        let projDoc = IntentRouter.route(input: "查看项目", runtimeKind: .localFM, catalog: mockCatalog)
         XCTAssertEqual(projDoc.kind, "project_init", "项目 intent routes to project_init kind")
         let hasProjectPicker = projDoc.blocks.contains {
             if case .projectPicker = $0 { return true }
