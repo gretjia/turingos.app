@@ -1,0 +1,53 @@
+{
+  "schema_version": "tos.app.view_ir.v0",
+  "kind": "morning_ritual",
+  "derive_source": [
+    "tape:seq:1000-1047",
+    "git:300fb563"
+  ],
+  "blocks": [
+    {
+      "type": "morning_ritual",
+      "date": "2026-06-12",
+      "tape_range": "seq:1000-1047",
+      "buckets": [
+        { "label": "done", "count": 3, "refs": ["nd_a1", "nd_a2", "nd_a3"] },
+        { "label": "staged", "count": 1, "refs": ["nd_b1"] },
+        { "label": "needs_approval", "count": 2, "refs": ["nd_c1", "nd_c2"] },
+        { "label": "blocked", "count": 0, "refs": [] },
+        { "label": "failed", "count": 1, "refs": ["nd_d1"] }
+      ]
+    },
+    {
+      "type": "summary_card",
+      "title": "今日摘要",
+      "body": "Phase 7 Web MVP 已合并；2 个批准请求等待裁决；F6 后端修复在进行中。",
+      "tape_ref": "tape:seq:1047"
+    },
+    {
+      "type": "approval_request",
+      "envelope_ref": "env_merge_300fb563"
+    },
+    {
+      "type": "risk_list",
+      "items": [
+        {
+          "level": "warn",
+          "text": "worktree wt_f6_backend 的 feat/f6-backend-cluster-fix 与 main 相差 22 个提交",
+          "risk_class": "divergence"
+        },
+        {
+          "level": "info",
+          "text": "2 个预算账户余量充足",
+          "risk_class": "budget"
+        }
+      ]
+    },
+    {
+      "type": "credential_field",
+      "field_id": "fld_anthropic_api_key",
+      "label": "Anthropic API Key",
+      "credential_scope": "anthropic_api"
+    }
+  ]
+}

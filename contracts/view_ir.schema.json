@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tos.app.contracts.view_ir.v0",
+  "title": "View IR",
+  "description": "Model-facing output contract — models produce IR ONLY, never executable HTML/JS (execution ruling red line 1). Unknown block types are rendered inert by the first-party renderer, never executed. The renderer is the strict layer; this schema validates the envelope and required fields only.",
+  "type": "object",
+  "required": ["schema_version", "kind", "derive_source", "blocks"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "tos.app.view_ir.v0"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "derive_source": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "summary_card",
+              "risk_list",
+              "approval_request",
+              "diff_view",
+              "evidence_list",
+              "project_picker",
+              "spec_draft",
+              "budget_card",
+              "worktree_map",
+              "repair_prompt",
+              "dossier_view",
+              "morning_ritual",
+              "intent_suggestions",
+              "credential_field"
+            ]
+          },
+          "title": { "type": "string" },
+          "body": { "type": "string" },
+          "tape_ref": { "type": "string" },
+          "items": { "type": "array" },
+          "envelope_ref": { "type": "string" },
+          "diff_ref": { "type": "string" },
+          "worktree_id": { "type": "string" },
+          "provenance": { "type": "string" },
+          "projects": { "type": "array" },
+          "spec_ref": { "type": "string" },
+          "sections": { "type": "array" },
+          "signature_node": { "type": "integer" },
+          "budget_ref": { "type": "string" },
+          "consumed": { "type": "object" },
+          "limit": { "type": "object" },
+          "worktrees": { "type": "array" },
+          "failure_node_ref": { "type": "string" },
+          "suggested_prompt": { "type": "string" },
+          "target_worktree": { "type": "string" },
+          "dossier_ref": { "type": "string" },
+          "risk_findings": { "type": "array" },
+          "date": { "type": "string" },
+          "tape_range": { "type": "string" },
+          "buckets": { "type": "array" },
+          "suggestions": { "type": "array" },
+          "field_id": { "type": "string" },
+          "label": { "type": "string" },
+          "credential_scope": { "type": "string" }
+        }
+      }
+    }
+  }
+}
