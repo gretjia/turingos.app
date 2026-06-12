@@ -1,0 +1,23 @@
+atom: A1_13_whitepaper_v05_protocol_native
+utc: 2026-06-12T03:12:58Z
+head: 777e5a9fc114d93a9ced1cf2650fac0686814cc3
+note: WHITEPAPER v0.5 positioning upgrade (Apple-native -> Apple-native x protocol-native) per user 8-point review + GPT dialogue (archived verbatim to research/REVIEW_v04_user_gpt_dialogue.md). R-stage: 4 parallel sonnet web-research tracks (protocols / model-access economics / live-software+Apple adapter training / freeform+hostile-host prior art), 131 searches/fetches, 41 claims (33 verified / 6 partially / 1 refuted / 1 unverified) machine-rendered to research/R_v05_protocol_live_sources.md + FEASIBILITY Part IV appendix + empirical items 9-13. One workflow run died on API error mid-flight - resumed via journal (resumeFromRunId), completed agents served from cache. DESIGN-CHANGING findings: SKILL.md is an OPEN STANDARD since 2025-12-18 (32 tools by 2026-03); GPT's correction #3 to the user was itself WRONG - Apple officially calls adapter training LoRA (user's original v0.3 wording vindicated, divergence on record); subscription-OAuth has real precedent (OpenClaw via Codex endpoint, Altman-announced 2026-05-02) but is de-facto not official; Anthropic Agent SDK reportedly moves to credit pools 2026-06-15; A2A reached v1.0 (2026-03, production); MCP next spec finalizes 2026-07-28; AG-UI is CopilotKit's (not Google); Freeform's ONLY automation surface = one Shortcuts action (Add Files to Board); Excalidraw MIT beats tldraw (commercial license gate); hostile-host prior art = HW-wallet WYSIWYS + banking chipTAN + Foundation Passport Prime (2026-05-22, first "Human Authority Hardware"); FIDO2 transaction-confirmation extension closed unmerged 2025-04; Apple Watch = generic approval UI only (presence factor, not WYSIWYS). v0.5 additions: 6.6 Turing View IR (approval cards FIRST-PARTY-RENDERED ONLY - third-party UI never carries the ratification ritual), 6.7 Canvas Projection (Freeform honest path), 9.1 Hostile Host model (T0-T3 threat ladder + axiom + Tier1/Tier2; v0.x explicitly does NOT claim T3), 13.6 protocol layer (MCP core / A2A outbound-first / MCP Apps preferred / A2UI+AG-UI adapter-only), 13.7 Model Gateway (3 API surfaces, A/B access classes, ModelCall full-content-on-tape default w/ honest replay-degradation when redacted), 13.8 Capability Registry (Install != trust; undeclared action class fail-closed), 13.9 Skill Library (SKILL.md-compatible + law shell, 12 initial skills), 13.10 Live Software 3.0 (= loop-3 data flywheel; white-box scaffolding only, never black-box self-mutation; per-base-model adapter retraining tax stated; holdout eval anti-Goodhart), 14.4 External Agent Adapter Contract (Git-first), roadmap single-ladder merge (alpha/beta/M1-M4), non-negotiables 17-21. S-stage: 2 opus critics + haiku lint, all readVerification-proven. Results: fidelity 1 blocker (user review point 8 community-stickiness research SILENTLY DROPPED - fixed by honest deferral declaration in 14.4 + FEASIBILITY Part III item 13; the research itself deferred to its own atom) + 3 risks; honesty 0 blockers + 3 risks (06-15 date hedged with 据报道, MCP Apps date anchor mirrored, vendor:verified clarified as identity-attestation-not-quality); lint clean. Atom predicates ALL PASS; shipgate p1 16/16 PASS. Parallel R1.9 session dirty files untouched. PR #26 updated to v0.5, awaiting user final review (no auto-merge). Implementation plan (落地计划) intentionally NOT written this atom - 4 user decisions pending (Tier-2 anchor form, inbound A2A, registry hosting, adapter-training timing); next atom after ratification.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
