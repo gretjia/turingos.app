@@ -105,9 +105,13 @@ struct TuringOSApp: App {
         // running with ZERO windows (A1_10 - lsappinfo-proven on the real
         // bundle; the headless probes never caught it because they never
         // open a GUI).
+        //
+        // A1_16: First screen is OrbView (docs/02 §2.1 — P4 UI constitution).
+        // Existing onboarding gate preserved. ContentView remains reachable
+        // from Orb via keyboard shortcut cmd+D (内核调试面).
         WindowGroup("TuringOS") {
             if onboarded {
-                ContentView(store: store)
+                OrbView(store: store)
                     .preferredColorScheme(.dark)
                     .task { startWorkspace() }
             } else {

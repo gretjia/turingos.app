@@ -1,0 +1,23 @@
+atom: A1_16_orb_facilitator_shell
+utc: 2026-06-12T05:16:06Z
+head: 9a95602c02347d89bbfe52a909b14b9183af97d9
+note: Sprint 1 atom 2/3 - Dynamic Orb first screen + Facilitator runtime + secure key entry + Meta AI config. Delivered: OrbState.swift (pure reducer state machine idle/listening/thinking/needsRuling/degraded, UI-independent, faultDetected catch-all caught by own test mid-implementation); OrbView.swift (first screen; content renders ONLY via ViewIRRenderer; IntentRouter deterministic - known intents -> template projections, unknown -> intent_suggestions escape hatch per docs/02 §4; kernel debug surface ContentView via cmd+D sheet - radar/attention preserved, demoted from primary nav); FacilitatorRuntime.swift (three-branch probe localFM/apiBacked/degraded behind protocol + canImport guard; tests use MockProbe only - CI-safe; NOTE: real FM availability uses NSClassFromString soft-link approximation, harden on real machine = FEASIBILITY Part III empirical item); KeychainStore.swift (kSecClassGenericPassword save/load/delete; secret zeroed after save; only scope descriptor surfaces); MetaAIConfig.swift (provider kind enum openai_compatible/anthropic_messages/native per Model Gateway three-surface design; NO secret field - testNoPlaintextLeak proves JSON encoding secret-free). TuringOSApp.swift: WindowGroup BEFORE MenuBarExtra preserved w/ explicit A1_10 comment. 65 tests (+6), MIN_TESTS 59->65, verifier 8/8 PASS 0 blockers (scene order quoted, secret hygiene greps zero, no model calls grep zero, View IR discipline grep zero, app lane x2 green). shipgate p1 16/16 PASS. OBSERVATION for user: parallel Codex session has untracked specs/atoms/A1_13_codex_init.md - atom NUMBERING COLLISION risk across parallel sessions (my A1_13 = whitepaper v0.5, committed). Branch stacked on claude/a1-15-view-ir.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
