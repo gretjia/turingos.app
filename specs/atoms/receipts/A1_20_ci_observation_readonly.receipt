@@ -1,0 +1,23 @@
+atom: A1_20_ci_observation_readonly
+utc: 2026-06-12T09:44:05Z
+head: 32d7d72959cf6017cad812101561977d7dc55790
+note: Sprint 3 read-only observation half (lawful subset; Predicate Gate + merge release await runtime import). Delivered: CIObservation.swift (RepoObservationSource protocol + LiveRepoObservationSource with COMMANDS-AS-DATA pattern - 8 command specs all read verbs: git log/rev-parse/merge-base/ls-tree/cat-file + gh pr list/checks + gh api GET branch_protection; read-only law asserted by test enumerating the spec table); CIEvidenceCollector.swift (assembles ALL 8 merge_dossier.ci_evidence required keys incl. workflow_file_hash computed from the workflows tree at commit + branch_protection_snapshot; unavailable data -> explicit sentinels, never dropped keys - "CI green" alone is not evidence, the dossier pins WHAT was green per docs/03 standard 4); CIProjections.swift (repair_prompt + dossier DRAFT projections, deterministic x2 byte-equal, provenance enum UPPERCASE schema-exact, draft-only - no verdicts no Q advance). 91 tests (+12), MIN_TESTS 79->91, zero network in tests (Live source never instantiated in test target), ViewIR.swift untouched, verifier 7/7 PASS 0 blockers. shipgate p1 16/16 PASS. PARALLEL U-LANE STATUS (runtime import critical path, recorded for traceability): U1 CORRECTION banners prepared as turingosv4#342 (191 lines exact, clean cherry-picks 140bf31b+dcdf4275, NOT merged); U3 ruled D per formula (no reproducible defect on main - M2 is observability enhancement, no failing test); U2 (AGENTS.md 14b) + U4 (agentic_os_gap) confirmed ABSENT from all v4 refs - exist only on the other Mac's dirty tree, BLOCKED on user; anchor re-verification protocol (workspace tests, POSIX-patched gate runner) running in background on clean clone ~/Developer/turingosv4-port @ 383c7e51.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
