@@ -9,6 +9,7 @@ allowlist:
   - "runtime/**"
   - "Cargo.toml"
   - "constitution/PINS.toml"
+  - "specs/atoms/CURRENT" # amended 2026-06-12: ship-cycle bookkeeping (same as every other atom card)
 max_new_files: 0
 predicates:
   - "test -f runtime/Cargo.toml"

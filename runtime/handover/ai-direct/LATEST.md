@@ -1,0 +1,1118 @@
+# TuringOS v4 — Handover State
+
+> Agent cold start: read `AGENTS.md`, `HARNESS_PLAYBOOK.md`, and
+> `skills/SUBAGENT_HARNESS.md` before this file. This file is a derived view,
+> not a source of truth. ChainTape/CAS and executable gates win on conflict.
+>
+> Hard rules: PR-only workflow, no `git push origin main`, no wildcard staging,
+> no sidecar staging. See `AGENTS.md` §14a.
+
+---
+
+## Current Snapshot (2026-06-09)
+
+**Session**: 1.0 readiness via a systematic multi-tier real E2E + adversarial
+campaign under the standing `/goal`, then closing the resulting Class-4 security
+gap. `main` now at `7298b927` (Merge #340). THREE PRs landed this session:
+
+- **#338** (`6649c684`, Class 2, zero pinned) — 1.0 product-flow hardening of
+  `turingos generate`: honest delivery contract (post-delivery steps
+  warn+anchor+exit-0, never retract a printed delivery; a genuine pre-delivery /
+  structural failure still exits 2), entrypoint-aware structural gate
+  (`.py`->PythonParses via `sanitized_runner`, `.html`->HtmlParses), spec-derived
+  functional gate, C11 shielded retry-feedback, and a new read-only
+  `turingos observe` (FC1/FC2/FC3 liveness + no-zombie + integer-VPPUT rollup).
+  Includes the E2E-driven needle fixes. Clean-context 4-lens audit 4x PROCEED.
+- **#339** (`09b3903`, Class 1) — operator-convenience VPPUT surfaced in
+  `turingos tdma run`. **Honestly NOT** the canonical Lean-oracle H-VPPUT: it
+  uses the deterministic stage judges, and the tdma git tape is not the
+  runtime-L4 tape `reconstruct_vpput_from_tape` reads.
+- **#340** (`7298b927`; trust-root commit `0585831b`; tag
+  `v4-ratify-2026-06-09-siggap`, gretjia ED25519) — **Class-4 §8** closure of
+  **OBS_AGENT_SIG_REPLAY_GAP**. §8 token
+  `APPROVE-AGENT-SIG-INGRESS-FAILCLOSED-ALL-12`. ALL 12 agent economic TypedTx
+  variants (Work/Verify/Challenge/TaskOpen/EscrowLock + CompleteSet*/MarketSeed/
+  Cpmm*/BuyWithCoinRouter) are now signature-verified **FAIL-CLOSED** at
+  `submit_agent_tx` ingress via a shared `verify_economic_agent_sig` helper (new
+  `SubmitError::AgentManifestRequired`: no manifest -> reject) AND at replay
+  Gate 4. 8 trust-root pins rehashed (sequencer.rs, verify.rs,
+  chain_derived_run_facts.rs test-section, + 5 pinned test files). Closes the
+  ingress vector for UNTRUSTED external agents (architect-confirmed 1.0 req).
+
+**Architect decision (2026-06-09) — NON-FATAL functional gate**: the spec-derived
+`RequiredTextPresent` check is best-effort (needle derived from fuzzy LLM prose,
+wrong 4 ways across the E2E: filename / command / numeric / narrative-example).
+Delivery is gated on the reliable STRUCTURAL scenarios ONLY; a functional miss is
+delivered + recorded as an on-tape advisory + warned, never a hard reject. See
+`test_run::delivery_verdict`.
+
+**E2E campaign (5 tiers; real CLI + live LLM + top-level tape observer; no mocks)**:
+- Simple E2E (HTML game / Python script) -> both OS-LIVE-DELIVERED.
+- Tier-1 (long-horizon multi-turn resume / forced-retry / adversarial) — FC2
+  multi-tick + resume + C11 relay + fail-closed all held; surfaced a trust-root
+  CLI footgun (`init` told users to `cd` into the scaffold; fixed) and the needle
+  false-negative (-> non-fatal gate).
+- Tier-2 (multi-worker market resolution `--n-parallel-workers 3` / Lean-oracle
+  `tdma --judge nesbitt`) — 3 workers admitted + winner settled; judge oracle
+  fired + discriminated correctly (7/8 stages, last step rightly rejected).
+- Tier-3 (100 synthetic Byzantine agents, zero-LLM, deterministic) — money
+  conservation / ingress system-tx rejection / double-claim idempotency / DoS
+  back-pressure / malformed fail-closed / 200-entry replay ALL held at scale;
+  DEMONSTRATED the agent-sig ingress gap exploitable -> drove #340.
+Full report: `handover/audits/E2E_1_0_READINESS_2026-06-09.md`.
+
+**Gates at `main`**: `cargo test --workspace --no-fail-fast` 479 bins / 0 failed;
+`run_constitution_gates` total=**194** failed=0; matrix-drift 3/3. New gates this
+session: `constitution_agent_sig_ingress_failclosed` (7 variants x 4 states,
+triple-coupled), `constitution_e2e_1_0_product_flow`,
+`no_false_pass_functional_scenario`, `adversarial_100_agent_scale` (7/7),
+`tdma_verified_pput_micro_gate`.
+
+**1.0 posture**: the core product flow (describe app -> delivered working code on
+a constitutional tape) AND untrusted-agent ingress security are now closed.
+**Remaining (architect / §8)**: **P2** distributable-binary trust-root (make
+`generate`'s trust-root check cwd-independent / binary-embedded — Class-4, only
+needed if shipping a standalone binary; the demo runs from the source root, and
+`init`'s "Next steps" now reflects that); minor **P4** (audit-tape production
+role naming, cross-backend `observe`/`verify chaintape` for the tdma git tape,
+market `winner=` stdout line).
+
+**Merge model (this session)**: with explicit architect authorization the agent
+self-merges non-trust-root PRs (#339 agent-merged). Trust-root PRs still require a
+user-signed `v4-ratify-*` tag (cryptographic, G-GUARD) before agent merge — that
+is the one irreducibly-human step (#340 merged after the user signed the tag).
+See `feedback_agent_merge_authorization`.
+
+## Current Snapshot (2026-06-08)
+
+**Session**: Agentic-OS roadmap S1–S6 — **every autonomously-shippable atom
+SHIPPED + merged** under the standing `/goal` (continuous workflows, self-open +
+self-merge PRs, constitution-bounded autonomy). 10 PRs landed #315–#324: M07
+single-admission predicate gate (#315/#316), conformance sweep +5 bypasses
+(#317), all-canonical-writers-verify-trust-root (#318), S6 verification redesign
+(#319), S1 FC3 observable+canary (#320), S4 arg-taint hard-gate (#321), S2 Tier-1
+memory (#322), S5 interop (#323), S3 economy observe-only boltzmann trace (#324).
+Each = Class 0–2, non-vacuous mutation-proven gate, ZERO trust-root/pinned change
+(unpinned-`#[path]`-submodule pattern), clean-context audit PROCEED. Workspace at
+#324: `cargo test --workspace` 2696/0, `run_constitution_gates` total=184
+failed=0, matrix-drift 3/3. **Residual = 4 Class-4 legs blocked on per-atom §8
+user tokens** (FC3-irreversible, Tier-2-agent-writable-memory, budget-hard-ceiling,
+capability-wallet-gating — packets in `handover/section8/`) **+ the multi-LLM-on-
+tape real-evidence obligation** (needs a live API run, flagged not faked). Full
+ledger: `handover/reports/AGENTIC_OS_ROADMAP_S1_S6_FINAL_STATUS_2026-06-08.md` +
+OBL-016 2026-06-08 progress block. The verification critique ("测试到底有没有用?")
+was vindicated + addressed: enumerate-all-sites gates + mutation-proof + recurring
+sweep + pinned≠wired (`feedback_single_site_gate_illusion`).
+
+## Current Snapshot (2026-06-06)
+
+**Session**: OBL-005 is now closed under the ratified no-zombie/no-drift
+scope, while the Agentic OS pivot wave has landed through PR #309 and A03
+KEEP-SRC-BOOT has consumed its Section-8 ratification as a focused boot
+manifest gate. A03 status token: `A03_KEEP_SRC_BOOT_LANDED`. PR #284 keeps Market A/B G0 at
+single-WorkTx-node/core-scope stage-2; PR #285 hardens source-tree commit
+git-history closure; PR #286 binds any future final closure to a fresh
+current-tree witness path; PR #287-#291 synchronize guard state, shared
+web/CLI spec helpers, fresh ToolBench/Mind2Web liveness refs, and R-022
+enforcement-log hygiene; PR #292 and PR #294 sync derived handover state;
+PR #293 clarifies the OBL-010 historical G0 receipt vs current OBL-005
+single-node/core-scope Market A/B runner boundary; PR #295 records the
+Agentic OS pivot execution plan; PR #296-#306 land A04 through A14 substrate
+and workload-boundary atoms; PR #307 fixes the final acceptance formatting /
+trust-root / R-022 landing blocker; PR #308 syncs this derived handover view.
+The user ratified `APPROVED-OBL005-NO-ZOMBIE-SCOPE` on 2026-06-06, and
+`handover/audits/OBL005_FINAL_CLOSURE_WITNESS_2026-06-06.md` now closes
+OBL-005 only for no-zombie/no-drift/no-unconstitutional-retained-substrate
+proof. Current scoped status token: `OBL005_FINAL_CLOSURE_VERIFIED`.
+Clean-context audit
+`handover/audits/OBL005_NO_ZOMBIE_FINAL_CLOSURE_CLEAN_CONTEXT_AUDIT_2026-06-06.md`
+returns `NO-VIOLATION`. `handover/audits/OBLIGATION_COMPLETENESS_WITNESS_2026-06-06.md`
+contains an exact `OBL-ALL-CLOSED` line for the obligation ledger. The later
+A03 KEEP-SRC-BOOT landing keeps `src/boot.rs::verify_trust_root`
+authoritative and does not claim wrapper-module migration, trust-root rehash,
+or full Agentic OS plan completion.
+PR #311 then repaired GitHub-main source-tree reachability for OBL-005 CI
+bindings, and
+`handover/audits/MAINLINE_BASELINE_SNAPSHOT_2026-06-06.md` records the current
+read-only mainline baseline at `4af83627ef013b65a4764b4b9c4fffb93ea0a8ae`.
+
+**Last synchronized base / snapshot source baseline**: `03564886` (PR #313 —
+baseline snapshot semantics clarification on GitHub main, after PR #312
+recorded the read-only snapshot from PR #311). This is not a self-updating
+current-HEAD pointer; verify the current tip with `git rev-parse origin/main`.
+This handover file is derived, not authority.
+
+**Truth boundary**: this file is a derived handover view. If it conflicts with
+`constitution.md`, ChainTape/CAS, deterministic replay, or executable gates,
+trust those sources first.
+
+Current state:
+
+- `OBLIGATIONS.md` is **globally closed for Level=must obligations** after
+  the 2026-06-06 scoped OBL-005 witness and the later A03/cache cleanup
+  branch work. OBL-001 through OBL-015 are satisfied in the current ledger.
+  The A03 closure is KEEP-SRC-BOOT only: no wrapper-module migration, no
+  trust-root authority move, and no `build.rs` / `genesis_payload.toml`
+  rehash.
+- PR #245 through #307 hardened OBL-005 final-closure accounting and landed the
+  Agentic OS pivot wave through A14 plus final acceptance cleanup: closure
+  blocker inventory, replay-artifact GREEN checks, missing domain-closure
+  blockers, source-tree fingerprint blockers, source-tree receipt identity, and
+  source-receipt final-closure eligibility, plus fresh boot/replay, FC3,
+  market/generate, Cybench, OSWorld, GPQA, Math, SWE-bench, ToolBench,
+  WebArena, TDMA, Mind2Web, GAIA, and generate/market A-B closure-status
+  evidence, plus two-sided YES/NO external market evidence, the single-sample
+  benchmark overclaim guard, the closure-scope decision packet, and the
+  executable closure-scope ratification guard plus derived handover/ledger
+  guard-state synchronization, G0 historical/current-runner boundary guard,
+  Market A/B single-node/core-scope stage-2 guard, source-tree commit
+  git-history guard, fresh final closure witness binding guard, web/CLI shared
+  spec runtime kernel guards, production liveness fresh-run binding,
+  R-022 enforcement-log conflict-marker guard, OBL-010 historical/current G0
+  boundary clarification, ChainTape-L4/TapeEvent/ExternalCall/AgentView/
+  PredicateReceipt/Economy/ProjectionCache/Scheduler/UniversalWitness/OS-v0/
+  WorkloadBoundary atoms, and the #307 R-022 same-file TRACE_MATRIX move
+  preservation fix.
+- PR #250 did **not** rewrite historical true-suite evidence. It makes future
+  source-tree-bound current reruns produce closure-eligible source receipts
+  when replay and source identity are green.
+- Current reconciliation fixture binds all 21 rows to fresh current-source
+  receipts from
+  `obl005_fresh_boot_replay_20260604T143328Z` boot/CLI evidence,
+  `obl005_ci_replay_cas_20260606T142221Z` replay/CAS evidence, and
+  `obl005_fresh_fc3_20260604T150936Z` FC3 evidence, plus
+  `obl005_fresh_market_20260604T235308Z` market evidence,
+  `obl005_ci_generate_20260606T142742Z` generate/artifact evidence, and
+  `obl005_ci_market_ab_20260606T143144Z` market A/B closure-status evidence,
+  plus `obl005_fresh_cybench_20260604T164533Z` Cybench evidence,
+  `obl005_fresh_osworld_20260604T171857Z` OSWorld evidence,
+  `obl005_fresh_gpqa_20260604T183931Z` GPQA evidence,
+  `obl005_fresh_math_20260604T191000Z` Math evidence,
+  `obl005_fresh_swebench_20260604T192100Z` SWE-bench evidence,
+  `obl005_ci_toolbench_20260606T143903Z` ToolBench evidence,
+  `obl005_fresh_webarena_20260604T200738Z` WebArena evidence,
+  `obl005_fresh_tdma_20260604T203708Z` TDMA evidence,
+  `obl005_ci_mind2web_20260606T143633Z` Mind2Web evidence, and
+  `obl005_fresh_gaia_20260604T213500Z` GAIA evidence:
+  `source_receipt_final_closure_false=0`,
+  `source_tree_fingerprint_missing=0`,
+  `fresh_final_closure_witness_missing=0`,
+  `domain_receipt_final_closure_false=14`,
+  `benchmark_capability_not_solved=10`,
+  `domain_receipt_final_closure_missing=0`, and
+  `market_no_or_short_side_missing=0`. The remaining domain/benchmark rows
+  are capability-pending annotations, not OBL-005 no-zombie closure blockers.
+- Post-#310 CI reachability repair on 2026-06-06: GitHub CI showed that some
+  final-closure bindings cited source-tree commits that existed in the local
+  object store but were not reachable from GitHub `main`. The follow-up repair
+  changes the source-tree guard from local `cat-file` presence to
+  `git merge-base --is-ancestor <commit> HEAD`, then rebinds
+  generate/artifact, replay/CAS, Market A/B, Mind2Web, and ToolBench rows to
+  fresh `e81c8a968c9b00723c2b4cd015368e3eb70dc58c` evidence roots:
+  `obl005_ci_generate_20260606T142742Z`,
+  `obl005_ci_replay_cas_20260606T142221Z`,
+  `obl005_ci_market_ab_20260606T143144Z`,
+  `obl005_ci_mind2web_20260606T143633Z`, and
+  `obl005_ci_toolbench_20260606T143903Z`. This repair does not rewrite
+  historical evidence, does not claim A03 runtime implementation, and preserves
+  benchmark/domain failures as capability-pending annotations. Clean-context
+  repair audit
+  `handover/audits/OBL005_CI_SOURCE_TREE_REACHABILITY_CLEAN_CONTEXT_AUDIT_2026-06-06.md`
+  returned `NO-VIOLATION`; its evidence-root tracking finding was resolved by
+  explicitly staging all five new roots (`git ls-files` returned 162 files).
+- Mainline baseline snapshot on 2026-06-06: local branch
+  `codex/mainline-baseline-snapshot` was created from `origin/main` at
+  `4af83627ef013b65a4764b4b9c4fffb93ea0a8ae` after PR #311 merged. GitHub
+  checks for PR #311 were green, `OBLIGATIONS.md` reported
+  `OBL-ALL-CLOSED`, the reconciliation fixture reported
+  `OBL005_FINAL_CLOSURE_VERIFIED`, and `bash scripts/run_constitution_gates.sh`
+  passed locally with `[k-1-5] total=167 failed=0`. Snapshot record:
+  `handover/audits/MAINLINE_BASELINE_SNAPSHOT_2026-06-06.md`. This is a
+  read-only derived-view sync and still does not authorize or implement A03
+  runtime work.
+- Class 0 scope note added 2026-06-05:
+  `handover/directives/2026-06-05_OBL005_CLOSURE_SCOPE_DECISION_PACKET.md`
+  records the closure-scope decision fork. The user selected the recommended
+  no-zombie/no-drift closure scope with `APPROVED-OBL005-NO-ZOMBIE-SCOPE`,
+  with benchmark/domain failures kept as honest capability-pending facts.
+- Class 2 guard added by PR #277: `tests/constitution_obl005_final_closure_witness.rs`
+  now requires the scope packet, the explicit ratification phrase, and
+  no-final-closure language before any later final witness can proceed. The
+  2026-06-06 fresh witness consumes that guard under the exact user phrase.
+- Class 2 source-tree commit guard added by PR #285:
+  `tests/constitution_true_suite_evidence_reconciliation.rs::final_closure_source_tree_commits_must_exist_in_git_history`
+  prevents any future final closure from citing source-tree commits absent from
+  git history unless rows remain non-closing with explicit blockers. This is a
+  guard only; it does not close OBL-005.
+- Class 2 fresh final closure witness guard added by PR #286:
+  `tests/fixtures/liveness/true_suite_evidence_reconciliation.toml` declares
+  `fresh_final_closure_witness_path =
+  "handover/audits/OBL005_FINAL_CLOSURE_WITNESS_2026-06-06.md"`, and
+  `tests/constitution_true_suite_evidence_reconciliation.rs::final_closure_claim_requires_fresh_current_tree_witness_binding`
+  requires `final_closure_claimed=true` to bind a fresh current-tree
+  witness through `fresh_final_closure_witness_path`. The historical 2026-05-27
+  witness remains immutable history, not reusable current closure authority. The
+  PR #286 guard landed at `e13fb9d5`; the 2026-06-06 witness is now the current
+  binding.
+- Class 2 guard-state sync added by PR #287:
+  `tests/constitution_obl005_final_closure_witness.rs` keeps the derived
+  handover/ledger guard language aligned with the fresh witness and scope
+  ratification gates. This is a guard only and does not close OBL-005.
+- Class 2 web/CLI spec-kernel sharing added by PR #288 and PR #289:
+  the web spec entry and CLI spec path now share the same runtime prompt/env
+  helper surface, preserving one production kernel with different user entries.
+  This supports the "web and CLI are entrances, not two TuringOSes" boundary.
+- Class 2 production-liveness fresh-ref binding added by PR #290:
+  `tests/constitution_production_module_liveness.rs::production_group_domain_evidence_uses_reconciled_fresh_runs`
+  prevents active production ToolBench/Mind2Web liveness groups from drifting
+  away from the reconciled fresh true-suite refs
+  `obl005_fresh_toolbench_20260604T224409Z` and
+  `obl005_fresh_mind2web_20260604T224409Z`.
+- Class 2 R-022 enforcement-log guard added by PR #291:
+  `tests/constitution_rules_ci_mirror.rs::enforcement_log_has_no_conflict_markers`
+  prevents committed `rules/enforcement.log` conflict markers from surviving
+  constitution gates. This is a hygiene guard only and does not close OBL-005.
+- Current-binary boundary added by PR #293 on 2026-06-05: OBL-010's 11/11 `g0run5`
+  capability receipt is historical evidence anchored to commit `418d8a7d`.
+  Current `src/bin/g0_market_activation_current_kernel.rs` was deliberately
+  narrowed by PR #258 / commit `7b12e9f1` into the OBL-005 Market A/B
+  single-node/core-scope runner. Do not cite the current retained binary as
+  current c4/c5/c10/c11 proof without fresh multi-node replay evidence.
+- Current blocker audit on 2026-06-05 re-derived the active reconciliation
+  counts from `tests/fixtures/liveness/true_suite_evidence_reconciliation.toml`:
+  `fresh_final_closure_witness_missing=21`,
+  `domain_receipt_final_closure_false=14`,
+  `benchmark_capability_not_solved=10`, and zero source/tree/domain-missing or
+  market-NO blockers. Focused gates
+  `constitution_production_module_liveness`,
+  `constitution_true_suite_evidence_reconciliation`, and
+  `constitution_obl005_final_closure_witness` passed locally. Headless AGY and
+  Claude Sonnet read-only audits found no unregistered zombie in the inspected
+  liveness/reconciliation gates; both agree final OBL-005 closure is not allowed
+  without explicit scope ratification and a fresh current-tree final witness.
+- Agentic OS pivot landing status on 2026-06-06: PR #296 A04, #297 A05,
+  #298 A06, #299 A07, #300 A08, #301 A09, #302 A10, #303 A11, #304 A12,
+  #305 A13, and #306 A14 merged through PR-only workflow; #307 then fixed the
+  post-A14 final acceptance blocker (`cargo fmt --check` drift), rehashed only
+  the two affected trust-root pins, and fixed R-022 so same-file
+  `TRACE_MATRIX` moves are not false-positive removals. #307 verification:
+  GitHub Constitution gate suite, Feature freeze check, `r022_check`, and
+  sidecar-contamination check all passed; local evidence included
+  `cargo fmt --check`, `git diff --check`, `cargo check --workspace`,
+  `cargo test -j1 --workspace --no-fail-fast`, focused R-022/matrix/rules/
+  hygiene tests, and `bash scripts/run_constitution_gates.sh`
+  (`[k-1-5] total=167 failed=0`). Clean-context AGY witness returned
+  `NO-VIOLATION` in
+  `handover/audits/FINAL_ACCEPTANCE_FORMAT_TRUSTROOT_CLEAN_CONTEXT_AUDIT_2026-06-06.md`.
+  The later 2026-06-06 OBL-005 closure does not claim A03 runtime
+  implementation, benchmark capability closure, or full Agentic OS plan
+  completion.
+- A03 boundary note: `handover/directives/2026-06-05_A03_BOOT_TRUST_ROOT_MANIFEST_PREFLIGHT_AND_SECTION8_REQUEST.md`
+  was a preflight/Section-8 packet; on 2026-06-06 the user supplied the exact
+  ratification phrase `APPROVE-A03-SECTION8-KEEP-SRC-BOOT`. The landed A03
+  marker is `A03_KEEP_SRC_BOOT_LANDED`. The implementation keeps live boot
+  trust-root authority at `src/boot.rs::verify_trust_root`, uses the existing
+  A13 public CLI hook `src/bin/turingos/cmd_boot.rs`, and adds the focused
+  gate `tests/constitution_tc_boot_trust_root_manifest.rs`. No
+  `src/runtime/boot_trust_root_manifest.rs` wrapper, `build.rs` edit,
+  `genesis_payload.toml` rehash, or `src/main.rs` boot-call edit is part of
+  this A03 landing.
+- Fresh deterministic evidence added this session: `boot_cli_current_kernel_fresh`
+  and `replay_cas_tamper_repair_current` now point at
+  `handover/evidence/true_suite/obl005_fresh_boot_replay_20260604T143328Z/`.
+  Both receipts are `final_closure_possible=true` with source commit
+  `024dfd2d75817f7c0e52004fd3fca8122e9981d9`; replay/CAS still keeps its
+  domain-closure-missing blocker and all rows still require a fresh final
+  closure witness.
+- Fresh FC3 evidence added this session: `fc3_governance_reinit_fresh` and
+  `memory_feedback_reinit` now point at
+  `handover/evidence/true_suite/obl005_fresh_fc3_20260604T150936Z/`.
+  The receipt is `final_closure_possible=true` with source commit
+  `5a2c74c46c9060256410c07a4e79ee2b0331212b`; both rows still require a
+  fresh final closure witness. Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_FC3_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION` for the Class 2 reconciliation/evidence update.
+- Fresh market evidence added this session: `market_external_agent_fresh` and
+  `market_economy_polymarket` now point at
+  `handover/evidence/true_suite/obl005_fresh_market_20260604T235308Z/`.
+  The receipt is `final_closure_possible=true` with source commit
+  `ff5d109e3ae17a0f1ca929398d04504d4da8e610`, two role-separated external LLM
+  market participants, signed YES+NO `BuyWithCoinRouterTx` evidence
+  (`buy_yes_count=1`, `buy_no_count=1`, `no_side_market_action_txs=1`), exactly
+  one WorkTx for the task reward path (`work_tx_count_for_task=1`), packaged
+  restore replay artifacts, `FULL_SYSTEM_LIT`, `missing=[]`, and replay/restore
+  indicators green. This removes the market rows'
+  `market_no_or_short_side_missing` and `domain_receipt_final_closure_false`
+  blockers while deliberately keeping `fresh_final_closure_witness_missing`.
+  Clean-context AGY witness
+  `handover/audits/OBL005_TWO_SIDED_MARKET_EXTERNAL_CLEAN_CONTEXT_AUDIT_2026-06-05.md`
+  returned `NO-VIOLATION` before PR #274 merged. No final OBL-005 closure is
+  claimed.
+- Fresh market A/B closure-status evidence merged by PR #272:
+  `market_ab_performance_fresh` now points at
+  `handover/evidence/true_suite/obl005_fresh_market_ab_20260604T232500Z/`.
+  The full-system layer is `FULL_SYSTEM_LIT` with `missing=[]`, and the domain
+  receipt is scoped to
+  `market_ab_candidate_only_g0_core_conditions_1_2_3_6_7_8_9`. The G0 receipt
+  proves YES+NO trades (`buy_yes_count=1`, `buy_no_count=1`), one WorkTx node,
+  one ChallengeTx short side, price movement, structural shielding, stage-2
+  EventResolve observation, and green ChainTape replay. It explicitly records
+  c4/c5 priced-DAG branching and c10/c11 reward-claim settlement closure as
+  constrained/stage-2 under the current one-rewardable-WorkTx task escrow
+  kernel shape; no c1-11 final closure is claimed. The row now keeps
+  `domain_receipt_final_closure_false` and
+  `fresh_final_closure_witness_missing`, not a missing-domain-receipt blocker.
+  Verification passed: focused generate/market/reconciliation/package tests,
+  constitution matrix drift, constitution gates (`[k-1-5] total=165 failed=0`),
+  `cargo test --workspace --no-fail-fast`, strict secret scan, and GitHub checks
+  on PR #272. Clean-context AGY witness
+  `handover/audits/OBL005_GENERATE_MARKETAB_CLOSURE_STATUS_AGY_WITNESS_2026-06-04.md`
+  returned `NO-VIOLATION`.
+- Fresh GPQA source evidence prepared on the current branch:
+  `gpqa_science_reasoning` now points at
+  `handover/evidence/true_suite/obl005_fresh_gpqa_20260604T183931Z/`.
+  The source receipt is `final_closure_possible=true` with source commit
+  `7b12e9f1fc6469682af6d5f4e8a2cba18ba0c0d2`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, green replay indicators, and 4 packaged evidence stores. The
+  model result is honestly recorded as `correct_with_rationale` with
+  `answer_correct=true`, but the domain manifest remains
+  `closure_scope=domain_adapter_smoke_only` and `final_closure_possible=false`.
+  The reconciliation manifest now points only the `gpqa_science_reasoning`
+  broad-family row at this fresh run, reducing
+  `source_receipt_final_closure_false` and `source_tree_fingerprint_missing`
+  from 9 to 8 while deliberately keeping `domain_receipt_final_closure_false`
+  and `fresh_final_closure_witness_missing`. Verification passed: real current
+  runner through `scripts/run_true_suite_broad_agi_batch.sh --execute-installed
+  --run-id obl005_fresh_gpqa_20260604T183931Z --runners
+  gpqa_science_reasoning_fresh`, focused reconciliation/final-closure/
+  realworld/matrix tests, and AGY blocker-selection advisory `VALID`. This
+  does not claim final closure. Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_GPQA_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION`.
+- Fresh Math source evidence prepared on the current branch:
+  `math_formal_proof` now points at
+  `handover/evidence/true_suite/obl005_fresh_math_20260604T191000Z/`.
+  The source receipt is `final_closure_possible=true` with source commit
+  `70330599725b779c4e6e8479d5e8db9e05d83069`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, green replay indicators, and 4 packaged evidence stores. The
+  model result is honestly recorded as `correct_with_rationale` with
+  `answer_correct=true`, but the domain manifest remains
+  `closure_scope=domain_adapter_smoke_only` and `final_closure_possible=false`.
+  The reconciliation manifest now points only the `math_formal_proof`
+  broad-family row at this fresh run, reducing
+  `source_receipt_final_closure_false` and `source_tree_fingerprint_missing`
+  from 8 to 7 while deliberately keeping `domain_receipt_final_closure_false`
+  and `fresh_final_closure_witness_missing`. This single-sample correct result
+  is a capability signal, not a domain-closure proof. Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_MATH_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION`.
+- Fresh SWE-bench source evidence prepared on the current branch:
+  `swebench_live_coding_repair_fresh` and `swebench_live_coding_repair` now
+  point at
+  `handover/evidence/true_suite/obl005_fresh_swebench_20260604T192100Z/`.
+  The source receipt is `final_closure_possible=true` with source commit
+  `9ed91421378da1f083ee7cf8e985e5eeda5ee6e9`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, green replay indicators, and 4 packaged evidence stores. The
+  model result is honestly recorded as `repair_patch_structurally_plausible`
+  with `patch_structurally_plausible=true`, but the domain manifest remains
+  `closure_scope=domain_adapter_smoke_only` and `final_closure_possible=false`.
+  The reconciliation manifest now points both the coverage-task row and the
+  broad-family row at this fresh run, reducing
+  `source_receipt_final_closure_false` and `source_tree_fingerprint_missing`
+  from 7 to 5 while deliberately keeping `domain_receipt_final_closure_false`,
+  `benchmark_capability_not_solved`, and `fresh_final_closure_witness_missing`.
+  This does not claim final closure. Verification passed, including
+  `bash scripts/run_constitution_gates.sh` (`[k-1-5] total=165 failed=0`) and
+  `cargo test --workspace --no-fail-fast`. Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_SWEBENCH_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION`.
+- Fresh ToolBench source evidence initially prepared in this session:
+  `toolbench_api_tool_use` first pointed at
+  `handover/evidence/true_suite/obl005_fresh_toolbench_20260604T194611Z/`.
+  The source receipt is `final_closure_possible=true` with source commit
+  `15c3477586191199f8dbe693e47441595dc73a63`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, green replay indicators, and 4 packaged evidence stores. The
+  model result is honestly recorded as `tool_selection_mismatch` with
+  `exact_match=false`, and the ToolBench domain manifest still omits
+  `final_closure_possible`, so the reconciliation manifest now points only the
+  `toolbench_api_tool_use` broad-family row at this fresh run, reducing
+  `source_receipt_final_closure_false` and `source_tree_fingerprint_missing`
+  from 5 to 4 while deliberately keeping
+  `domain_receipt_final_closure_missing`, `benchmark_capability_not_solved`,
+  and `fresh_final_closure_witness_missing`. This initial receipt does not
+  claim final closure and is superseded for active production-liveness refs by
+  PR #290's reconciled fresh ToolBench run `obl005_fresh_toolbench_20260604T224409Z`.
+  Verification passed, including `bash scripts/run_constitution_gates.sh`
+  (`[k-1-5] total=165 failed=0`) and
+  `cargo test --workspace --no-fail-fast`. Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_TOOLBENCH_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION`.
+- Fresh WebArena source evidence prepared on the current branch:
+  `webarena_web_agent` now points at
+  `handover/evidence/true_suite/obl005_fresh_webarena_20260604T200738Z/`.
+  The source receipt is `final_closure_possible=true` with source commit
+  `e1ad26dc9260b219e8c328ac2543c766469418f2`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, green replay indicators, and 4 packaged evidence stores. The
+  model result is honestly recorded as `browser_task_answer_mismatch` with
+  `answer_correct=false`, and the WebArena domain manifest remains
+  `closure_scope=domain_adapter_smoke_only` and `final_closure_possible=false`,
+  so the reconciliation manifest now points only the `webarena_web_agent`
+  broad-family row at this fresh run, reducing
+  `source_receipt_final_closure_false` and `source_tree_fingerprint_missing`
+  from 4 to 3 while deliberately keeping `domain_receipt_final_closure_false`,
+  `benchmark_capability_not_solved`, and `fresh_final_closure_witness_missing`.
+  This does not claim final closure. Verification passed, including
+  `bash scripts/run_constitution_gates.sh` (`[k-1-5] total=165 failed=0`) and
+  `cargo test --workspace --no-fail-fast`. Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_WEBARENA_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION`, including the WorkTx/escrow boundary check that no
+  multi-node priced-DAG reward settlement is claimed.
+- Fresh TDMA source evidence prepared on the current branch:
+  `tdma_real_proof_fresh` now points at
+  `handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z/`.
+  The TDMA child runner no longer pre-packages `tdma_tape.git`; the shared
+  true-suite packager owns tarball creation. The fresh receipt is
+  `final_closure_possible=true` with source commit
+  `bb0a29e166aa0db4c7635985a567e12b0a5830b9`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, `tdma_replay_report.ok=true`, `stages_completed=5/5`, packaged
+  TDMA/runtime/CAS stores, and green restore replay indicators. The TDMA domain
+  manifest remains `closure_scope=domain_adapter_smoke_only` and
+  `final_closure_possible=false`, so the reconciliation manifest reduces
+  `source_receipt_final_closure_false` and `source_tree_fingerprint_missing`
+  from 3 to 2 while deliberately keeping `domain_receipt_final_closure_false`
+  and `fresh_final_closure_witness_missing`. Verification passed, including
+  `bash scripts/run_constitution_gates.sh` (`[k-1-5] total=165 failed=0`) and
+  `cargo test --workspace --no-fail-fast`. Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_TDMA_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION`. This does not claim final closure.
+- Fresh Mind2Web source evidence added on main by PR #265:
+  `mind2web_open_web` initially pointed at
+  `handover/evidence/true_suite/obl005_fresh_mind2web_20260604T210300Z/`.
+  The receipt is `final_closure_possible=true` with source commit
+  `cd4c9e832dd7d213fabc61dba1c8e57a1b6c6544`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, admitted WorkTx, packaged CAS/runtime stores, green
+  replay/restore indicators, and FC1/FC2/FC3 full-system rows. The model
+  result remains `browser_action_mismatch`, and the Mind2Web domain manifest
+  still omits `final_closure_possible`, so the reconciliation manifest reduces
+  `source_receipt_final_closure_false` and `source_tree_fingerprint_missing`
+  from 2 to 1 while deliberately keeping
+  `domain_receipt_final_closure_missing`, `benchmark_capability_not_solved`,
+  and `fresh_final_closure_witness_missing`. This initial receipt does not
+  claim final closure and is superseded for active production-liveness refs by
+  PR #290's reconciled fresh Mind2Web run `obl005_fresh_mind2web_20260604T224409Z`.
+- Fresh GAIA source evidence added by PR #267:
+  `gaia_general_assistant` now points at
+  `handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/`.
+  The receipt is `final_closure_possible=true` with source commit
+  `90cec268a908f39a93eceb888af453e07f328b24`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, admitted WorkTx, packaged CAS/runtime stores, green
+  replay/restore indicators, and FC1/FC2/FC3 full-system rows. The model
+  result remains `incorrect_with_rationale`, and the GAIA domain manifest
+  remains `closure_scope=domain_adapter_smoke_only` with
+  `final_closure_possible=false`, so the reconciliation manifest reduces
+  `source_receipt_final_closure_false` and `source_tree_fingerprint_missing`
+  from 1 to 0 while deliberately keeping
+  `domain_receipt_final_closure_false`, `benchmark_capability_not_solved`, and
+  `fresh_final_closure_witness_missing`. Verification passed: real runner,
+  focused GAIA/reconciliation/production-liveness/final-closure/matrix tests,
+  local secret scan, `git diff --check`, constitution gates
+  (`[k-1-5] total=165 failed=0`), and `cargo test --workspace
+  --no-fail-fast`. Clean-context Codex witness
+  `handover/audits/OBL005_FRESH_GAIA_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION`. This does not claim final closure.
+- Fresh generate/artifact closure-status evidence merged by PR #272:
+  `generate_artifact_chain_fresh` now points at
+  `handover/evidence/true_suite/obl005_fresh_generate_20260604T232500Z/`.
+  The provider-backed spec/generate run records
+  `closure_scope=generate_artifact_chain_current_kernel`,
+  `full_system_participation_required=true`, `final_closure_possible=true`,
+  `family_id=generate_artifact_chain`, `FULL_SYSTEM_LIT`, admitted WorkTx +
+  MarketSeed, packaged CAS/runtime/TDMA stores, and restore replay indicators
+  green. The row now keeps only `fresh_final_closure_witness_missing`; the old
+  `domain_receipt_final_closure_missing` blocker is removed. No final OBL-005
+  closure is claimed.
+  Clean-context AGY witness
+  `handover/audits/OBL005_GENERATE_MARKETAB_CLOSURE_STATUS_AGY_WITNESS_2026-06-04.md`
+  returned `NO-VIOLATION`.
+- Fresh Cybench source evidence prepared and audited on the current branch:
+  `cybench_security_sandbox_fresh` and `cybench_security_sandbox` now point at
+  `handover/evidence/true_suite/obl005_fresh_cybench_20260604T164533Z/`.
+  The receipt is `final_closure_possible=true` with source commit
+  `0f38026e4d03177ad4b6641086e9f1e98f751e8b`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, admitted WorkTx, packaged evidence stores, and green
+  replay/restore indicators. The model result remains
+  `safe_action_mismatch`, so both Cybench rows deliberately keep
+  `domain_receipt_final_closure_false`, `benchmark_capability_not_solved`, and
+  `fresh_final_closure_witness_missing`; no final closure is claimed.
+  Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_CYBENCH_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION` for the Class 2 reconciliation/evidence update.
+- Fresh OSWorld source evidence prepared and audited on the current branch:
+  `osworld_computer_use_fresh` and `osworld_computer_use` now point at
+  `handover/evidence/true_suite/obl005_fresh_osworld_20260604T171857Z/`.
+  The receipt is `final_closure_possible=true` with source commit
+  `1254212e10afe939b466d8404889106383d9bdb8`, `FULL_SYSTEM_LIT`,
+  `missing=[]`, admitted WorkTx, packaged evidence stores, and green
+  replay/restore indicators. The model result remains
+  `sandbox_action_mismatch`, so both OSWorld rows deliberately keep
+  `domain_receipt_final_closure_false`, `benchmark_capability_not_solved`, and
+  `fresh_final_closure_witness_missing`; no final closure is claimed.
+  Verification passed: real runner, focused OSWorld/reconciliation/
+  final-closure/matrix tests, local secret/raw-response scan, `git diff
+  --check`, constitution gates (`[k-1-5] total=164 failed=0`), and
+  `cargo test --workspace --no-fail-fast`. Clean-context Claude witness
+  `handover/audits/OBL005_FRESH_OSWORLD_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md`
+  returned `NO-VIOLATION`.
+- WorkTx/escrow boundary: `constitution.md` does not explicitly state a
+  WorkTx-accept uniqueness rule for one rewardable WorkTx per task escrow.
+  Current kernel admission allows multiple WorkTxs for the same task; TB-8
+  single-solver settlement/claim sweeping is what prevents multiple same-task
+  full escrow payouts. Current market liveness stays single-WorkTx-node with
+  multi-agent YES/NO router-side activity.
+- Current worktree note: successful TDMA evidence
+  `obl005_fresh_tdma_20260604T203708Z` is already bound in the reconciliation
+  manifest. Do not treat local failed/intermediate or superseded evidence
+  directories as GREEN evidence:
+  `obl005_fresh_generate_20260604T160500Z`,
+  `obl005_fresh_tdma_20260604T190500Z`,
+  `obl005_fresh_tdma_20260604T203106Z`,
+  `obl005_fresh_tdma_20260604T203504Z`,
+  `obl005_fresh_market_ab_20260604T174500Z`, and
+  `obl005_fresh_market_ab_20260604T175726Z`, plus the superseded local
+  ToolBench run `obl005_fresh_toolbench_20260604T194504Z`.
+
+Recent verification:
+
+```text
+scripts/run_true_suite_broad_agi_batch.sh --execute-installed \
+  --run-id obl005_fresh_tdma_20260604T203708Z \
+  --runners tdma_real_proof_fresh
+# exit 0
+
+cargo test -p turingosv4 \
+  --test constitution_true_suite_evidence_reconciliation \
+  --test constitution_production_module_liveness \
+  --test constitution_obl005_final_closure_witness \
+  --test constitution_realworld_liveness_coverage \
+  --test constitution_matrix_drift \
+  --test constitution_true_suite_tdma_runner -- --nocapture
+# exit 0
+
+git diff --check
+# exit 0
+
+Secret/raw-provider-payload scans over final TDMA evidence and edited
+docs/fixture
+# no real token hits; only expected mock/env-placeholder names
+
+bash scripts/run_constitution_gates.sh
+# exit 0; [k-1-5] total=165 failed=0
+
+cargo test --workspace --no-fail-fast
+# exit 0
+
+Clean-context Claude witness:
+handover/audits/OBL005_FRESH_TDMA_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md
+# verdict: NO-VIOLATION
+
+scripts/run_true_suite_broad_agi_batch.sh --execute-installed \
+  --run-id obl005_fresh_webarena_20260604T200738Z \
+  --runners webarena_web_agent_fresh
+# exit 0
+
+cargo test -p turingosv4 \
+  --test constitution_true_suite_evidence_reconciliation \
+  --test constitution_obl005_final_closure_witness \
+  --test constitution_realworld_liveness_coverage \
+  --test constitution_matrix_drift -- --nocapture
+# exit 0
+
+cargo test -p turingosv4 \
+  --test constitution_true_suite_webarena_runner -- --nocapture
+# exit 0
+
+git diff --check
+# exit 0
+
+Secret/raw-provider-payload scans over final WebArena evidence and edited
+docs/fixture
+# no disallowed hits
+
+bash scripts/run_constitution_gates.sh
+# exit 0; [k-1-5] total=165 failed=0
+
+cargo test --workspace --no-fail-fast
+# exit 0
+
+Clean-context Claude witness:
+handover/audits/OBL005_FRESH_WEBARENA_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md
+# verdict: NO-VIOLATION
+
+scripts/run_true_suite_broad_agi_batch.sh --execute-installed \
+  --run-id obl005_fresh_toolbench_20260604T194611Z \
+  --runners toolbench_api_tool_use_fresh
+# exit 0
+
+cargo test -p turingosv4 \
+  --test constitution_true_suite_toolbench_runner -- --nocapture
+# exit 0
+
+git diff --check
+# exit 0
+
+Secret/raw-provider-payload scans over final ToolBench evidence and edited
+docs/fixture
+# no disallowed hits
+
+bash scripts/run_constitution_gates.sh
+# exit 0; [k-1-5] total=165 failed=0
+
+cargo test --workspace --no-fail-fast
+# exit 0
+
+Clean-context Claude witness:
+handover/audits/OBL005_FRESH_TOOLBENCH_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md
+# verdict: NO-VIOLATION
+
+scripts/run_true_suite_broad_agi_batch.sh --execute-installed \
+  --run-id obl005_fresh_swebench_20260604T192100Z \
+  --runners swebench_live_coding_repair_fresh
+# exit 0
+
+cargo test -p turingosv4 \
+  --test constitution_true_suite_evidence_reconciliation \
+  --test constitution_obl005_final_closure_witness \
+  --test constitution_realworld_liveness_coverage \
+  --test constitution_matrix_drift -- --nocapture
+# exit 0
+
+cargo test -p turingosv4 \
+  --test constitution_true_suite_swebench_runner -- --nocapture
+# exit 0
+
+bash scripts/run_constitution_gates.sh
+# exit 0; [k-1-5] total=165 failed=0
+
+cargo test --workspace --no-fail-fast
+# exit 0
+
+Clean-context Claude witness:
+handover/audits/OBL005_FRESH_SWEBENCH_SOURCE_EVIDENCE_CLEAN_CONTEXT_AUDIT_2026-06-04.md
+# verdict: NO-VIOLATION
+
+scripts/run_true_suite_broad_agi_batch.sh --execute-installed \
+  --run-id obl005_fresh_math_20260604T191000Z \
+  --runners math_competition_reasoning_fresh
+# exit 0
+
+scripts/run_true_suite_broad_agi_batch.sh --execute-installed \
+  --run-id obl005_fresh_gpqa_20260604T183931Z \
+  --runners gpqa_science_reasoning_fresh
+# exit 0
+
+cargo test -p turingosv4 \
+  --test constitution_true_suite_evidence_reconciliation \
+  --test constitution_obl005_final_closure_witness \
+  --test constitution_realworld_liveness_coverage \
+  --test constitution_matrix_drift -- --nocapture
+# exit 0
+
+cargo test -p turingosv4 \
+  --test constitution_g0_market_activation_boundary \
+  --test constitution_real16_market_performance \
+  --test constitution_true_suite_broad_agi_batch_runner \
+  --test constitution_realworld_liveness_coverage \
+  --test constitution_script_liveness_inventory \
+  --test constitution_true_suite_evidence_reconciliation \
+  --test constitution_obl005_final_closure_witness \
+  --test constitution_matrix_drift \
+  --test fc_alignment_conformance -- --nocapture
+# exit 0
+
+cargo test -p turingosv4 --lib \
+  boot::tests::verify_trust_root_passes_on_intact_repo -- --nocapture
+# exit 0
+
+rustfmt --edition 2021 --check \
+  src/bin/g0_market_activation_current_kernel.rs \
+  tests/constitution_g0_market_activation_boundary.rs \
+  tests/constitution_real16_market_performance.rs
+# exit 0
+
+bash -n scripts/run_true_suite_market_ab_current_kernel.sh \
+  scripts/run_true_suite_broad_agi_batch.sh && git diff --check
+# exit 0
+
+cargo test -p turingosv4 --test constitution_matrix_drift -- --nocapture
+# exit 0
+
+bash scripts/run_constitution_gates.sh
+# [k-1-5] total=165 failed=0
+
+cargo test --workspace --no-fail-fast
+# exit 0
+
+cargo test --test constitution_true_suite_osworld_runner \
+  --test constitution_true_suite_evidence_reconciliation \
+  --test constitution_obl005_final_closure_witness \
+  --test constitution_matrix_drift -- --nocapture
+# exit 0
+
+cargo test --test constitution_true_suite_generate_artifact_runner \
+  --test constitution_true_suite_evidence_reconciliation \
+  --test constitution_obl005_final_closure_witness \
+  --test constitution_matrix_drift -- --nocapture
+# exit 0
+
+cargo test --bin turingos blackbox_system_prompt -- --nocapture
+# exit 0
+
+cargo test --bin turingos blackbox_system_prompt_forbids_remote_font_dependencies -- --nocapture
+# exit 0
+
+git diff --check
+# exit 0
+
+PR #250 checks
+# r022_check SUCCESS
+# validate PR has no sidecar contamination SUCCESS
+# Constitution gate suite SUCCESS
+# Feature freeze check SUCCESS
+```
+
+Next steps:
+
+- A03 KEEP-SRC-BOOT is consumed and landed as `A03_KEEP_SRC_BOOT_LANDED`.
+  Do not start wrapper-module migration, TC-002 deferral extraction,
+  trust-root rehash, or boot authority relocation unless the architect/user
+  gives a new exact A03/TC-002 Section-8 phrase.
+- OBL-005 is closed only under the ratified no-zombie scope. Keep
+  benchmark/domain failures as capability-pending facts unless a separate
+  capability/domain witness closes them.
+
+## Previous Snapshot
+
+**Session**: 2026-05-23 close — TB-SOFTWARE-3-0 + TB-STRESS-PHASE-2 SHIPPED.
+
+**Main tip**: `6c12e092` (PR #132 stress ship report + audits, 2026-05-23T13:00Z).
+
+### TB-SOFTWARE-3-0-CONSOLIDATION (8 atoms, 8 PRs merged 2026-05-23)
+
+Single-maintainer substrate hardening on top of Phase E cutover. Atoms +
+PRs:
+
+| Atom | PR | Class | What |
+|------|----|----|----|
+| S0.1 | #120 | 0 | Package §8 directive + TB charter |
+| S1   | #122 | 2 | Remove stdout-as-truth in `task/open` (`t_hash_*` + `simple_hash` deleted; 502 BAD_GATEWAY on parse failure) |
+| S2   | #123 | 2 | Private `GrillSessionSnapshot` in per-session CAS for cross-restart resume |
+| S3   | #124 | 2 | `BuildSessionViewError { Open, Read, Decode }` taxonomy; empty stays `Ok(SpecPending)` |
+| S4.1 | #125 | 2 | Rename `siliconflow_client` → `chat_client` (file + 7 cmd_*.rs imports); NO `ChatProvider` enum (deferred per K10) |
+| S4.2 | #126 | 0 | `LLM_BOUNDARY_INVENTORY_2026-05-23.md` documenting 17 chat_complete* sites + deferred abstraction packet |
+| S5   | #127 | 1+0 | `scripts/audit_legacy_bypass.sh` (reporting-only, NOT a constitution gate) + checklist doc |
+| S6.1 + S6.2 | #128 | 0 | Aggregate ship report + cumulative audits (Constitution: NO-VIOLATION; Karpathy: PASS) |
+
+Ship report: `handover/reports/SOFTWARE_3_0_CONSOLIDATION_2026-05-23.md`
+Audits: `handover/audits/SOFTWARE_3_0_VAL_{CONSTITUTION,KARPATHY}_2026-05-23.md`
+Charter: `handover/tracer_bullets/TB-SOFTWARE-3-0_charter_2026-05-23.md`
+
+Scope freeze (held across all 8 commits): NO touch to `src/state/typed_tx.rs`,
+`src/state/sequencer.rs`, `src/bus.rs`, `src/bottom_white/cas/schema.rs`,
+`constitution.md`, `genesis_payload.toml`, `src/runtime/mod.rs` export,
+no new CAS `ObjectType`, no provider abstraction layer.
+
+### TB-STRESS-PHASE-2 (3 PRs merged 2026-05-23)
+
+Adversarial 10-test battery on top of Phase E + TB-SOFTWARE-3-0.
+
+| Atom | PR | Class | What |
+|------|----|----|----|
+| STRESS-0 | #129 | 0+1 | Charter + §8 + 10 runner scripts under `scripts/stress/` |
+| STRESS-1..10 | #131 | 1+2 | Execution evidence + runner robustness fixes |
+| STRESS-SHIP | #132 | 0 | Aggregate ship report + cumulative audits |
+
+**Final tally**: 8 PASS / 1 PARTIAL (ST-04) / 1 NOT-EXECUTED (ST-08) / 0 FAIL.
+
+Substantive finding (ST-04 PARTIAL): S2's `write_snapshot` VERIFIED writing
+418-byte capsules with schema_id `turingos-web-grill-session-snapshot-v1`
+to per-session CAS. Multi-turn resume blocked by upstream triage promotion
+guard requiring `PromptPromotionReceipt` — workspace bootstrap dependency,
+NOT S2 defect. Production guard correctly fail-closes on unconfigured
+workspaces.
+
+Audits: `handover/audits/STRESS_PHASE_2_VAL_{CONSTITUTION,KARPATHY}_2026-05-23.md`
+Ship report: `handover/reports/STRESS_PHASE_2_SHIP_REPORT_2026-05-23.md`
+Charter: `handover/tracer_bullets/TB-STRESS-PHASE-2_charter_2026-05-23.md`
+
+LLM cost: ~$0 (mock providers throughout). Wall time: ~3 hr.
+
+### Memory updates from this session
+
+- `feedback_defer_abstraction_until_second_impl` — don't propose
+  ChatProvider/ModelCallReceipt-style framework before 2nd concrete impl
+  lands. Rename to generic naming OK; abstraction layer deferred.
+- `feedback_git_hygiene_no_bulk_ops` — forbidden: `git stash -u`, `git add -A`;
+  default execution base = fresh worktree from origin/main.
+- `feedback_conservative_error_semantics` — empty IS normal (`Ok(SpecPending)`,
+  not `Err(EmptySession)`); HTTP failures use 502/500, not 200-with-warning.
+
+---
+
+## Pre-session-#60 snapshot (for forensic continuity)
+
+**Session**: #60 close, 2026-05-22 — TDMA-Generate + Phase E libgit2 cutover SHIPPED.
+
+PR #116 (Atom 25 full cutover) at 2026-05-22T18:36Z. `turingos generate
+--tdma-bounded` and `turingos tdma run` both default to TDMA-Bounded +
+GitTapeLedger (Phase E Path B). 8 atoms (19–26) merged to main.
+Constitution Art. 0.4 Path B obligations (all 6) materially satisfied.
+MemoryTapeLedger retired from production paths. Ship report:
+`handover/tracer_bullets/TB-TDMA-GENERATE-PHASE-E_ship_report_2026-05-22.md`.
+Package §8: `handover/directives/2026-05-22_TDMA_GENERATE_PHASE_E_DIRECTIVE_AND_§8.md`.
+
+PRs in that ship: #109 (gen wire-up), #110 (skeleton), #111 (roundtrip),
+#112 (head+BBS), #113 (migrate + single-chain fix), #115 (opt-in flag),
+#116 (full cutover), #117 (Atom 26 ship report + §8 template + Path A retirement).
+
+---
+
+## Pre-session #60 snapshot (for forensic continuity)
+
+**Session**: #59 close, 2026-05-22 — TDMA-Bounded-RC1 ship candidate.
+
+**Main tip**: `865b4c14` — `fix(harness): update constitution gate test
+after R-022 hook migration` (PR #89 squash). RC1 awaits architect GA §8
+signature before merging `feature/tdma-bounded-rc1` to main.
+
+**Active feature branch**: `feature/tdma-bounded-rc1` HEAD `f6e35aeb`
+(PR #93). 10 atoms shipped (0..7+7.5+8); 9-gate harness GREEN; bug7
+regression GREEN; real-evidence run captured at
+`handover/evidence/tdma_rc1_real_evidence_20260522T095144Z/`
+(invariants_passed=true). Ship report:
+`handover/tracer_bullets/TB-TDMA-BOUNDED-RC1_ship_report_2026-05-22.md`.
+GA §8 template awaiting architect signature:
+`handover/directives/2026-05-22_TDMA_BOUNDED_RC1_GA_§8_TEMPLATE.md`.
+
+---
+
+## Pre-session #59 snapshot (for forensic continuity)
+
+**Session**: #58 close, 2026-05-21 (late evening).
+
+**State**: P7.z + Boundary-Ratification-Hygiene remain complete; session
+#58 shipped three increments:
+1. **Plan v7 — MiniF2F partial recovery** (PR #82/#83/#84 + hotfix as `cff03a28`):
+   restored `lean_market` binary (`experiments/minif2f_v4/`, separate
+   Cargo workspace) and promoted `batch_orchestrator.rs` to `src/runtime/`.
+   Tier 3 deleted files remain unrestored per architect's strict
+   no-innovation directive.
+2. **R-022 hook architectural fix** (PR #88 `1cfad1a4` + PR #89 `865b4c14`):
+   moved the TRACE_MATRIX backlink check from `pre-commit.r022` to a new
+   `commit-msg.r022` hook (gives the in-flight commit message regardless
+   of `-m`/`-F`/interactive), fixing the COMMIT_EDITMSG read footgun
+   discovered during the Plan v7 hotfix. Constitution gate test parity
+   updated alongside.
+3. **Generative HTML kernel-integrity probe + Software 3.0 audit** (PR #91,
+   branch `claude/generative-html-kernel-probe-20260522`): surfaced 5 real
+   kernel bugs in `src/web/spec.rs` + `src/web/generate.rs` (2 LANDED via
+   parallel sessions with tests; 2 in tree; 1 forward-bound). Software 3.0
+   conformance: 3 PASS / 6 WARN / 2 FAIL (rubric C1-C11). FAIL = C8 no
+   cross-session agent memory + C10 no generative HTML IR. See
+   [handover/research/generative_html_kernel_integrity_2026-05-22/synthesis/REPORT.md](../research/generative_html_kernel_integrity_2026-05-22/synthesis/REPORT.md).
+
+There is no active charter PR in flight at this handover.
+
+**Archive**: sessions #1-#54 remain at
+`handover/ai-direct/LATEST_ARCHIVE_PRE_2026-05-20_sessions_1_to_54.md`.
+Session #56 audit/remediation records live under `handover/audits/`.
+
+---
+
+## What Changed In PR #78
+
+PR #78 deliberately did **not** start the full v2.0 predicate layer. It shipped
+the smaller transition framework: boundary facts, §8 ratification, process
+hygiene, truthfulness hygiene, and meaning fixtures.
+
+Load-bearing artifacts:
+
+- `docs/architecture/FC_REAL_WORLD_BOUNDARY.md`
+  - Class 0 fact record for FC1/FC2/FC3 real-world boundaries.
+  - Names the four architect decisions: Art. 0.4 path, hermetic mechanism,
+    predicate process locality, and LLM call topology.
+- `handover/directives/2026-05-21_FC_BOUNDARY_RATIFICATION_DIRECTIVE.md`
+  - Ratifies the boundary choices without auto-authorizing sequencer,
+    typed-tx, trust-root, or signing-payload implementation.
+- `handover/evidence/sandbox_boundary_baseline_2026-05-21.md`
+  - Before-state evidence for naked shell-out, weak sandbox claims, and stale
+    boundary facts.
+- `src/sdk/sanitized_runner.rs`
+  - `env_clear`, env allowlist, explicit cwd, stdout/stderr capture, timeout
+    kill, argv/cwd/allowed-env/exit/timed-out evidence.
+  - `NetworkPolicyClaim::NotEnforced`; phase 0 does not claim `DenyAll`.
+- Product shell-out wiring through the sanitized runner.
+- P7.z truthfulness hygiene:
+  - prompt hash binds canonical provider request bytes;
+  - raw-output CID uses provider response bytes;
+  - `world_head_unchanged` is observed rather than production-literal;
+  - offline/sandbox/browser wording is downgraded to what the code can prove.
+- Real-world meaning fixtures:
+  - compile failure,
+  - regression two-phase,
+  - preview DOM contract rather than screenshot oracle,
+  - privacy secret-env non-leak,
+  - ambiguous requirement hold/non-accept.
+
+Non-claim: TuringOS still does **not** have OS-level hermetic/no-network
+sandboxing. The shipped claim is production shell-out process hygiene.
+
+---
+
+## Verification Snapshot
+
+Local orchestrator checks:
+
+```bash
+git diff --check
+cargo test --test constitution_matrix_drift
+RUST_TEST_THREADS=1 bash scripts/run_constitution_gates.sh
+```
+
+Constitution gate result:
+
+```text
+[k-1-5] total=133 failed=0
+```
+
+GitHub checks on PR #78:
+
+- `Constitution gate suite`: pass
+- `Feature freeze check`: pass
+- `r022_check`: pass
+- `validate PR has no sidecar contamination`: pass
+
+Clean-context audits:
+
+- Lovelace: `NO-VIOLATION`
+- Curie: `NO-VIOLATION`
+- Euler supplemental audit on the gate-runner optimization: `NO-VIOLATION`
+
+---
+
+## Current Main Status
+
+`main` includes:
+
+- PR #3 CAS Git constitutional repair.
+- PR #4 Phase 6.0-6.3 alpha CLI stack.
+- PR #6 Phase 7 Web MVP.
+- PR #11 Phase 6.3.y grill-driven Generative UI ship unit.
+- PR #43-#54 Product-CAK Hardening P7.z atoms C0-C11.
+- Cz cumulative Trust Root realignment at `9bdaddee`.
+- PR #56 session #56 audit/remediation records.
+- PR #78 Boundary-Ratification-Hygiene increment at `38adc108`.
+- **Plan v7 (MiniF2F partial recovery, 2026-05-21):**
+  - PR #82 R0 — `lean_market` binary restored at `2bf282ca` (Tier 1).
+  - PR #83 R1 — `batch_orchestrator` promoted to `src/runtime/` at `6148a0cd` (Tier 2).
+  - PR #84 R2+Cz — root `Cargo.toml` `exclude = ["experiments/minif2f_v4"]`
+    + Trust Root rehash (Cz cycle 3) at `7f61605d`.
+  - Hotfix at `cff03a28` — removed Codex Polymarket WIP leak from `src/runtime/mod.rs`
+    (R-022 OBS `OBS_R022_R1_EXTERNAL_MARKET_SNAPSHOT_LEAK_2026-05-22.md`).
+  - PR #87 archive at `97c8169b` — research bundle at
+    `handover/research/PLAN_V7_MINIF2F_RECOVERY_2026-05-22/`.
+- **R-022 hook architectural fix (2026-05-21):**
+  - PR #88 at `1cfad1a4` — R-022 trace-matrix check moved from
+    `pre-commit.r022` to new `commit-msg.r022` (fixes COMMIT_EDITMSG
+    read footgun). Postmortem: `handover/architect-insights/R022_HOOK_FIX_2026-05-22.md`.
+  - PR #89 at `865b4c14` — constitution gate parity update
+    (`l8_pre_commit_hook_chains_k_harden_2_block` flipped + 2 new
+    gate tests bind the new architecture).
+
+Migration: existing clones must re-run `bash scripts/install_hooks.sh`
+to pick up the new `commit-msg` symlink. Idempotent.
+
+P7.z produced the CAS-backed product evidence chain:
+
+```text
+SpecCapsule
+  -> GenerationAttemptCapsule
+  -> ArtifactBundleManifest
+      -> PreviewRunCapsule
+      -> TestRunCapsule
+      -> GenerateRejectionCapsule (L4.E)
+      -> BuildSessionView (derived)
+      -> offline replay/spec audit
+```
+
+PR #78 then tightened how the project talks about that chain: no fake
+hermetic claim, no fake `DenyAll`, no literal world-head self-report, no
+dashboard/screenshot/LLM-reviewer truth claim.
+
+---
+
+## Active Non-Claims
+
+- Do not claim complete v2.0 predicate layer.
+- Do not claim OS-level hermetic sandbox.
+- Do not claim runtime network denial.
+- Do not treat screenshots, dashboards, cache, web sessions, or LLM reviews as
+  acceptance truth.
+- Do not treat MiniF2F as a live root-workspace package; the root workspace
+  excludes it. Plan v7 (2026-05-21) restored a partial subset:
+  `experiments/minif2f_v4/` is again a separate Cargo workspace housing the
+  `lean_market` binary only (Tier 1), and `batch_orchestrator.rs` was
+  promoted to `src/runtime/` (Tier 2). All other deleted MiniF2F files
+  (Tier 3) remain unrestored.
+
+Allowed wording:
+
+```text
+TuringOS has shipped process hygiene for production shell-outs: env allowlist,
+explicit cwd, timeout, stdout/stderr capture, and unified runner wiring. This
+is not OS-level hermetic/no-network sandboxing.
+```
+
+---
+
+## Recommended Next Work
+
+Original 3 options (session #57):
+
+1. Decide whether the next charter is OS-level sandbox phase 1, P7.z
+   truthfulness follow-up, or a tiny replayable-decision smoke test.
+2. If choosing sandbox phase 1, make the mechanism explicit first:
+   process-only, bwrap/unshare/seccomp, or VM/Wasmtime. Do not smuggle this
+   into a generic "predicate layer" task.
+3. If choosing replayable decision, do not call it the predicate layer yet.
+   Keep it to deterministic boolean decision record/replay with no schema
+   catalog, oracle, cooldown, or predicate taxonomy.
+
+Additional charters surfaced by session #58 generative HTML probe + Software 3.0 audit
+(detail in [synthesis/REPORT.md §6](../research/generative_html_kernel_integrity_2026-05-22/synthesis/REPORT.md)):
+
+4. **Charter A — Generative HTML IR** (closes C10 FAIL, highest-impact). Define
+   `GenerativeHtmlIr` JSON schema → generate emits IR first then renders → IR CID into
+   `GenerationAttemptCapsule` tail-additive → new `ir_to_html` renderer + test gate.
+   Class 2-3. Orthogonal to all 3 options above. Gives TuringOS a unique formally
+   auditable + content-addressed IR no commercial comparator has.
+5. **Charter B — Web Driven-Mode default + generate prompt hash** (closes C1/C2/C9 WARN).
+   Class 1-2. Supersedes P7.z truthfulness on the generate-prompt-hash dimension.
+6. **Charter C — Layered eval + sandbox static analysis** (closes C6/C11 WARN + BUG-5
+   verifier no fetch detection + BUG-6 new W8 `JsSyntaxValid` gate). Class 2.
+   Complementary to OS sandbox phase 1.
+7. **Follow-up parallel sessions** for BUG-3a (`generate.rs` step 4b error propagation
+   matching spec.rs) + BUG-3b (env allowlist regression test) — both Class 1-2.
+
+---
+
+## Cold-Start File Order
+
+1. `AGENTS.md`
+2. `HARNESS_PLAYBOOK.md`
+3. `HARNESS_MANUAL.md`
+4. `constitution.md`
+5. `handover/ai-direct/LATEST.md`
+6. `docs/architecture/FC_REAL_WORLD_BOUNDARY.md`
+7. `handover/directives/2026-05-21_FC_BOUNDARY_RATIFICATION_DIRECTIVE.md`
+8. `handover/alignment/CONSTITUTION_EXECUTION_MATRIX.md`
+9. `handover/alignment/TRACE_FLOWCHART_MATRIX.md`

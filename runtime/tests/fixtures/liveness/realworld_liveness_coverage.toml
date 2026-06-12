@@ -1,0 +1,494 @@
+schema_version = "turingosv4.realworld_liveness_coverage.v1"
+authority = "constitution.md + fresh ChainTape/CAS real-world evidence"
+policy = "fresh_current_kernel_required_for_final"
+final_closure_status = "OBL005_FINAL_CLOSURE_VERIFIED"
+historical_evidence_is_final = false
+smoke_is_not_final_evidence = true
+full_system_required_for_final = true
+full_system_sample_manifest = "full_system_participation.json"
+per_sample_fc_union_is_not_sufficient = true
+market_participation_required_for_every_sample = true
+market_participation_modes = [
+  "invest",
+  "abstain_with_tape_visible_market_opportunity",
+]
+required_per_sample_fc_blocks = [
+  "FC1",
+  "FC2",
+  "FC3",
+]
+required_per_sample_module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+]
+
+[[task]]
+id = "market_external_agent_fresh"
+problem_type = "market_economy"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_market_external_agent.sh"
+module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "agent_prompt_model_boundary",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+]
+constitutional_paths = [
+  "FC1:Q_t->rtool->input->agent-delta->output->predicates->wtool->Q_t+1",
+  "FC2:replay",
+  "FC3:logs-archive->feedback->architectAI->vetoAI",
+]
+anti_contamination_guards = [
+  "DeepSeek/SiliconFlow external agent enters only through local OpenAI-compatible proxy, never kernel hardcoding",
+  "parsed provider decision must become signed BuyWithCoinRouterTx on ChainTape/CAS",
+  "external_agent_market_manifest.json must include router_economics with CPMM reserves, k, price, retained-plus-out shares, and conservation booleans",
+  "reject old scripted REAL fixtures, raw provider-response evidence, price-as-truth, and ghost liquidity",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/market_action/runtime_repo/",
+  "handover/evidence/true_suite/<run>/market_action/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_action/cas/",
+  "handover/evidence/true_suite/<run>/market_action/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_action/genesis_report.json",
+  "handover/evidence/true_suite/<run>/market_action/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/<run>/market_action/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/market_action/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/market_action/market_external_agent_run_manifest.json",
+  "handover/evidence/true_suite/<run>/market_action/replay_report.json",
+  "handover/evidence/true_suite/<run>/market_action/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/market_action/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+]
+
+[[task]]
+id = "market_ab_performance_fresh"
+problem_type = "market_economy"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_market_ab_current_kernel.sh"
+module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+]
+constitutional_paths = [
+  "FC1:predicates",
+  "FC1:wtool",
+  "FC2:pinned-benchmark-replay",
+  "FC3:logs-archive->feedback->architectAI->vetoAI",
+]
+anti_contamination_guards = [
+  "pin same problem/model/budget hashes across arms",
+  "allow only declared arm diff keys",
+  "forbid causal E4 claim unless verifier proves non-overlapping signal",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+  "handover/evidence/true_suite/<run>/market_ab/arm_config_manifests/",
+  "handover/evidence/true_suite/<run>/market_ab/arm_A/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_ab/arm_A/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_ab/arm_A/replay_report.json",
+  "handover/evidence/true_suite/<run>/market_ab/arm_A/aggregate_verdict.json",
+  "handover/evidence/true_suite/<run>/market_ab/arm_D/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_ab/arm_D/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_ab/arm_D/replay_report.json",
+  "handover/evidence/true_suite/<run>/market_ab/arm_D/aggregate_verdict.json",
+  "handover/evidence/true_suite/<run>/market_ab/REAL16_VERIFIER_INPUT.json",
+  "handover/evidence/true_suite/<run>/market_ab/g0/g0_market_activation_manifest.json",
+  "handover/evidence/true_suite/<run>/market_ab/g0/replay_report.json",
+  "handover/evidence/true_suite/<run>/market_ab/g0/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_ab/g0/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_ab/market_ab_run_manifest.json",
+  "handover/evidence/true_suite/<run>/market_ab/full_system_participation.json",
+]
+
+[[task]]
+id = "generate_artifact_chain_fresh"
+problem_type = "generate_artifact"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_generate_artifact_current_kernel.sh"
+module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+  "agent_prompt_model_boundary",
+  "librarian_spec_grill_product",
+  "web_product_surface",
+  "frontend_product_surface",
+  "cli_orchestration_surface",
+]
+constitutional_paths = [
+  "FC2:human-spec->initAI",
+  "FC1:output->predicates->wtool",
+  "FC3:logs->feedback",
+]
+anti_contamination_guards = [
+  "session CAS alone is insufficient",
+  "require generated artifact bundle CID linked to ChainTape/CAS",
+  "mechanical DOM/API verdict must not substitute for L4 evidence",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/generate_artifact/runtime_repo/",
+  "handover/evidence/true_suite/<run>/generate_artifact/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/generate_artifact/cas/",
+  "handover/evidence/true_suite/<run>/generate_artifact/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/generate_artifact/genesis_report.json",
+  "handover/evidence/true_suite/<run>/generate_artifact/artifact_bundle_cid.json",
+  "handover/evidence/true_suite/<run>/generate_artifact/generate_artifact_run_manifest.json",
+  "handover/evidence/true_suite/<run>/generate_artifact/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/generate_artifact/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/generate_artifact/replay_report.json",
+  "handover/evidence/true_suite/<run>/generate_artifact/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/generate_artifact/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+]
+
+[[task]]
+id = "swebench_live_coding_repair_fresh"
+problem_type = "swebench_coding_repair"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_swebench_current_kernel.sh"
+module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+  "agent_prompt_model_boundary",
+]
+constitutional_paths = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:pinned-benchmark-replay",
+  "FC3:logs-archive->feedback",
+]
+anti_contamination_guards = [
+  "public SWE-bench issue context is hashed into CAS before the model call",
+  "gold patch and test patch remain evaluation-side data and must not enter the prompt",
+  "structural patch plausibility is not final SWE-bench scoring or OBL-005 closure",
+  "raw provider prompt/response are not persisted as evidence",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/swebench/repo_snapshots/",
+  "handover/evidence/true_suite/<run>/swebench/runtime_repo/",
+  "handover/evidence/true_suite/<run>/swebench/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/swebench/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/swebench/cas/",
+  "handover/evidence/true_suite/<run>/swebench/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/swebench/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/swebench/genesis_report.json",
+  "handover/evidence/true_suite/<run>/swebench/swebench_live_coding_repair_manifest.json",
+  "handover/evidence/true_suite/<run>/swebench/swebench_live_coding_repair_run_manifest.json",
+  "handover/evidence/true_suite/<run>/swebench/replay_report.json",
+  "handover/evidence/true_suite/<run>/swebench/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/swebench/failure_taxonomy.json",
+]
+
+[[task]]
+id = "osworld_computer_use_fresh"
+problem_type = "osworld_computer_use"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_osworld_current_kernel.sh"
+module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+  "agent_prompt_model_boundary",
+  "tool_registry_current",
+]
+constitutional_paths = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:boot->Q0->map-reduce-tick->replay",
+  "FC3:tools/logs->logs-archive->feedback",
+]
+anti_contamination_guards = [
+  "OSWorld task context is an offline sandbox snapshot hashed into CAS before the model call",
+  "expected action and final state remain evaluation-side data and must not enter the prompt",
+  "sandbox action trace is structural evidence only; the runner must not mutate the host OS",
+  "raw provider prompt/response are not persisted as evidence",
+  "OSWorld task success is not module-liveness closure without ChainTape/CAS replay and full-system participation",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/osworld/sandbox_snapshots/",
+  "handover/evidence/true_suite/<run>/osworld/runtime_repo/",
+  "handover/evidence/true_suite/<run>/osworld/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/osworld/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/osworld/cas/",
+  "handover/evidence/true_suite/<run>/osworld/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/osworld/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/osworld/genesis_report.json",
+  "handover/evidence/true_suite/<run>/osworld/osworld_computer_use_manifest.json",
+  "handover/evidence/true_suite/<run>/osworld/osworld_computer_use_run_manifest.json",
+  "handover/evidence/true_suite/<run>/osworld/replay_report.json",
+  "handover/evidence/true_suite/<run>/osworld/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/osworld/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/osworld/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/osworld/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/osworld/failure_taxonomy.json",
+  "handover/evidence/true_suite/<run>/osworld/fc_trace_report.json",
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+]
+
+[[task]]
+id = "cybench_security_sandbox_fresh"
+problem_type = "cybench_security_sandbox"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_cybench_current_kernel.sh"
+module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+  "agent_prompt_model_boundary",
+  "tool_registry_current",
+]
+constitutional_paths = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:boot->Q0->map-reduce-tick->replay",
+  "FC3:tools/logs->logs-archive->feedback",
+]
+anti_contamination_guards = [
+  "Cybench challenge context is an offline disposable sandbox snapshot hashed into CAS before the model call",
+  "expected safe action, final state, and hidden flag remain evaluation-side data and must not enter the prompt",
+  "sandbox trace is structural safe-triage evidence only; the runner must not contact live targets or execute exploits",
+  "raw provider prompt/response are not persisted as evidence",
+  "Cybench task success is not module-liveness closure without ChainTape/CAS replay and full-system participation",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/cybench/challenge_snapshots/",
+  "handover/evidence/true_suite/<run>/cybench/runtime_repo/",
+  "handover/evidence/true_suite/<run>/cybench/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/cybench/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/cybench/cas/",
+  "handover/evidence/true_suite/<run>/cybench/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/cybench/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/cybench/genesis_report.json",
+  "handover/evidence/true_suite/<run>/cybench/cybench_security_sandbox_manifest.json",
+  "handover/evidence/true_suite/<run>/cybench/cybench_security_sandbox_run_manifest.json",
+  "handover/evidence/true_suite/<run>/cybench/replay_report.json",
+  "handover/evidence/true_suite/<run>/cybench/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/cybench/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/cybench/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/cybench/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/cybench/failure_taxonomy.json",
+  "handover/evidence/true_suite/<run>/cybench/fc_trace_report.json",
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+]
+
+[[task]]
+id = "tdma_real_proof_fresh"
+problem_type = "tdma_proof"
+status = "fresh_required"
+tape_kind = "tdma_domain"
+entrypoint = "scripts/run_true_suite_tdma_current_kernel.sh"
+module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+  "agent_prompt_model_boundary",
+  "tdma_bounded_solver",
+]
+constitutional_paths = [
+  "FC1:rtool->agent-delta->predicates",
+  "FC2:boot->Q0->map-reduce-tick->replay",
+  "FC3:logs->feedback",
+]
+anti_contamination_guards = [
+  "zero-gain retry demo does not count as final success evidence",
+  "require bounded prompt proof and no raw stderr leak",
+  "judge verdicts must be replayable from durable TDMA tape files",
+  "TDMA GitTapeLedger evidence must not be mislabeled as bottom-white L4 ChainTape",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/tdma/manifest.json",
+  "handover/evidence/true_suite/<run>/tdma/chaintape.jsonl",
+  "handover/evidence/true_suite/<run>/tdma/tdma_tape.git.tar.gz",
+  "handover/evidence/true_suite/<run>/tdma/per_attempt_probes.jsonl",
+  "handover/evidence/true_suite/<run>/tdma/tdma_replay_report.json",
+  "handover/evidence/true_suite/<run>/tdma/runtime_repo/",
+  "handover/evidence/true_suite/<run>/tdma/cas/",
+  "handover/evidence/true_suite/<run>/tdma/genesis_report.json",
+  "handover/evidence/true_suite/<run>/tdma/tdma_proof_manifest.json",
+  "handover/evidence/true_suite/<run>/tdma/failure_taxonomy.json",
+  "handover/evidence/true_suite/<run>/tdma/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/tdma/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/tdma/replay_report.json",
+  "handover/evidence/true_suite/<run>/tdma/tdma_run_manifest.json",
+  "handover/evidence/true_suite/<run>/tdma/full_system_participation.json",
+]
+
+[[task]]
+id = "fc3_governance_reinit_fresh"
+problem_type = "fc3_governance_reinit"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_fc3_governance_reinit_current_kernel.sh"
+module_groups = [
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+  "tool_registry_current",
+]
+constitutional_paths = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:boot->Q0->map-reduce-tick->replay",
+  "FC3:logs-archive->feedback->architectAI->vetoAI->tools/logs->re-init",
+]
+anti_contamination_guards = [
+  "handover files and latest pointers cannot be source of truth",
+  "require LogFeedbackArchiveTx, ArchitectProposalTx, VetoDecisionTx, ReinitRequestTx, and ReinitBootTx in L4/CAS",
+  "Veto-AI must be runtime typed verdict, not external PR ceremony",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+  "handover/evidence/true_suite/<run>/fc3/chaintape.jsonl",
+  "handover/evidence/true_suite/<run>/fc3/cas/",
+  "handover/evidence/true_suite/<run>/fc3/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/fc3/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/fc3/fc3_replay_report.json",
+  "handover/evidence/true_suite/<run>/fc3/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/fc3/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/fc3/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/fc3/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/fc3/fc3_governance_reinit_run_manifest.json",
+  "handover/evidence/true_suite/<run>/fc3/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/fc3/runtime_repo.worktree.tar.gz",
+]
+
+[[task]]
+id = "replay_cas_tamper_repair_current"
+problem_type = "replay_cas"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_replay_cas_tamper_current_kernel.sh"
+module_groups = [
+  "axiom_boot_trust_root",
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+]
+constitutional_paths = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:replay",
+  "FC3:logs-archive",
+]
+anti_contamination_guards = [
+  "dashboard cannot pass without deterministic reconstruction",
+  "tampered CAS/L4 must fail closed",
+  "old evidence is annotated, never rewritten",
+  "fresh runner must generate current ChainTape/CAS before tamper forks",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+  "handover/evidence/true_suite/<run>/replay_cas/runtime_repo/",
+  "handover/evidence/true_suite/<run>/replay_cas/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/replay_cas/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/replay_cas/cas/",
+  "handover/evidence/true_suite/<run>/replay_cas/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/replay_cas/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/replay_cas/genesis_report.json",
+  "handover/evidence/true_suite/<run>/replay_cas/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/replay_cas/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/replay_cas/replay_report.json",
+  "handover/evidence/true_suite/<run>/replay_cas/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/replay_cas/tamper_report.json",
+  "handover/evidence/true_suite/<run>/replay_cas/post_tamper_replay_report.json",
+  "handover/evidence/true_suite/<run>/replay_cas/replay_cas_run_manifest.json",
+  "handover/evidence/true_suite/<run>/replay_cas/full_system_participation.json",
+]
+
+[[task]]
+id = "boot_cli_current_kernel_fresh"
+problem_type = "boot_cli"
+status = "fresh_required"
+tape_kind = "canonical_l4"
+entrypoint = "scripts/run_true_suite_boot_cli_current_kernel.sh"
+module_groups = [
+  "axiom_boot_trust_root",
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "fc3_runtime_meta_roles",
+  "role_economic_learning_sidecars",
+  "cli_orchestration_surface",
+]
+constitutional_paths = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:boot",
+  "FC2:Q0",
+  "FC2:replay",
+  "FC3:logs-archive->feedback->architectAI->vetoAI",
+]
+anti_contamination_guards = [
+  "fresh current main binary must create the workspace",
+  "genesis bytes and constitution hash must match",
+  "resume must continue existing ChainTape rather than minting a new genesis",
+]
+evidence_artifacts = []
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+  "handover/evidence/true_suite/<run>/boot_cli/runtime_repo/",
+  "handover/evidence/true_suite/<run>/boot_cli/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/boot_cli/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/boot_cli/cas/",
+  "handover/evidence/true_suite/<run>/boot_cli/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/boot_cli/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/boot_cli/genesis_report.json",
+  "handover/evidence/true_suite/<run>/boot_cli/replay_report.json",
+  "handover/evidence/true_suite/<run>/boot_cli/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/boot_cli/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/boot_cli/full_system_participation.json",
+]

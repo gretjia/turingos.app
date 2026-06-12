@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# CO1.13.2 — pre-commit hook (tracked shim) — K-HARDEN-2 sidecar block.
+#
+# Per spec § 1.2 v1.1.1: this shim is the canonical source of truth for the
+# pre-commit hook. .git/hooks/pre-commit is created as a symlink to this
+# file by scripts/install_hooks.sh. Any updates land here, not in the
+# untracked .git/hooks/ directory.
+#
+# This hook does ONE thing now:
+#   K-HARDEN-2 sidecar contamination block (added 2026-05-20):
+#       fail if any staged file is under handover/evidence/dev_self_hosting/dev_*/
+#       or under .claude/worktrees/ (catches subagent `git add .` mishaps even
+#       when committed by humans, e.g. via cherry-pick or rebase squash).
+#
+# The R-022 trace-matrix backlink check moved to scripts/hooks/commit-msg.r022
+# (R022_HOOK_FIX_2026-05-22) because pre-commit cannot read the in-flight
+# commit message for `git commit -m` / `-F` — git writes COMMIT_EDITMSG only
+# after pre-commit succeeds.
+#
+# FC-trace: FC3-Alignment (sidecar evidence-contamination block).
+
+set -euo pipefail
+
+STAGED="$(git diff --cached --name-only || true)"
+VIOLATIONS=""
+
+if echo "$STAGED" | grep -q '^handover/evidence/dev_self_hosting/dev_'; then
+  VIOLATIONS="${VIOLATIONS}\n  - handover/evidence/dev_self_hosting/dev_*/ sidecar files"
+fi
+
+if echo "$STAGED" | grep -q '^\.claude/worktrees/'; then
+  VIOLATIONS="${VIOLATIONS}\n  - .claude/worktrees/ subagent workspace files"
+fi
+
+if [ -n "$VIOLATIONS" ]; then
+  echo "K-HARDEN-2 pre-commit: BLOCKED — staged files include forbidden patterns:" >&2
+  echo -e "$VIOLATIONS" >&2
+  echo "" >&2
+  echo "Staged file list:" >&2
+  echo "$STAGED" | sed 's/^/  /' >&2
+  echo "" >&2
+  echo "Resolution:" >&2
+  echo "  - Unstage: git restore --staged <file>" >&2
+  echo "  - Or force: git commit --no-verify (logged in reflog)" >&2
+  exit 1
+fi
+
+exit 0

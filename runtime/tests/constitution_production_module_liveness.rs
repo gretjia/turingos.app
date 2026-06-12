@@ -1,0 +1,1352 @@
+//! No-zombie production module liveness contract.
+//!
+//! This gate is intentionally stricter than ordinary smoke tests. Smoke tests
+//! can prove that a local seam still compiles, but they do not prove the user's
+//! stop condition: every retained production code group must be necessary for
+//! AGI and lit by broad real-world task evidence. The manifest below is a
+//! derived inventory, not a new source of truth; constitution.md plus
+//! ChainTape/CAS evidence remain authoritative.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
+use std::path::{Path, PathBuf};
+
+const MANIFEST_PATH: &str = "tests/fixtures/liveness/production_module_liveness.toml";
+const RECONCILIATION_MANIFEST_PATH: &str =
+    "tests/fixtures/liveness/true_suite_evidence_reconciliation.toml";
+const VERIFIED_CLOSURE_STATUS: &str = "OBL005_FINAL_CLOSURE_VERIFIED";
+
+#[derive(Debug, Clone)]
+struct Group {
+    id: String,
+    classification: String,
+    status: String,
+    risk_class: i64,
+    allowed_as_fc_authority: bool,
+    restricted_surface: bool,
+    module_ids: Vec<String>,
+    paths: Vec<String>,
+    smoke_gates: Vec<String>,
+    real_world_evidence: Vec<String>,
+    support_evidence: Vec<String>,
+    evidence_requires: Vec<String>,
+    closure_action: Option<String>,
+}
+
+fn manifest() -> toml::Value {
+    let raw = fs::read_to_string(MANIFEST_PATH)
+        .unwrap_or_else(|err| panic!("read {MANIFEST_PATH}: {err}"));
+    toml::from_str(&raw).unwrap_or_else(|err| panic!("parse {MANIFEST_PATH}: {err}"))
+}
+
+fn reconciliation_manifest() -> toml::Value {
+    let raw = fs::read_to_string(RECONCILIATION_MANIFEST_PATH)
+        .unwrap_or_else(|err| panic!("read {RECONCILIATION_MANIFEST_PATH}: {err}"));
+    toml::from_str(&raw).unwrap_or_else(|err| panic!("parse {RECONCILIATION_MANIFEST_PATH}: {err}"))
+}
+
+fn as_str_array(table: &toml::value::Table, key: &str) -> Vec<String> {
+    table
+        .get(key)
+        .and_then(toml::Value::as_array)
+        .unwrap_or_else(|| panic!("group missing array `{key}`: {table:?}"))
+        .iter()
+        .map(|v| {
+            v.as_str()
+                .unwrap_or_else(|| panic!("array `{key}` contains non-string: {v:?}"))
+                .to_string()
+        })
+        .collect()
+}
+
+fn as_string(table: &toml::value::Table, key: &str) -> String {
+    table
+        .get(key)
+        .and_then(toml::Value::as_str)
+        .unwrap_or_else(|| panic!("group missing string `{key}`: {table:?}"))
+        .to_string()
+}
+
+fn optional_str_array(table: &toml::value::Table, key: &str) -> Vec<String> {
+    table
+        .get(key)
+        .and_then(toml::Value::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .map(|v| {
+                    v.as_str()
+                        .unwrap_or_else(|| panic!("array `{key}` contains non-string: {v:?}"))
+                        .to_string()
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn groups() -> Vec<Group> {
+    let manifest = manifest();
+    manifest
+        .get("group")
+        .and_then(toml::Value::as_array)
+        .unwrap_or_else(|| panic!("{MANIFEST_PATH} missing [[group]] rows"))
+        .iter()
+        .map(|row| {
+            let table = row
+                .as_table()
+                .unwrap_or_else(|| panic!("group row is not a table: {row:?}"));
+            Group {
+                id: as_string(table, "id"),
+                classification: as_string(table, "classification"),
+                status: as_string(table, "status"),
+                risk_class: table
+                    .get("risk_class")
+                    .and_then(toml::Value::as_integer)
+                    .unwrap_or_else(|| panic!("group missing integer risk_class: {table:?}")),
+                allowed_as_fc_authority: table
+                    .get("allowed_as_fc_authority")
+                    .and_then(toml::Value::as_bool)
+                    .unwrap_or_else(|| {
+                        panic!("group missing bool allowed_as_fc_authority: {table:?}")
+                    }),
+                restricted_surface: table
+                    .get("restricted_surface")
+                    .and_then(toml::Value::as_bool)
+                    .unwrap_or_else(|| panic!("group missing bool restricted_surface: {table:?}")),
+                module_ids: as_str_array(table, "module_ids"),
+                paths: as_str_array(table, "paths"),
+                smoke_gates: as_str_array(table, "smoke_gates"),
+                real_world_evidence: as_str_array(table, "real_world_evidence"),
+                support_evidence: optional_str_array(table, "support_evidence"),
+                evidence_requires: as_str_array(table, "evidence_requires"),
+                closure_action: table
+                    .get("closure_action")
+                    .and_then(toml::Value::as_str)
+                    .map(str::to_string),
+            }
+        })
+        .collect()
+}
+
+fn module_declarations(path: &str, prefix: &str, include_private_mod: bool) -> Vec<String> {
+    let raw = fs::read_to_string(path).unwrap_or_else(|err| panic!("read {path}: {err}"));
+    raw.lines()
+        .filter_map(|line| {
+            let line = line.trim();
+            let name = if let Some(rest) = line.strip_prefix("pub mod ") {
+                rest.strip_suffix(';')
+            } else if let Some(rest) = line.strip_prefix("pub(crate) mod ") {
+                rest.strip_suffix(';')
+            } else if include_private_mod {
+                line.strip_prefix("mod ")?.strip_suffix(';')
+            } else {
+                None
+            }?;
+            if prefix.is_empty() {
+                Some(name.to_string())
+            } else {
+                Some(format!("{prefix}::{name}"))
+            }
+        })
+        .collect()
+}
+
+fn standalone_binary_inventory() -> Vec<String> {
+    let mut ids = Vec::new();
+    for entry in fs::read_dir("src/bin").unwrap_or_else(|err| panic!("read src/bin: {err}")) {
+        let path = entry
+            .unwrap_or_else(|err| panic!("read src/bin entry: {err}"))
+            .path();
+        if path.is_file() && path.extension().and_then(|v| v.to_str()) == Some("rs") {
+            let stem = path
+                .file_stem()
+                .and_then(|v| v.to_str())
+                .unwrap_or_else(|| panic!("invalid src/bin file name: {path:?}"));
+            ids.push(format!("bin::{stem}"));
+        }
+    }
+    ids
+}
+
+fn normalize_path(path: &Path) -> String {
+    let cwd = fs::canonicalize(".").unwrap_or_else(|err| panic!("canonicalize cwd: {err}"));
+    let absolute =
+        fs::canonicalize(path).unwrap_or_else(|err| panic!("canonicalize {path:?}: {err}"));
+    absolute
+        .strip_prefix(&cwd)
+        .unwrap_or(&absolute)
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+fn collect_rs_files(root: &Path) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(path) = stack.pop() {
+        if path.is_dir() {
+            for entry in
+                fs::read_dir(&path).unwrap_or_else(|err| panic!("read dir {path:?}: {err}"))
+            {
+                stack.push(
+                    entry
+                        .unwrap_or_else(|err| panic!("read dir entry {path:?}: {err}"))
+                        .path(),
+                );
+            }
+        } else if path.is_file() && path.extension().and_then(|v| v.to_str()) == Some("rs") {
+            out.insert(normalize_path(&path));
+        }
+    }
+    out
+}
+
+fn path_attr(line: &str) -> Option<String> {
+    let line = line.trim();
+    let rest = line.strip_prefix("#[path")?;
+    let start = rest.find('"')?;
+    let rest = &rest[start + 1..];
+    let end = rest.find('"')?;
+    Some(rest[..end].to_string())
+}
+
+fn module_name(line: &str) -> Option<String> {
+    let line = line.trim();
+    let rest = if let Some(rest) = line.strip_prefix("pub mod ") {
+        rest
+    } else if let Some(rest) = line.strip_prefix("pub(crate) mod ") {
+        rest
+    } else if let Some(rest) = line.strip_prefix("mod ") {
+        rest
+    } else {
+        return None;
+    };
+    rest.strip_suffix(';').map(str::to_string)
+}
+
+fn declared_module_file(
+    parent_file: &Path,
+    module: &str,
+    explicit_path: Option<String>,
+) -> PathBuf {
+    let parent_dir = parent_file
+        .parent()
+        .unwrap_or_else(|| panic!("module file has no parent: {parent_file:?}"));
+    if let Some(path) = explicit_path {
+        return parent_dir.join(path);
+    }
+
+    let flat = parent_dir.join(format!("{module}.rs"));
+    if flat.exists() {
+        return flat;
+    }
+    parent_dir.join(module).join("mod.rs")
+}
+
+fn walk_declared_source_files(path: &Path, seen: &mut BTreeSet<String>) {
+    assert!(
+        path.exists(),
+        "declared Rust module file is missing: {path:?}"
+    );
+    let normalized = normalize_path(path);
+    if !seen.insert(normalized) {
+        return;
+    }
+
+    let raw = fs::read_to_string(path).unwrap_or_else(|err| panic!("read {path:?}: {err}"));
+    let mut pending_path_attr = None;
+    for line in raw.lines() {
+        if let Some(path) = path_attr(line) {
+            pending_path_attr = Some(path);
+            continue;
+        }
+        if let Some(name) = module_name(line) {
+            let child = declared_module_file(path, &name, pending_path_attr.take());
+            walk_declared_source_files(&child, seen);
+        } else if !line.trim_start().starts_with('#') {
+            pending_path_attr = None;
+        }
+    }
+}
+
+fn declared_source_files() -> BTreeSet<String> {
+    let mut seen = BTreeSet::new();
+    for root in ["src/lib.rs", "src/main.rs"] {
+        let path = Path::new(root);
+        if path.exists() {
+            walk_declared_source_files(path, &mut seen);
+        }
+    }
+    for entry in fs::read_dir("src/bin").unwrap_or_else(|err| panic!("read src/bin: {err}")) {
+        let path = entry
+            .unwrap_or_else(|err| panic!("read src/bin entry: {err}"))
+            .path();
+        if path.is_file() && path.extension().and_then(|v| v.to_str()) == Some("rs") {
+            walk_declared_source_files(&path, &mut seen);
+        }
+    }
+    seen
+}
+
+fn declared_inventory() -> BTreeSet<String> {
+    let roots = [
+        ("src/lib.rs", "", false),
+        ("src/drivers/mod.rs", "drivers", false),
+        ("src/runtime/mod.rs", "runtime", false),
+        ("src/state/mod.rs", "state", false),
+        ("src/economy/mod.rs", "economy", false),
+        ("src/bottom_white/mod.rs", "bottom_white", false),
+        ("src/bottom_white/cas/mod.rs", "bottom_white::cas", false),
+        (
+            "src/bottom_white/ledger/mod.rs",
+            "bottom_white::ledger",
+            false,
+        ),
+        (
+            "src/bottom_white/tools/mod.rs",
+            "bottom_white::tools",
+            false,
+        ),
+        ("src/top_white/mod.rs", "top_white", false),
+        (
+            "src/top_white/predicates/mod.rs",
+            "top_white::predicates",
+            false,
+        ),
+        ("src/sdk/mod.rs", "sdk", false),
+        ("src/sdk/tools/mod.rs", "sdk::tools", false),
+        ("src/judges/mod.rs", "judges", false),
+        ("src/web/mod.rs", "web", false),
+        ("src/bin/turingos.rs", "bin::turingos", true),
+    ];
+    let mut inventory: BTreeSet<String> = roots
+        .into_iter()
+        .flat_map(|(path, prefix, include_private)| {
+            module_declarations(path, prefix, include_private)
+        })
+        .collect();
+    inventory.insert("main".to_string());
+    inventory.extend(standalone_binary_inventory());
+    inventory
+}
+
+fn manifest_module_index(groups: &[Group]) -> BTreeMap<String, String> {
+    let mut index = BTreeMap::new();
+    for group in groups {
+        for module_id in &group.module_ids {
+            if let Some(prev) = index.insert(module_id.clone(), group.id.clone()) {
+                panic!(
+                    "module `{module_id}` is claimed by both `{prev}` and `{}`",
+                    group.id
+                );
+            }
+        }
+    }
+    index
+}
+
+fn group_by_id<'a>(groups: &'a [Group], id: &str) -> &'a Group {
+    groups
+        .iter()
+        .find(|group| group.id == id)
+        .unwrap_or_else(|| panic!("missing liveness group `{id}`"))
+}
+
+fn read_json(path: &str) -> serde_json::Value {
+    serde_json::from_str(
+        &fs::read_to_string(path).unwrap_or_else(|err| panic!("read {path}: {err}")),
+    )
+    .unwrap_or_else(|err| panic!("parse {path}: {err}"))
+}
+
+fn reconciled_broad_family_run(id: &str) -> String {
+    let reconciliation = reconciliation_manifest();
+    for row in reconciliation
+        .get("broad_family")
+        .and_then(toml::Value::as_array)
+        .unwrap_or_else(|| panic!("{RECONCILIATION_MANIFEST_PATH} missing [[broad_family]] rows"))
+    {
+        let table = row
+            .as_table()
+            .unwrap_or_else(|| panic!("broad_family row is not a table: {row:?}"));
+        if table.get("id").and_then(toml::Value::as_str) == Some(id) {
+            return as_string(table, "evidence_run");
+        }
+    }
+    panic!("{RECONCILIATION_MANIFEST_PATH} missing broad_family `{id}`");
+}
+
+fn true_suite_run_id(path: &str) -> Option<&str> {
+    path.strip_prefix("handover/evidence/true_suite/")?
+        .split('/')
+        .next()
+}
+
+fn json_bool_at<'a>(value: &'a serde_json::Value, keys: &[&str]) -> bool {
+    let mut cur = value;
+    for key in keys {
+        cur = match cur.get(*key) {
+            Some(next) => next,
+            None => return false,
+        };
+    }
+    cur.as_bool() == Some(true)
+}
+
+fn json_u64_at<'a>(value: &'a serde_json::Value, keys: &[&str]) -> u64 {
+    let mut cur = value;
+    for key in keys {
+        cur = match cur.get(*key) {
+            Some(next) => next,
+            None => return 0,
+        };
+    }
+    cur.as_u64().unwrap_or(0)
+}
+
+fn is_replay_receipt(path: &str) -> bool {
+    path.ends_with("/replay_report.json")
+        || path.ends_with("/restore_replay_report.json")
+        || path.ends_with("/tdma_replay_report.json")
+        || path.ends_with("/tdma_restore_report.json")
+        || path.ends_with("/aggregate_verdict.json")
+}
+
+fn is_report_log_or_stdout_path(path: &str) -> bool {
+    let lower = path.to_ascii_lowercase();
+    lower.ends_with(".md")
+        || lower.ends_with(".txt")
+        || lower.ends_with(".log")
+        || lower.ends_with(".stdout")
+        || lower.ends_with(".stderr")
+}
+
+fn is_candidate_or_performance_report_json(path: &str) -> bool {
+    let lower = path.to_ascii_lowercase();
+    if !lower.ends_with(".json") {
+        return false;
+    }
+    let file = lower.rsplit('/').next().unwrap_or(&lower);
+    file.contains("candidate_report")
+        || file.contains("performance_report")
+        || (file.starts_with("real") && file.contains("_report"))
+}
+
+fn assert_unique_group_ids(groups: &[Group]) {
+    let mut seen = BTreeSet::new();
+    let mut duplicates = Vec::new();
+    for group in groups {
+        if !seen.insert(group.id.clone()) {
+            duplicates.push(group.id.clone());
+        }
+    }
+    assert!(
+        duplicates.is_empty(),
+        "duplicate liveness group ids would shadow no-zombie accounting: {duplicates:?}"
+    );
+}
+
+fn assert_existing_path(path: &str) {
+    assert!(
+        Path::new(path).exists(),
+        "manifest path does not exist: {path}"
+    );
+}
+
+fn assert_manifest_path_pattern_exists(pattern: &str) {
+    if let Some(star_idx) = pattern.find('*') {
+        let prefix = &pattern[..star_idx];
+        let suffix = &pattern[star_idx + 1..];
+        let parent = Path::new(prefix).parent().unwrap_or_else(|| Path::new("."));
+        let has_match = fs::read_dir(parent)
+            .unwrap_or_else(|err| panic!("read glob parent for `{pattern}`: {err}"))
+            .any(|entry| {
+                let path = entry
+                    .unwrap_or_else(|err| panic!("read glob entry for `{pattern}`: {err}"))
+                    .path();
+                let rendered = path.to_string_lossy();
+                rendered.starts_with(prefix) && rendered.ends_with(suffix)
+            });
+        assert!(has_match, "manifest glob pattern has no match: {pattern}");
+    } else {
+        assert_existing_path(pattern);
+    }
+}
+
+fn assert_smoke_gate_file_exists(gate: &str) {
+    let path = gate.split("::").next().unwrap_or(gate);
+    assert_existing_path(path);
+}
+
+fn assert_smoke_gate_function_exists(gate: &str) {
+    let Some((path, function)) = gate.split_once("::") else {
+        return;
+    };
+    let function = function.rsplit("::").next().unwrap_or(function).trim();
+    let raw = fs::read_to_string(path).unwrap_or_else(|err| panic!("read gate {path}: {err}"));
+    let sync_signature = format!("fn {function}(");
+    let async_signature = format!("async fn {function}(");
+    assert!(
+        raw.lines().any(|line| {
+            let line = line.trim_start();
+            line.starts_with(&sync_signature) || line.starts_with(&async_signature)
+        }),
+        "manifest smoke gate `{gate}` names a test function that does not exist"
+    );
+}
+
+#[test]
+fn liveness_manifest_policy_is_real_world_first() {
+    let manifest = manifest();
+    assert_eq!(
+        manifest.get("schema_version").and_then(toml::Value::as_str),
+        Some("turingosv4.production_module_liveness.v1")
+    );
+    assert_eq!(
+        manifest.get("authority").and_then(toml::Value::as_str),
+        Some("constitution.md + ChainTape/CAS evidence")
+    );
+    assert_eq!(
+        manifest.get("policy").and_then(toml::Value::as_str),
+        Some("real_world_required_for_final")
+    );
+    assert_eq!(
+        manifest
+            .get("smoke_is_not_final_evidence")
+            .and_then(toml::Value::as_bool),
+        Some(true),
+        "smoke tests must never satisfy the final no-zombie claim"
+    );
+    assert_eq!(
+        manifest
+            .get("final_closure_status")
+            .and_then(toml::Value::as_str),
+        Some(VERIFIED_CLOSURE_STATUS),
+        "OBL-005 no-zombie closure must stay bound to the fresh final-closure witness"
+    );
+}
+
+#[test]
+fn final_closure_cannot_be_claimed_while_quarantine_remains() {
+    let manifest = manifest();
+    let groups = groups();
+    let has_quarantine = groups
+        .iter()
+        .any(|group| group.status == "legacy_quarantined");
+
+    if has_quarantine {
+        assert_ne!(
+            manifest
+                .get("final_closure_status")
+                .and_then(toml::Value::as_str),
+            Some(VERIFIED_CLOSURE_STATUS),
+            "OBL-005 final closure cannot be claimed while any legacy_quarantined group remains as production blockers"
+        );
+    }
+
+    for group in groups {
+        if group.status == "legacy_quarantined" {
+            let action = group.closure_action.as_deref().unwrap_or_default();
+            assert!(
+                action.contains("Delete") || action.contains("rebind") || action.contains("Rebind"),
+                "legacy quarantine group `{}` must name a concrete delete-or-rebind action; got `{action}`",
+                group.id
+            );
+        }
+    }
+}
+
+#[test]
+fn final_closure_cannot_be_claimed_while_non_closing_dev_groups_remain() {
+    let manifest = manifest();
+    let groups = groups();
+    let has_non_closing_dev = groups
+        .iter()
+        .any(|group| group.classification == "dev_only" || group.status == "smoke_only");
+
+    if has_non_closing_dev {
+        assert_ne!(
+            manifest
+                .get("final_closure_status")
+                .and_then(toml::Value::as_str),
+            Some(VERIFIED_CLOSURE_STATUS),
+            "OBL-005 final closure cannot be claimed while retained dev-only/smoke-only groups remain non-closing"
+        );
+    }
+}
+
+#[test]
+fn retired_lean_research_diagnostic_bins_do_not_reenter_production() {
+    let groups = groups();
+    let retired_modules = [
+        "bin::lean_emergence",
+        "bin::lean_hayek_market",
+        "bin::lean_graded_diag",
+        "bin::lean_hetero_market",
+        "bin::lean_tree_market",
+    ];
+    let retired_paths = [
+        "src/bin/lean_emergence.rs",
+        "src/bin/lean_hayek_market.rs",
+        "src/bin/lean_graded_diag.rs",
+        "src/bin/lean_hetero_market.rs",
+        "src/bin/lean_tree_market.rs",
+    ];
+
+    assert!(
+        groups
+            .iter()
+            .all(|group| group.id != "lean_research_diagnostic_bins"),
+        "retired Lean diagnostic bins must not remain as a non-closing liveness group"
+    );
+
+    for module in retired_modules {
+        assert!(
+            groups
+                .iter()
+                .all(|group| !group.module_ids.iter().any(|id| id == module)),
+            "retired diagnostic module `{module}` must not be retained in production liveness accounting"
+        );
+    }
+
+    for path in retired_paths {
+        assert!(
+            !std::path::Path::new(path).exists(),
+            "retired diagnostic bin `{path}` must not re-enter src/bin without real ChainTape/CAS replay evidence"
+        );
+    }
+}
+
+#[test]
+fn retired_tdma_rc1_standalone_bins_do_not_reenter_production() {
+    let groups = groups();
+    let retired_modules = [
+        "bin::tdma_rc1_deepseek_nesbitt",
+        "bin::tdma_rc1_deepseek_putnam_2025_b3",
+        "bin::tdma_rc1_deepseek_putnam_a1",
+        "bin::tdma_rc1_distiller_stress",
+        "bin::tdma_rc1_nesbitt_stress",
+        "bin::tdma_rc1_real_evidence",
+        "bin::tdma_rc1_zero_gain_demo",
+    ];
+    let retired_paths = [
+        "src/bin/tdma_rc1_deepseek_nesbitt.rs",
+        "src/bin/tdma_rc1_deepseek_putnam_2025_b3.rs",
+        "src/bin/tdma_rc1_deepseek_putnam_a1.rs",
+        "src/bin/tdma_rc1_distiller_stress.rs",
+        "src/bin/tdma_rc1_nesbitt_stress.rs",
+        "src/bin/tdma_rc1_real_evidence.rs",
+        "src/bin/tdma_rc1_zero_gain_demo.rs",
+    ];
+    let retired_evidence = [
+        "handover/evidence/tdma_zero_gain_demo_20260522T115130Z/manifest.json",
+        "handover/evidence/tdma_zero_gain_demo_20260522T115130Z/chaintape.jsonl",
+    ];
+
+    for module in retired_modules {
+        assert!(
+            groups
+                .iter()
+                .all(|group| !group.module_ids.iter().any(|id| id == module)),
+            "retired TDMA RC1 standalone module `{module}` must not be retained in production liveness accounting"
+        );
+    }
+
+    for path in retired_paths {
+        assert!(
+            !std::path::Path::new(path).exists(),
+            "retired TDMA RC1 standalone bin `{path}` must not re-enter src/bin; use `turingos tdma run` plus `tdma_proof_current_kernel` for current ChainTape/CAS evidence"
+        );
+    }
+
+    for evidence_path in retired_evidence {
+        assert!(
+            groups.iter().all(|group| !group
+                .real_world_evidence
+                .iter()
+                .any(|path| path == evidence_path)),
+            "historical TDMA RC1 evidence `{evidence_path}` must not be counted as current production liveness evidence"
+        );
+    }
+}
+
+#[test]
+fn liveness_group_ids_are_unique() {
+    assert_unique_group_ids(&groups());
+}
+
+#[test]
+fn every_src_rust_file_is_reachable_from_a_crate_or_binary_root() {
+    let discovered = collect_rs_files(Path::new("src"));
+    let declared = declared_source_files();
+    let missing: Vec<_> = discovered.difference(&declared).cloned().collect();
+    assert!(
+        missing.is_empty(),
+        "src Rust files not declared from src/lib.rs, src/main.rs, or a src/bin root: {missing:?}"
+    );
+}
+
+#[test]
+fn every_exported_module_has_exactly_one_liveness_group() {
+    let groups = groups();
+    assert_unique_group_ids(&groups);
+    let index = manifest_module_index(&groups);
+    let declared = declared_inventory();
+
+    let mut missing = Vec::new();
+    for module_id in &declared {
+        if !index.contains_key(module_id) {
+            missing.push(module_id.clone());
+        }
+    }
+    assert!(
+        missing.is_empty(),
+        "exported or routed modules missing no-zombie liveness group: {missing:?}"
+    );
+
+    for module_id in index.keys() {
+        assert!(
+            declared.contains(module_id) || module_id == "main",
+            "manifest claims module `{module_id}` that is not declared in the scanned module roots"
+        );
+    }
+}
+
+#[test]
+fn candidate_groups_have_real_world_chaintape_or_cas_evidence() {
+    for group in groups() {
+        match group.status.as_str() {
+            "historical_real_world_candidate"
+            | "legacy_quarantined"
+            | "smoke_only"
+            | "claim_boundary_support" => {}
+            other => panic!("unknown liveness status `{other}` in `{}`", group.id),
+        }
+        assert!(
+            !group.paths.is_empty(),
+            "group `{}` must name owned paths",
+            group.id
+        );
+        for path in &group.paths {
+            assert_manifest_path_pattern_exists(path);
+        }
+        assert!(
+            !group.smoke_gates.is_empty(),
+            "group `{}` needs smoke gates for fast regression detection",
+            group.id
+        );
+        for gate in &group.smoke_gates {
+            assert_smoke_gate_file_exists(gate);
+            assert_smoke_gate_function_exists(gate);
+        }
+        assert!(
+            !group.evidence_requires.is_empty(),
+            "group `{}` must name required evidence kinds",
+            group.id
+        );
+
+        if group.status == "historical_real_world_candidate" {
+            assert!(
+                !group.real_world_evidence.is_empty(),
+                "candidate group `{}` has only smoke evidence; broad real-world evidence is required",
+                group.id
+            );
+            let real_evidence_tokens = [
+                "accepted/rejected tape",
+                "admission verification",
+                "audit verdict",
+                "backend observer",
+                "bounded prompt",
+                "CAS",
+                "ChainTape",
+                "ChainTapeLease",
+                "fresh boot",
+                "generated artifact",
+                "integer money",
+                "L4",
+                "L4.E",
+                "market decision trace",
+                "market projection",
+                "market tx",
+                "predicate activation",
+                "read-view",
+                "real API session",
+                "real command path",
+                "real task attempts",
+                "real user simulator",
+                "registry root",
+                "replay",
+                "retry tape",
+                "runtime repo",
+                "system-only meta tx",
+                "tool registry root",
+            ];
+            assert!(
+                group.evidence_requires.iter().any(|kind| {
+                    real_evidence_tokens
+                        .iter()
+                        .any(|token| kind.eq_ignore_ascii_case(token))
+                }),
+                "candidate group `{}` must require ChainTape/CAS/replay or real-run evidence, got {:?}",
+                group.id,
+                group.evidence_requires
+            );
+            for path in &group.real_world_evidence {
+                assert!(
+                    !path.ends_with("evaluator.stdout") && !path.ends_with("evaluator.stderr"),
+                    "group `{}` cannot use stdout/stderr as final real-world evidence: {path}",
+                    group.id
+                );
+                assert_existing_path(path);
+            }
+        } else {
+            assert!(
+                group.closure_action.as_deref().unwrap_or_default().len() >= 20,
+                "non-live group `{}` must carry an explicit closure/quarantine action",
+                group.id
+            );
+        }
+    }
+}
+
+#[test]
+fn claim_boundary_support_closes_accounting_without_domain_capability_evidence() {
+    let groups = groups();
+    let boundary = group_by_id(&groups, "workload_adapter_boundary");
+    assert_eq!(
+        boundary.status, "claim_boundary_support",
+        "`workload_adapter_boundary` must not remain smoke_only after OBL-005 no-zombie closure"
+    );
+    assert_eq!(
+        boundary.classification, "product_workload",
+        "workload adapters are retained product workload support, not FC authority"
+    );
+    assert!(
+        !boundary.allowed_as_fc_authority,
+        "claim-boundary support cannot be cited as flowchart authority"
+    );
+    assert!(
+        boundary.real_world_evidence.is_empty(),
+        "claim-boundary support evidence is not benchmark/domain capability evidence"
+    );
+    assert!(
+        boundary
+            .support_evidence
+            .iter()
+            .any(|path| path == "handover/reports/A14_WORKLOAD_ADAPTER_BOUNDARY_2026-06-06.md"),
+        "workload adapter boundary must bind its current A14 boundary report as support evidence"
+    );
+    assert!(
+        boundary.support_evidence.iter().any(|path| {
+            path == "handover/audits/A14_WORKLOAD_ADAPTER_BOUNDARY_CLEAN_CONTEXT_AUDIT_2026-06-06.md"
+        }),
+        "workload adapter boundary must bind its clean-context audit as support evidence"
+    );
+    for path in &boundary.support_evidence {
+        assert_existing_path(path);
+        assert!(
+            !path.ends_with(".stdout") && !path.ends_with(".stderr"),
+            "support evidence must not be raw stdout/stderr: {path}"
+        );
+    }
+    assert!(
+        boundary
+            .evidence_requires
+            .iter()
+            .any(|kind| kind == "clean-context audit")
+            && boundary
+                .evidence_requires
+                .iter()
+                .any(|kind| kind == "no benchmark capability claim"),
+        "claim-boundary support must require audit and explicit no-capability-claim evidence"
+    );
+    assert!(
+        boundary
+            .closure_action
+            .as_deref()
+            .unwrap_or_default()
+            .contains("not benchmark/domain capability evidence"),
+        "closure action must state that support evidence is not capability evidence"
+    );
+}
+
+#[test]
+fn product_and_legacy_rows_cannot_be_flowchart_authority() {
+    for group in groups() {
+        match group.classification.as_str() {
+            "required_substrate" | "support_invariant" => {}
+            "product_workload" | "legacy_quarantine" | "dev_only" => assert!(
+                !group.allowed_as_fc_authority,
+                "group `{}` is `{}` and cannot be cited as FC authority",
+                group.id, group.classification
+            ),
+            other => panic!(
+                "unknown liveness classification `{other}` in `{}`",
+                group.id
+            ),
+        }
+
+        if group.status == "legacy_quarantined" || group.classification == "dev_only" {
+            assert!(
+                group.real_world_evidence.is_empty(),
+                "quarantined/dev group `{}` must not pretend to be lit by real-world AGI evidence",
+                group.id
+            );
+        }
+    }
+}
+
+#[test]
+fn fc_authority_groups_use_current_true_suite_json_receipts() {
+    for group in groups()
+        .into_iter()
+        .filter(|group| group.allowed_as_fc_authority)
+    {
+        for path in &group.real_world_evidence {
+            let lower = path.to_ascii_lowercase();
+            assert!(
+                path.starts_with("handover/evidence/true_suite/"),
+                "FC-authority group `{}` must use current true-suite evidence, not historical/local evidence: {path}",
+                group.id
+            );
+            assert!(
+                path.ends_with(".json"),
+                "FC-authority group `{}` must use machine-readable JSON receipts, not report/log/stdout evidence: {path}",
+                group.id
+            );
+            assert!(
+                !(lower.ends_with(".md")
+                    || lower.ends_with(".txt")
+                    || lower.ends_with(".log")
+                    || lower.ends_with(".stdout")
+                    || lower.ends_with(".stderr")),
+                "FC-authority group `{}` must not cite report/log/stdout evidence: {path}",
+                group.id
+            );
+            assert!(
+                !is_candidate_or_performance_report_json(path),
+                "FC-authority group `{}` must not cite candidate/performance report JSON as production liveness evidence: {path}",
+                group.id
+            );
+        }
+        assert!(
+            group
+                .real_world_evidence
+                .iter()
+                .any(|path| path.ends_with("/full_system_participation.json")),
+            "FC-authority group `{}` must bind at least one current full_system_participation receipt",
+            group.id
+        );
+        assert!(
+            group
+                .real_world_evidence
+                .iter()
+                .any(|path| is_replay_receipt(path)),
+            "FC-authority group `{}` must bind a replay/audit receipt, not only manifests",
+            group.id
+        );
+    }
+}
+
+#[test]
+fn product_workload_groups_use_current_true_suite_receipts() {
+    for group in groups()
+        .into_iter()
+        .filter(|group| group.classification == "product_workload")
+    {
+        if group.status != "historical_real_world_candidate" {
+            continue;
+        }
+
+        for path in &group.real_world_evidence {
+            assert!(
+                path.starts_with("handover/evidence/true_suite/"),
+                "product workload group `{}` must use current true-suite receipts/artifacts, not historical local evidence: {path}",
+                group.id
+            );
+            assert!(
+                !is_report_log_or_stdout_path(path),
+                "product workload group `{}` must not cite report/log/stdout/transcript evidence as current liveness evidence: {path}",
+                group.id
+            );
+            assert!(
+                !is_candidate_or_performance_report_json(path),
+                "product workload group `{}` must not cite candidate/performance report JSON as current liveness evidence: {path}",
+                group.id
+            );
+        }
+
+        let full_system_paths: Vec<_> = group
+            .real_world_evidence
+            .iter()
+            .filter(|path| path.ends_with("/full_system_participation.json"))
+            .collect();
+        assert!(
+            !full_system_paths.is_empty(),
+            "product workload group `{}` must bind at least one current full_system_participation receipt",
+            group.id
+        );
+
+        for path in full_system_paths {
+            let receipt = read_json(path);
+            assert_eq!(
+                receipt
+                    .get("schema_version")
+                    .and_then(serde_json::Value::as_str),
+                Some("turingosv4.true_suite.full_system_participation.v1"),
+                "product workload group `{}` full-system receipt has an unexpected schema: {path}",
+                group.id
+            );
+            assert!(
+                json_bool_at(&receipt, &["verdict", "full_system_participation"])
+                    && json_bool_at(&receipt, &["replay", "all_indicators_pass"]),
+                "product workload group `{}` full-system receipt must prove full-system participation and green replay: {path}",
+                group.id
+            );
+        }
+    }
+}
+
+#[test]
+fn axiom_boot_trust_root_is_bound_to_current_boot_genesis_replay_receipts() {
+    let groups = groups();
+    let boot = group_by_id(&groups, "axiom_boot_trust_root");
+    let genesis_path = "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/genesis_report.json";
+    let full_system_path = "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/full_system_participation.json";
+    let replay_path = "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/replay_report.json";
+
+    for required in [genesis_path, full_system_path, replay_path] {
+        assert!(
+            boot.real_world_evidence.iter().any(|path| path == required),
+            "`axiom_boot_trust_root` must bind current boot CLI receipt `{required}`"
+        );
+    }
+
+    let genesis = read_json(genesis_path);
+    assert!(
+        genesis
+            .get("constitution_hash")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|v| v.len() == 64),
+        "boot genesis receipt must carry the pinned constitution hash"
+    );
+    assert!(
+        genesis
+            .get("system_pubkey_hash")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|v| v.len() == 64),
+        "boot genesis receipt must carry the system trust-root public-key hash"
+    );
+
+    let full_system = read_json(full_system_path);
+    assert!(
+        json_bool_at(&full_system, &["fc2", "genesis_report_present"])
+            && json_bool_at(&full_system, &["replay", "all_indicators_pass"]),
+        "boot full-system receipt must prove FC2 genesis and replay indicators"
+    );
+}
+
+#[test]
+fn predicate_registry_group_is_bound_to_tape_visible_activation_receipt() {
+    let groups = groups();
+    let predicate = group_by_id(&groups, "predicate_registry_top_white");
+    let full_system_path = "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/full_system_participation.json";
+    assert!(
+        predicate
+            .real_world_evidence
+            .iter()
+            .any(|path| path == full_system_path),
+        "`predicate_registry_top_white` must bind a current full-system receipt with PredicateBindingActivate"
+    );
+
+    let full_system = read_json(full_system_path);
+    assert!(
+        json_u64_at(
+            &full_system,
+            &["tx_kind_counts", "predicate_binding_activate"]
+        ) > 0,
+        "predicate registry full-system receipt must include a tape-visible PredicateBindingActivate tx"
+    );
+    let sequence = full_system
+        .get("tx_kind_sequence")
+        .and_then(serde_json::Value::as_array)
+        .unwrap_or_else(|| {
+            panic!("predicate registry full-system receipt missing tx_kind_sequence")
+        });
+    assert!(
+        sequence
+            .iter()
+            .any(|kind| kind.as_str() == Some("PredicateBindingActivate")),
+        "predicate registry full-system receipt must show PredicateBindingActivate in L4 sequence"
+    );
+}
+
+#[test]
+fn legacy_shadow_tape_group_is_split_from_active_tdma_ledger() {
+    let groups = groups();
+    assert!(
+        groups
+            .iter()
+            .all(|group| group.id != "legacy_shadow_tape_and_tool_surfaces"),
+        "the old mixed legacy group must stay split; it hid active TDMA ledger substrate inside SDK/WAL quarantine"
+    );
+
+    let tdma = group_by_id(&groups, "tdma_bounded_solver");
+    assert!(
+        tdma.module_ids.iter().any(|id| id == "ledger"),
+        "`ledger` is active TDMA substrate and must be covered by the TDMA real-world evidence group"
+    );
+    assert!(
+        tdma.paths.iter().any(|path| path == "src/ledger.rs"),
+        "TDMA evidence group must name src/ledger.rs explicitly"
+    );
+
+    assert!(
+        groups
+            .iter()
+            .all(|group| group.id != "legacy_wal_and_sdk_tool_surfaces"),
+        "legacy WAL/SDK quarantine was closed; do not reintroduce it as an active liveness group"
+    );
+
+    let economy = group_by_id(&groups, "economy_market_settlement");
+    assert!(
+        economy
+            .module_ids
+            .iter()
+            .any(|id| id == "sdk::tools::wallet"),
+        "wallet projection is active economy substrate and must be covered by economy real-world evidence"
+    );
+}
+
+#[test]
+fn frontend_product_code_is_accounted_for_when_present() {
+    if !Path::new("frontend/package.json").exists() {
+        return;
+    }
+
+    let groups = groups();
+    let frontend = group_by_id(&groups, "frontend_product_surface");
+    assert_eq!(
+        frontend.classification, "product_workload",
+        "frontend is retained product code, not a constitutional authority"
+    );
+    assert!(
+        !frontend.allowed_as_fc_authority,
+        "frontend product surface cannot become flowchart authority"
+    );
+    assert!(
+        frontend.paths.iter().any(|path| path == "frontend/src")
+            && frontend.paths.iter().any(|path| path == "frontend/test"),
+        "frontend group must account for source and tests"
+    );
+    assert!(
+        frontend
+            .smoke_gates
+            .iter()
+            .any(|gate| gate == "frontend/test/welcome.test.ts"),
+        "frontend group must name a frontend-owned smoke gate"
+    );
+    assert!(
+        !frontend.real_world_evidence.is_empty(),
+        "frontend group must stay bound to real product-path evidence, not only unit tests"
+    );
+}
+
+#[test]
+fn design_system_code_is_accounted_for_when_present() {
+    if !Path::new("design-system").exists() {
+        return;
+    }
+
+    let groups = groups();
+    let design_system = group_by_id(&groups, "design_system_product_surface");
+    assert!(
+        matches!(
+            design_system.classification.as_str(),
+            "product_workload" | "dev_only"
+        ),
+        "design-system code must be classified as retained product surface or dev-only substrate"
+    );
+    assert!(
+        !design_system.allowed_as_fc_authority,
+        "design-system code cannot become flowchart authority"
+    );
+    assert!(
+        design_system
+            .paths
+            .iter()
+            .any(|path| path == "design-system"),
+        "design-system group must account for the root design-system path"
+    );
+
+    if design_system.classification == "product_workload" {
+        assert!(
+            !design_system.smoke_gates.is_empty(),
+            "product design-system code must name a concrete smoke gate"
+        );
+        assert!(
+            !design_system.real_world_evidence.is_empty(),
+            "product design-system code must stay bound to real product-path evidence"
+        );
+    } else {
+        assert!(
+            design_system.real_world_evidence.is_empty(),
+            "dev-only design-system code must not pretend to be lit by AGI production evidence"
+        );
+        assert!(
+            design_system
+                .closure_action
+                .as_deref()
+                .unwrap_or_default()
+                .len()
+                >= 20,
+            "dev-only design-system code must carry an explicit exclusion rationale"
+        );
+    }
+}
+
+#[test]
+fn restricted_surfaces_are_classified_high_risk() {
+    for group in groups() {
+        if group.restricted_surface {
+            assert!(
+                group.risk_class >= 3,
+                "restricted group `{}` must be Class 3+; got {}",
+                group.id,
+                group.risk_class
+            );
+        }
+        if group.risk_class >= 4 {
+            assert!(
+                group.restricted_surface || group.status == "legacy_quarantined",
+                "Class 4 group `{}` must be a restricted surface or explicit quarantine",
+                group.id
+            );
+        }
+    }
+}
+
+#[test]
+fn registered_real_world_suites_exist_and_are_not_smoke_labels() {
+    let manifest = manifest();
+    let suites = manifest
+        .get("real_world_suite")
+        .and_then(toml::Value::as_array)
+        .unwrap_or_else(|| panic!("{MANIFEST_PATH} missing [[real_world_suite]] rows"));
+    assert!(
+        suites.len() >= 5,
+        "broad real-world coverage requires multiple suite families, got {}",
+        suites.len()
+    );
+    for suite in suites {
+        let table = suite
+            .as_table()
+            .unwrap_or_else(|| panic!("real_world_suite row is not a table: {suite:?}"));
+        let id = as_string(table, "id");
+        let path = as_string(table, "path");
+        let families = as_str_array(table, "families");
+        let evidence = as_str_array(table, "evidence");
+        assert_existing_path(&path);
+        assert!(
+            path.starts_with("handover/evidence/true_suite/"),
+            "real-world suite `{id}` must index current true-suite roots; historical REAL/stage roots are archive context, not current liveness authority: {path}"
+        );
+        assert!(
+            !id.to_ascii_lowercase().contains("smoke"),
+            "real-world suite `{id}` must not be smoke-only"
+        );
+        assert!(
+            !families.is_empty() && !evidence.is_empty(),
+            "real-world suite `{id}` must name families and evidence kinds"
+        );
+        for evidence_kind in &evidence {
+            let lower = evidence_kind.to_ascii_lowercase();
+            assert!(
+                !(lower.contains("candidate_report")
+                    || lower.contains("report")
+                    || lower.contains("log")
+                    || lower.contains("dashboard")
+                    || lower.contains("stdout")
+                    || lower.contains("stderr")
+                    || lower.contains("transcript")),
+                "real-world suite `{id}` evidence kind `{evidence_kind}` is report/log/transcript-style; suite labels must name chain/CAS/replay/full-system receipt classes"
+            );
+        }
+    }
+}
+
+#[test]
+fn registered_real_world_suites_cover_reconciled_fresh_runs() {
+    let production = manifest();
+    let suite_runs: BTreeSet<_> = production
+        .get("real_world_suite")
+        .and_then(toml::Value::as_array)
+        .unwrap_or_else(|| panic!("{MANIFEST_PATH} missing [[real_world_suite]] rows"))
+        .iter()
+        .map(|suite| {
+            let table = suite
+                .as_table()
+                .unwrap_or_else(|| panic!("real_world_suite row is not a table: {suite:?}"));
+            let path = as_string(table, "path");
+            Path::new(&path)
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or_else(|| panic!("real_world_suite path has no run id basename: {path}"))
+                .to_string()
+        })
+        .collect();
+
+    let reconciliation = reconciliation_manifest();
+    let mut bound_runs = BTreeSet::new();
+    for section in ["coverage_task", "broad_family"] {
+        for row in reconciliation
+            .get(section)
+            .and_then(toml::Value::as_array)
+            .unwrap_or_else(|| panic!("{RECONCILIATION_MANIFEST_PATH} missing [[{section}]] rows"))
+        {
+            let table = row
+                .as_table()
+                .unwrap_or_else(|| panic!("{section} row is not a table: {row:?}"));
+            bound_runs.insert(as_string(table, "evidence_run"));
+        }
+    }
+
+    let missing: Vec<_> = bound_runs.difference(&suite_runs).cloned().collect();
+    assert!(
+        missing.is_empty(),
+        "production real_world_suite registry must include every fresh evidence_run bound by reconciliation; missing {missing:?}"
+    );
+}
+
+#[test]
+fn production_group_domain_evidence_uses_reconciled_fresh_runs() {
+    let tracked_families = [
+        ("mind2web_open_web", "mind2web"),
+        ("toolbench_api_tool_use", "toolbench"),
+    ];
+    let groups = groups();
+
+    for (family_id, evidence_subdir) in tracked_families {
+        let expected_run = reconciled_broad_family_run(family_id);
+        let mut references = Vec::new();
+
+        for group in &groups {
+            for path in &group.real_world_evidence {
+                if path.contains(&format!("/{evidence_subdir}/")) {
+                    references.push((group.id.as_str(), path.as_str()));
+                }
+            }
+        }
+
+        assert!(
+            !references.is_empty(),
+            "production liveness groups must bind `{family_id}` evidence from reconciliation"
+        );
+        for (group_id, path) in references {
+            assert_eq!(
+                true_suite_run_id(path),
+                Some(expected_run.as_str()),
+                "group `{group_id}` cites stale `{family_id}` evidence; expected run `{expected_run}` from reconciliation, got `{path}`"
+            );
+        }
+    }
+}

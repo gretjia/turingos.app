@@ -1,0 +1,29 @@
+{
+  "all_detected": true,
+  "detected_count": 3,
+  "expected": 3,
+  "schema_version": "v1/audit_tape_tamper",
+  "tamper_results": [
+    {
+      "detail": "destructively zeroed back half (133 bytes) of largest loose object \"handover/evidence/tb_16_real_llm_arena_2026-05-04/audit_pipeline_smoke/tamper/flip_l4_byte/runtime_repo/.git/objects/42/7c5978b9afff191faa1d0ba1b972ba6dc8ca45\"",
+      "detected": true,
+      "label": "flip_l4_byte",
+      "schema_version": "v1/audit_tape_tamper",
+      "verdict": null
+    },
+    {
+      "detail": "destructively zeroed back half (493 bytes) of largest CAS object \"handover/evidence/tb_16_real_llm_arena_2026-05-04/audit_pipeline_smoke/tamper/flip_cas_byte/cas/.git/objects/98/60dc3652d9a6e7bfd3bef585a0b2aaa87f835e\"",
+      "detected": true,
+      "label": "flip_cas_byte",
+      "schema_version": "v1/audit_tape_tamper",
+      "verdict": null
+    },
+    {
+      "detail": "zeroed last 4 hex chars in \"handover/evidence/tb_16_real_llm_arena_2026-05-04/audit_pipeline_smoke/tamper/truncate_l4_ref/runtime_repo/.git/refs/transitions/main\"",
+      "detected": true,
+      "label": "truncate_l4_ref",
+      "schema_version": "v1/audit_tape_tamper",
+      "verdict": null
+    }
+  ]
+}

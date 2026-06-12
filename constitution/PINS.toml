@@ -12,7 +12,8 @@ tier = 1 # Tier-1 read-only: guarded by hook + shipgate; amendments only via Cla
 
 [runtime_port] # ADR-015: full port of turingosv4 into runtime/ (user final ruling 2026-06-11)
 source_repo = "https://github.com/gretjia/turingosv4"
-anchor = "PIN-AT-REVERIFICATION" # current v4 main; exact rev pinned after the 1h anchor re-verification protocol (clean clone: workspace tests + 194 gates + pin sweep + new-red catalog), AFTER U-items land on v4 main
+anchor = "61ec26c7ba7f0e510afa083ded19f98009b47f58" # v4 main after U1 (#342 MERGED); tree-identical to re-verified 3bf6b2f3 (git diff empty, checked 2026-06-12) so the 2026-06-12 anchor re-verification receipt applies verbatim: 194 gates EXIT=0, workspace 2391 passed/1 failed (sandbox_cwd_is_explicit_workspace = catalogued platform red, R1.9 §0.2), verify_trust_root all ok. U2/U4 ruling (user authorization 2026-06-12): NOT blocking — doc items, land post-import as follow-up doc atoms in this repo. Evidence: ~/Developer/turingosv4-reverify-20260612/{ANCHOR_REV.txt,SUMMARY.md,v4_gates_run.log,v4_workspace_tests.log}
+pinned_on = "2026-06-12"
 import_mode = "squash single commit, message records turingosv4@<rev>"
 v4_fate = "freeze + archive after import baseline green; PR #283 tag-archived; branch cleanup authorized"
 baseline_ratchet = "exception list = re-verification red catalog; shrink-only; each red owns an atom; auto-tighten to all-green"

@@ -1,0 +1,557 @@
+# TuringOS v4 - Shared Agent Instructions
+
+This file is the short shared execution adapter for Codex, Claude Code, and
+future fast agents. Keep it practical and stable. Do not copy the full
+constitution, flowcharts, or historical handover here; route to them.
+
+`CLAUDE.md` imports this file and may add Claude-specific operating detail.
+If duplicated guidance conflicts, obey this file for the shared harness
+contract, then the deeper/more specific adapter for tool-local mechanics.
+
+## 0. Prime directives (读这 5 条即可；其余各节为 reference，按需查)
+
+49-session 纠正频率实测 — 绝大多数纠正命中这 5 条。其余条款是细则与机制，
+按需查以下各节 / `HARNESS_PLAYBOOK.md`，不必每条复述：
+
+1. **窄动作**：做且只做被要求的。不扩 scope、不加 ceremony、不写没要的代码 /
+   报告 / preamble。 (corrections 19%)
+2. **真跑才算完成**：声明“完成”**或交给用户测试**前，亲自从真实二进制入口
+   （`turingos init`/`genesis`）跑通并贴 evidence；读代码 / self-report 不算。
+   细则（blind-sim、禁止移交未跑通产物）见 §4.3。 (15%)
+3. **自主到底**：驱动到 all-merged——**你只开 PR、不等 merge，开完即推进下一
+   atom**；合法停机点只有 all-merged 或 Class-4 §8 gate；别把选择反推给我。
+   细则见 §4.4。 (15%)
+4. **认产物不认标签**：看真实页面 / 输出，不信名字 / 自述；诚实先讲坏消息，
+   不 sycophantic。 (verify+honesty 19%)
+5. **内核默认对**：先假设内核 / 宪法正确、在外层找因；碰 §6 restricted surface
+   先停分类。 (6%)
+
+## 1. Identity and Truth Order
+
+TuringOS v4 is a tape-first constitutional operating substrate for LLM/AGI
+agents. If meaningful activity is not on tape, it is not a TuringOS run.
+
+Truth order (3 tiers, flat — receipt-driven; see
+`handover/architect-insights/K-2-2_TRUTH_TIER_GREP_RECEIPTS.md` for src/ grep
+evidence):
+
+**Tier 1: Axioms** (immutable, checked at compile/start time)
+- `constitution.md`
+- The 3 canonical flowchart hashes (stored in tests and docs)
+
+**Tier 2: Facts** (live state machine)
+- ChainTape (L4 + L4.E transitions)
+- CAS (evidence objects, indexed by content hash)
+- Replay/audit verifier (deterministic reconstruction from ChainTape + CAS)
+
+**Tier 3: Workspace pointers** (mutable, derived)
+- Current TB charter / directive / ratification
+- `handover/ai-direct/LATEST.md` (explicit derived view; ChainTape wins if conflict)
+
+**Derived views** (all below tier 3 — no src/ runtime reader, per K-2.2 receipts):
+- `handover/alignment/CONSTITUTION_EXECUTION_MATRIX.md`
+- `handover/alignment/TRACE_FLOWCHART_MATRIX.md`
+- `handover/tracer_bullets/TB_LOG.tsv` (append-only log)
+- Dashboards, reports, README files, stdout logs
+
+If a derived view contradicts ChainTape/CAS, trust ChainTape/CAS.
+If ChainTape/CAS contradicts constitution gates, stop.
+
+## 2. Cold Start
+
+**THIS file (`AGENTS.md`) is the canonical universal entry for ALL coding
+agent CLIs** — Claude Code, Codex CLI, Gemini CLI, Aider, Cursor, Windsurf,
+GitHub Copilot, Warp, Antigravity, and any future runtime. Each CLI has its own
+thin discovery file (`CLAUDE.md`, `GEMINI.md`, `CONVENTIONS.md`, `.cursorrules`,
+`.cursor/rules/000-agents-alignment.mdc`, `.windsurfrules`,
+`.github/copilot-instructions.md`, `WARP.md`) but those files all redirect
+here. If any thin entry file contradicts `AGENTS.md`, **`AGENTS.md` wins**.
+
+For a new non-trivial task, read in this order regardless of CLI:
+
+1. `AGENTS.md` (this file — canonical agent contract)
+2. `HARNESS_PLAYBOOK.md` (full operating manual — K-HARDEN, lessons L1-L9, K-2.3 drift, etc.)
+3. `HARNESS.md` (architecture vocabulary, H1-H5 gate ladder, kill gates — supplemental reference)
+4. `constitution.md` (axiom layer)
+5. `handover/ai-direct/LATEST.md` (current session state — derived view)
+6. Key Coding Principles: [KARPATHY_ARCHITECT.md](skills/KARPATHY_ARCHITECT.md) & [KARPATHY_SIMPLE_CODE.md](skills/KARPATHY_SIMPLE_CODE.md)
+7. `handover/alignment/CONSTITUTION_EXECUTION_MATRIX.md`
+8. `handover/alignment/TRACE_FLOWCHART_MATRIX.md`
+9. Current directives/charters relevant to the task
+10. Source files and tests for the touched surface
+
+CLI-specific notes:
+- **Claude Code** additionally reads `CLAUDE.md` + optional memory under
+  `~/.claude/projects/.../memory/MEMORY.md` (do not depend on this path on other
+  machines).
+- Every other CLI reads its own thin discovery file (listed above) and/or
+  `AGENTS.md` directly; all redirect here. Antigravity needs no thin file — the
+  universal contract suffices.
+
+### Two-layer model (unify the contract, not the mechanism)
+
+The harness unifies the *contract*, never the *mechanism*:
+
+- **Layer 1 — universal contract (this file).** Truth order (§1), risk classes
+  (§5), restricted surfaces (§6), PR-only workflow (§14a), audit doctrine (§9),
+  obligation ledger (§16), tape-first evidence (§4), Karpathy principles (§13).
+  `AGENTS.md` is the *only* home of a rule; thin discovery files point here,
+  never restate it.
+- **Layer 2 — platform-native enhancement.** Each platform realizes the one
+  contract with its own native tooling (Claude hooks / skills / subagents,
+  Cursor `.mdc`, Aider config, …). Layer 2 may only **ADD**; it may never
+  restate-and-narrow a Layer-1 rule (e.g. listing a *subset* of §6 reads as
+  "only these are restricted" — point to §6, don't re-list).
+
+`tests/cli_entry_files_redirect_to_agents.rs` enforces both halves: each thin
+file must redirect here and must not name a restricted surface absent from §6.
+
+Dynamic state belongs in `handover/ai-direct/LATEST.md` and
+`handover/tracer_bullets/TB_LOG.tsv`, not in this file. Do not encode current
+HEADs, gate counts, temporary freezes, or active round counts in `AGENTS.md`.
+
+Default user-facing language is Chinese. Technical terms may remain in English.
+
+## 3. Constitution Flowcharts
+
+The current constitution has the three-flowchart version:
+
+- FC1: Runtime loop, `constitution.md` around line 455.
+  `Q_t -> rtool -> input -> Agent delta -> output -> predicates -> wtool -> Q_{t+1}`.
+- FC2: Boot/full architecture, `constitution.md` around line 571.
+  Human spec / InitAI / predicates / Q0 / map-reduce tick / halt.
+- FC3: Meta-architecture, `constitution.md` around line 826.
+  Constitution + logs archive -> ArchitectAI/Veto-AI -> tools/logs -> feedback -> re-init.
+
+`handover/alignment/TRACE_FLOWCHART_MATRIX.md` carries the canonical hashes.
+FC1 is split into 1a/1b hashes because the runtime loop spans two fragments.
+Treat those hashes as architectural contracts; changing the flowcharts is a
+Class 4 constitution event.
+
+Before designing or implementing any non-trivial change, state which FC nodes
+or invariants the change touches. If the FC mapping is unclear, inspect
+`TRACE_FLOWCHART_MATRIX.md` before editing.
+
+## 4. Operating Loop
+
+Prime operating mode: Constitutional Harness Engineering.
+
+Required loop:
+
+1. Write or identify the constitution/test gate first.
+2. Run the minimal real evidence path when the change is evidence-bearing.
+3. Implement only enough to make the harness and evidence correct.
+4. Re-run the relevant checks.
+5. For high-risk or ship-path work, request a clean-context audit (any capable
+   platform) after implementation evidence exists.
+6. Ship only after gates, evidence, and review agree.
+
+Forbidden loop:
+
+```text
+charter -> atom -> self-audit -> external audit -> more docs -> delayed test
+```
+
+No tape, no test. Stdout, human-readable dashboards, private counters, LLM
+self-reports, final proof text, unanchored JSON, memory-only preseed, or global
+latest pointers are not sufficient evidence.
+
+### 4.1 Pre-charter parallel-write check (lightweight, universal)
+
+Before drafting any charter that will touch `src/` or `scripts/`, check for
+in-flight PRs that claim overlapping paths. This is a 2-second lookup, not a
+new mechanism — there is no central lock, no state file, no scheduler. Intent:
+prevent the orchestrator and a parallel implementer (Codex/Gemini/another
+Claude session) from doing duplicate or colliding work on mainline.
+
+Canonical command (works wherever the GitHub CLI runs — Linux/macOS/Windows):
+
+```bash
+gh pr list --state open --json number,headRefName,title,files \
+  --jq '.[] | {n:.number, br:.headRefName, t:.title, f:[.files[].path]}'
+```
+
+Equivalent fallbacks (use whichever your runtime exposes):
+
+- Claude Code (web/remote env without `gh`): GitHub MCP `list_pull_requests` +
+  `pull_request_read` for the `files` view.
+- Codex CLI / Gemini CLI / Aider / Cursor / human shell: `gh pr list ...` above.
+- No network: `git fetch origin && git for-each-ref --format='%(refname)' refs/remotes/origin/ | grep -v main` to enumerate active feature branches.
+
+Decision rule (no new tooling, no charter field):
+
+- No overlap with planned paths → proceed.
+- Overlap → either wait for the in-flight PR to merge, narrow the charter to
+  non-overlapping paths, or coordinate explicitly with the other writer (note
+  it in the charter §3 "Predecessor / dependency" block).
+
+Do not build a path-lock file, a charter overlap database, or a dispatcher.
+Collisions are rare and recoverable (`git rebase`, re-run the atom). The check
+exists so we don't dispatch a parallel branch we already know will conflict.
+
+### 4.2 No silent idle — execution liveness (session-mined 2026-06-03)
+
+不得静默 idle。(1) 长任务或派发 sub-agent 后须主动汇报进度，不许无声停摆；
+(2) 派出的 sub-agent 久不返回时，主动检查其状态、从已有缓存/中间产物抢救已
+完成的工作，避免重复劳动，不要无声干等；(3) 自身因上下文中断则从断处续做，
+不得停在原地等用户主动催“你 idle 了吗”。本条是会话/编排级 liveness，区别于
+实验级 checkpoint（per-unit checkpoint + --resume，另见相应 long-run 规则）。
+Claude-Code 特有的失败症状——工具调用格式错误导致以**原始 XML 文本**显示而非
+执行——见 `CLAUDE.md §10`。Evidence: recurring across 3 sessions.
+
+### 4.3 Full real E2E before handoff (session-mined 2026-06-03)
+
+§0 directive 2 的细则。触发点有两个——**用户参与测试前** 与 **你声明“完成”前**，
+两者皆须先由 agent 亲自从真实二进制入口（`turingos init`/`genesis`）完整跑通一次
+并贴 evidence；读代码 / 标签 / self-report / proxy 不算。只有你全程跑通，用户参与
+才有效率——**禁止把未跑通的产物移交给用户测试**。需模拟用户时，sub-agent 只接收
+persona + 目标约束，零预设答案、零标准答案，仅依据页面当前内容作答（blind sim）。
+
+### 4.4 Autonomy default & legal stop points (session-mined 2026-06-03)
+
+§0 directive 3 的细则。目标是全部 PR/任务 all-merged；合法停机点只有 (a) all-merged
+或 (b) Class-4 §8 ratification gate（`fix`/`go`/`ok` 等单词不构成 §8 sign-off）。merge
+由 orchestrator 负责（§14a：agent 只能开 PR）——这是执行方式约束、**不是停机理由**：
+开完一个 PR 立即推进下一个 atom，不要停下等 merge 确认，也不要因“无权 merge”
+而停机。此 autonomy default 永不凌驾 §5 Class-4 / §6 restricted surfaces。
+
+## 5. Risk Classes
+
+Use the project risk model before editing:
+
+- Class 0: docs, plans, charters, handover updates.
+- Class 1: additive isolated helpers, parsers, formatters, non-authoritative
+  views.
+- Class 2: production wire-up, evaluator adapters, dashboards, replay
+  verifiers, benchmark harness code.
+- Class 3: auth, money, CAS integrity, capabilities, market/economic state,
+  production evidence, `audit_tape`.
+- Class 4: constitution, flowcharts, sequencer admission, typed transaction
+  schema, canonical signing payload, RootBox/kernel-level authority.
+
+Class 3/4 work requires harness -> real evidence -> audit. Do not audit a
+failing harness as a pass.
+
+Class 4 requires explicit per-atom section-8 architect/user ratification before
+implementation or ship. One-word messages such as `fix`, `go`, `ok`,
+`continue`, or `can` do not constitute Class 4 sign-off.
+
+## 6. Restricted Surfaces
+
+Stop and classify before editing any of these:
+
+- `src/kernel.rs`
+- `src/bus.rs`
+- `src/sdk/tools/wallet.rs`
+- `src/state/sequencer.rs`
+- `src/state/typed_tx.rs`
+- `src/bottom_white/cas/schema.rs`
+- RootBox or canonical signing payload surfaces
+- Any sequencer admission rule
+- Any typed tx wire schema or discriminant
+- Any trust-root or constitution/flowchart authority surface
+
+If a change touches sequencer admission, typed tx schema, or canonical signing
+payloads, treat it as Class 4 candidate until proven otherwise. Class 4 cannot
+hide inside a Class 3 umbrella.
+
+## 7. Commands
+
+Preferred checks:
+
+```bash
+cargo check
+cargo test --workspace --no-fail-fast
+bash scripts/run_constitution_gates.sh
+make constitution
+cargo fmt --all
+cargo clippy --workspace --tests --no-deps
+```
+
+Use `cargo test --workspace --no-fail-fast` for ship-level workspace reports,
+not bare `cargo test`. Use targeted tests during development, then broaden
+according to risk.
+
+`bash scripts/run_constitution_gates.sh` and `make constitution` are the
+constitutional gate paths. Gate tests must be able to fail; a test that cannot
+fail is documentation, not a gate.
+
+## 8. Dirty Tree and Evidence
+
+You may start in a dirty worktree. Never revert user changes, generated
+evidence, or unrelated drift unless the user explicitly asks. If unrelated
+files are modified, ignore them. If existing changes affect your task, work
+with them and explain the interaction.
+
+Before any runner that writes to `handover/evidence/` or evaluates real
+problems, invoke `/runner-preflight` when available or follow its checklist:
+
+1. clean/understood tree
+2. fresh binaries vs current source/HEAD
+3. evidence immutability
+4. risk class
+5. FC trace
+6. charter/directive completeness
+7. audit-round state
+
+Do not edit Trust-Root-pinned source files during active batch runs. If a fix
+is needed mid-batch, abort the batch or accept the wasted run before editing.
+
+Never retroactively rewrite old ChainTape/L4/L4.E/CAS evidence, fabricate a
+genesis report, or migrate historical evidence to satisfy new rules. New rules
+apply going forward. If an old document is stale, add a new OBS/annotation
+document rather than mutating historical evidence.
+
+## 9. Audit Default
+
+Default and only audit path for this repository is **one clean-context audit by
+a fresh agent on any capable platform** (Claude, Codex, Antigravity, or any
+future capable runtime). The auditor must run in a clean context and must not
+have the implementation transcript. One independent witness is sufficient; this
+repository does not require a second.
+
+This doctrine is **platform-agnostic**: it names a *role* (a fresh,
+clean-context auditor), not a vendor. All older vendor-specific phrasings —
+"single Codex", "Codex + Gemini dual audit", "Gemini dropped" — are superseded
+by the ratification line below.
+
+> Ratification 2026-05-29: audit doctrine generalized to **platform-agnostic
+> clean-context audit**; supersedes single-Codex (2026-05-24) and the earlier
+> dual Codex+Gemini doctrine. The requirement is clean context + no
+> implementation transcript, not a particular vendor.
+
+Implementation agents must not self-certify high-risk work. For Class 3/4 or
+ship-path changes, after implementation evidence exists, invoke a fresh
+clean-context auditor (any capable platform). Provide only:
+
+- task brief and risk class
+- touched FC nodes/invariants
+- current diff or commit
+- relevant source/docs
+- evidence paths
+- exact verification command output
+- required verdict format: `PROCEED | CHALLENGE | VETO`
+
+Do not provide the implementation transcript. The reviewer must lead with
+findings, cite files/lines, distinguish production defects from test-scaffold
+gaps, and end with a clear verdict.
+
+Conservative interpretation:
+
+- `VETO` blocks ship.
+- `CHALLENGE` requires fix or explicit forward deferral with rationale.
+- `PROCEED` is necessary but not a substitute for passing gates/evidence.
+
+## 10. (retired 2026-05-29)
+
+The self-hosting `turingos_dev` sidecar was removed (Phase 2). §11–§16 retain
+their numbers so existing `AGENTS.md §NN` citations across the thin CLI files,
+skills, and `CLAUDE.md` stay valid.
+
+## 11. Done Definition
+
+A task is done only when:
+
+- The touched FC nodes and risk class are stated.
+- Relevant unit/integration/constitution gates pass.
+- Evidence-bearing changes have a minimal real run or an explicit reason why no
+  real run is required.
+- The diff is reviewed for regressions, hidden Class 4 surfaces, evidence
+  rewrite, ID namespace drift, and money/tape/shielding violations.
+- Clean-context audit (any capable platform) is completed for high-risk or
+  ship-path work.
+- Dynamic handover files are updated only if current project state actually
+  changed.
+- `OBLIGATIONS.md` reconciled: every `Level=must` entry is `satisfied`
+  (with evidence path), `blocked` (with blocker + proof), or `superseded`
+  (with explicit user trigger phrase + `superseded-by`). No `open` must.
+  See `skills/OBLIGATIONS_LEDGER.md`.
+
+For docs-only changes like this file, no Rust tests are required unless the doc
+change also modifies scripts, source code, or executable workflow.
+
+## 12. Engineering Rules
+
+Use `rg`/`rg --files` for search. Prefer existing patterns, types, parsers, and
+helpers over inventing new abstractions. Keep edits scoped to the task.
+
+For structured data, use structured parsers/APIs where available. Avoid ad hoc
+string parsing for schemas, manifests, chain records, or evidence payloads.
+
+Money/economy paths must use integer math only. No `f64`/`f32` in money or
+market conservation paths.
+
+Agent read views must be scoped, reconstructable, and shielded. Do not expose
+raw Lean stderr, raw autopsy logs, private diagnostics, benchmark leaks, or
+untriaged historical logs in ordinary agent prompts.
+
+Canonical IDs and shadow IDs must not be mixed. Dashboard and report code must
+derive from ChainTape/CAS, not become a source of truth.
+
+No workaround closures: admission and gates are fail-closed by default — do not
+turn a failing gate into a skip, null pointer, empty evidence path, or
+dashboard-only proof. Align with the constitution and FC1/FC2/FC3, or stop.
+
+## 13. Key Coding Principles (Karpathy Skills)
+
+All agents must strictly adhere to the following coding and architectural guidelines:
+
+- **Karpathy Architect Skill**: Apply first-principles architecture, data-flow-first design, monolithic/flat default architecture, and micro-implementation. See [KARPATHY_ARCHITECT.md](file:///home/zephryj/projects/turingosv4/skills/KARPATHY_ARCHITECT.md).
+- **Karpathy Simple Code Skill**: Focus on direct computation, small state machines, transparent data flow, and minimal abstractions. Avoid unnecessary dependencies and boilerplate lifecycle complexity. See [KARPATHY_SIMPLE_CODE.md](file:///home/zephryj/projects/turingosv4/skills/KARPATHY_SIMPLE_CODE.md).
+
+## 14. Class-by-Class Cadence & Audit Checklist (K-4.1, v3 plan §5)
+
+### Cadence
+
+Match ceremony to risk class — Karpathy: surgical changes. Old loop (charter →
+atom → self-audit → external audit → more docs → delayed test) is forbidden;
+required loop is constitution gate → real run → debug → fix → rerun → audit →
+ship.
+
+| Class | Charter | Directive | Matrix update | §8 | Independent audit (witness only) | Memory |
+|-------|---------|-----------|---------------|-----|-----------------------------------|--------|
+| 0 docs | no | no | no | no | no | only recurring rule |
+| 1 additive | no | no | no | no | predicate self-test only | only recurring rule |
+| 2 wire-up | brief | optional | yes | no | clean-context audit, any platform (witness, output `{NO-VIOLATION, VIOLATION-FOUND, RECONSTRUCTION-FAILURE, SECOND-SOURCE-DRIFT}`) | surprise only |
+| 3 auth/money/CAS | TB charter | yes | yes | required | clean-context audit (witness, one independent — any capable platform, see §9) | yes |
+| 4 constitution/sequencer | TB charter | yes | yes | per-atom §8 | clean-context audit PRE-§8 (witness, one independent — any capable platform, see §9) | yes |
+
+**Audit witness is not judge.** Ship gate = predicates GREEN (hard judge —
+`cargo test --workspace`, `bash scripts/run_constitution_gates.sh`,
+`cargo test --test constitution_matrix_drift`) ∧ audit witness output ≠
+unresolved violation. Subjective code-style / performance / coverage /
+architecture-preference opinions are out-of-scope per constitutional Veto-AI
+boundary (output domain `{PASS, VETO}`).
+
+### Predicate verification checklist (pre-merge, machine-deterministic)
+
+Auditor copy-pastes this batch; no human judgment in any line:
+
+- [ ] PR title states risk class
+- [ ] `git diff main --name-only` 未触及 §6 restricted-surface 列表，OR 该 PR 引用 per-atom §8 directive 文件
+- [ ] `cargo test --workspace --no-fail-fast` exit 0
+- [ ] `bash scripts/run_constitution_gates.sh` exit 0
+- [ ] `cargo test --test constitution_matrix_drift` exit 0
+- [ ] PR body 含 acceptance-criteria 命令块与期望输出
+- [ ] 该 atom 自身的 predicate verification recipe 输出 `PREDICATES-GREEN`
+- [ ] 无新 `Manager` / `Factory` / `Engine` / `Platform` / `Framework` type（structural grep）
+- [ ] 无新 trait + 单一非-idiomatic impl（structural grep）
+- [ ] 无新 board-as-truth 文件存在 evidence chain 外
+- [ ] 无新 global latest pointer 作为 canonical input
+
+### Independent audit witness verdict domain
+
+Clean-context audit (any capable platform) 可合法输出（仅这四个，见 §9）:
+- `NO-VIOLATION`（扫了 N 条款，无违宪发现）
+- `VIOLATION-FOUND <constitutional-clause> <file>:<line>`
+- `RECONSTRUCTION-FAILURE <which-tape-or-cas-path-cannot-be-reconstructed>`
+- `SECOND-SOURCE-DRIFT <which-derived-view-is-usurping-ground-truth>`
+
+出现以下即越界，可由 user 或 Claude 主体拒收该次 audit 报告：
+- "I think the code style ..."
+- "Performance could be improved ..."
+- "Test coverage feels low ..."
+- "Architecture would be better if ..."
+- 任何其他主观品味 / 性能 / 覆盖率 / 架构偏好类语句
+
+### Obligation completeness witness (K-OBL-1, 2026-05-24)
+
+Separate witness role per `skills/OBLIGATIONS_LEDGER.md §3 Rule 4`. Reads
+`OBLIGATIONS.md` and emits exactly one of:
+- `OBL-ALL-CLOSED`
+- `OBL-OPEN-MUST <OBL-id>`
+- `OBL-EVIDENCE-MISSING <OBL-id>`
+- `OBL-BLOCKER-UNVERIFIED <OBL-id>`
+
+A `PROCEED` from any other audit witness is **invalid** if obligation
+witness verdict ≠ `OBL-ALL-CLOSED`. The obligation witness does not opine on
+code/style/architecture — same subjective-opinion boundary as above.
+
+### Pre-dispatch grounding (session-mined 2026-06-03)
+
+把上面机械可核验的验收标准从 audit 侧延伸到 **plan 侧**。派发任何复杂任务或
+多-agent 分工**之前**：(1) 先声明你对任务的理解，并把完整拆解（atom 列表）呈给
+用户确认，获明确批准后再执行——任务复杂或方案不明时先研究、与用户确认方案，
+不要直接开干；(2) 每个 atom 的颗粒度须细到**低思考深度 flash-model agent** 能
+独立执行，指令自包含、不依赖上下文补全；(3) 每个 atom 须附**机械可核验**的验收
+标准（具体命令 + 期望输出），auditor 可直接 copy-paste 验证、零人工判断（与上面
+checklist 同一标准，只是施加在派发前）；(4) 验收标准与 Karpathy 取舍（§13）对齐。
+Evidence: recurring across 3 sessions.
+
+## 14a. PR-only workflow (K-HARDEN-7, 2026-05-20) — universal across agent runtimes
+
+**All coding agents may only create pull requests. Approval + merge is the
+orchestrator's responsibility.**
+
+Applies to: Claude Code, Codex CLI, Gemini CLI, Aider, Cursor, human shell
+sessions, CI bots, every future coding-agent runtime. Cross-platform enforced
+via three independent layers:
+
+| Layer | Scope | Bypass |
+|-------|-------|--------|
+| GitHub branch protection on main | Server-side, universal | Repo admin only |
+| `scripts/hooks/pre-push.harden` (git pre-push hook) | Any agent that respects git hooks | `--no-verify` or `GIT_HARDEN_ALLOW_MAIN=1` |
+| Claude Code `.claude/hooks/validate_git_push.sh` | Claude Code only | env var or other agent |
+
+Install local hooks once per clone:
+```
+bash scripts/install_hooks.sh
+```
+
+Enable GitHub-side server protection (one-time, admin):
+```
+bash scripts/setup_branch_protection.sh
+```
+
+Legitimate orchestrator bypass (merging a vetted PR locally):
+```
+GIT_HARDEN_ALLOW_MAIN=1 git push origin main
+```
+
+See `skills/SUBAGENT_HARNESS.md` for prompt-template patterns and
+`handover/architect-insights/K_HARDEN_PROPOSAL_2026-05-20.md` for design
+rationale.
+
+## 15. Harness Guidance Maintenance
+
+This file should stay concise and load-bearing. If any agent repeats the same
+mistake twice, **prefer a mechanism (a gate test that can fail) over more prose —
+prose at the margin does not change behavior**; update `AGENTS.md` only for a
+genuinely load-bearing rule, else create a small referenced playbook/skill. If
+this file grows too large, split task-specific material into separate docs and
+reference them here. Keep instructions minimal, accurate, high-signal over long
+repeated policy.
+
+## 16. User Obligation Ledger (K-OBL-1, 2026-05-24)
+
+Universal across all agent runtimes.
+
+Per-project file: `<project_root>/OBLIGATIONS.md`. Tracks user-stated obligations
+across multi-turn conversations to prevent **Conversational Anchor Drift** (silent
+task substitution when the user offers mid-flight debug input). Lesson source:
+V-010 — a 15-persona E2E mandate silently replaced by a UI fix; multi-agent audit
+returned `PROCEED` on the substitution. Full skill + schema:
+`skills/OBLIGATIONS_LEDGER.md`.
+
+### The four rules (mandatory, every agent)
+
+1. **Create on first imperative** — at task Class ≥ 1, create `OBLIGATIONS.md`
+   if missing; extract user imperatives into `OBL-001..OBL-00N`.
+2. **Every-turn reconcile** — implementation/audit/completion turns must begin
+   with `Active obligations: OBL-001 (open), OBL-002 (satisfied), ... → next`.
+3. **No implicit redefinition** — user debug input = input to existing OBL or
+   new sub-OBL, **never replacement**. Replacement needs an explicit user
+   trigger phrase (`取消 X` / `不要 X 了` / `改用 Y 代替 X`).
+4. **Done gate** — no `done` / `完成` / `PROCEED` while any `Level=must` is
+   `open`. See §11.
+
+### Audit integration
+
+Obligation completeness is a separate witness role with its own verdict
+domain — see §14 "Obligation completeness witness". A `PROCEED` from any
+other audit witness is invalid if obligation witness ≠ `OBL-ALL-CLOSED`.
+
+### Cross-platform discovery
+
+All thin discovery files (see §2) already redirect here. No per-agent shim.
+One file, one schema, every agent.

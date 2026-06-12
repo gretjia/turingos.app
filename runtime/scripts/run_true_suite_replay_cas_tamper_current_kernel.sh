@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# True-suite replay/CAS tamper current-kernel evidence runner.
+#
+# Produces the `replay_cas_tamper_repair_current` artifact shape declared in
+# tests/fixtures/liveness/realworld_liveness_coverage.toml.
+
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RUN_ID="${1:-replay_cas_tamper_current_$(date -u +%Y%m%dT%H%M%SZ)}"
+RUN_ID="${RUN_ID#handover/evidence/true_suite/}"
+RUN_ROOT="$PROJECT_ROOT/handover/evidence/true_suite/$RUN_ID"
+RUN_DIR="$RUN_ROOT/replay_cas"
+
+if [[ -e "$RUN_DIR" ]]; then
+    echo "ERROR: evidence directory already exists: $RUN_DIR" >&2
+    exit 2
+fi
+
+mkdir -p "$RUN_ROOT"
+
+if [[ -n "$(cd "$PROJECT_ROOT" && git status --porcelain | grep -vE '^\?\? handover/evidence/' | head -1)" ]]; then
+    echo "ERROR: working tree has non-evidence changes; run /runner-preflight before evidence runners" >&2
+    exit 3
+fi
+
+echo "[build] cargo build --release --bin turingos --bin verify_chaintape --bin fc3_governance_reinit_current_kernel --bin full_system_augment_current_kernel --bin audit_tape_tamper --bin full_system_participation_current_kernel"
+(cd "$PROJECT_ROOT" && cargo build --release \
+    --bin turingos \
+    --bin verify_chaintape \
+    --bin fc3_governance_reinit_current_kernel \
+    --bin full_system_augment_current_kernel \
+    --bin audit_tape_tamper \
+    --bin full_system_participation_current_kernel)
+
+TURINGOS="$PROJECT_ROOT/target/release/turingos"
+FC3_HELPER="$PROJECT_ROOT/target/release/fc3_governance_reinit_current_kernel"
+AUGMENT="$PROJECT_ROOT/target/release/full_system_augment_current_kernel"
+TAMPER="$PROJECT_ROOT/target/release/audit_tape_tamper"
+PARTICIPATION="$PROJECT_ROOT/target/release/full_system_participation_current_kernel"
+BIN_DIR="$PROJECT_ROOT/target/release"
+
+echo "[init] turingos init --project $RUN_DIR"
+"$TURINGOS" init --project "$RUN_DIR" --template proof --provider siliconflow
+
+echo "[fc3] current runtime ChainTape FC1/FC2/FC3 typed path"
+"$FC3_HELPER" \
+    --runtime-repo "$RUN_DIR/runtime_repo" \
+    --cas "$RUN_DIR/cas" \
+    --run-id "$RUN_ID" \
+    --constitution "$PROJECT_ROOT/constitution.md" \
+    --out-dir "$RUN_DIR"
+
+echo "[augment] append tape-visible market action on the same ChainTape"
+"$AUGMENT" \
+    --runtime-repo "$RUN_DIR/runtime_repo" \
+    --cas "$RUN_DIR/cas" \
+    --run-id "$RUN_ID" \
+    --constitution "$PROJECT_ROOT/constitution.md" \
+    --out-dir "$RUN_DIR" \
+    --skip-fc3
+
+cp "$RUN_DIR/runtime_repo/genesis_report.json" "$RUN_DIR/genesis_report.json"
+
+echo "[verify] public turingos verify chaintape"
+TURINGOS_BIN_DIR="$BIN_DIR" "$TURINGOS" verify chaintape \
+    --repo "$RUN_DIR/runtime_repo" \
+    --cas "$RUN_DIR/cas" \
+    --run-id "$RUN_ID" \
+    --out "$RUN_DIR/replay_report.json"
+
+echo "[tamper] audit_tape_tamper over temp forks"
+"$TAMPER" \
+    --runtime-repo "$RUN_DIR/runtime_repo" \
+    --cas-dir "$RUN_DIR/cas" \
+    --agent-pubkeys "$RUN_DIR/runtime_repo/agent_pubkeys.json" \
+    --pinned-pubkeys "$RUN_DIR/runtime_repo/pinned_pubkeys.json" \
+    --genesis "$RUN_DIR/runtime_repo/genesis_report.json" \
+    --constitution "$PROJECT_ROOT/constitution.md" \
+    --alignment-dir "$PROJECT_ROOT/handover/alignment" \
+    --tamper-dir "$RUN_DIR/tamper_work" \
+    --out "$RUN_DIR/tamper_report.json"
+
+echo "[verify] original tape still verifies after tamper forks"
+TURINGOS_BIN_DIR="$BIN_DIR" "$TURINGOS" verify chaintape \
+    --repo "$RUN_DIR/runtime_repo" \
+    --cas "$RUN_DIR/cas" \
+    --run-id "$RUN_ID" \
+    --out "$RUN_DIR/post_tamper_replay_report.json"
+cp "$RUN_DIR/post_tamper_replay_report.json" "$RUN_DIR/restore_replay_report.json"
+
+"$PARTICIPATION" \
+    --run-id "$RUN_ID" \
+    --family-id "replay_cas_tamper_repair_current" \
+    --entrypoint "scripts/run_true_suite_replay_cas_tamper_current_kernel.sh" \
+    --source-root "$PROJECT_ROOT" \
+    --runtime-repo "$RUN_DIR/runtime_repo" \
+    --cas "$RUN_DIR/cas" \
+    --replay-report "$RUN_DIR/replay_report.json" \
+    --genesis-report "$RUN_DIR/genesis_report.json" \
+    --domain-manifest "$RUN_DIR/tamper_report.json" \
+    --fc3-index "$RUN_DIR/governance_capsule_index.json" \
+    --require-full-system \
+    --out "$RUN_DIR/full_system_participation.json"
+
+python3 - "$PROJECT_ROOT" "$RUN_DIR" <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+project = Path(sys.argv[1])
+run_dir = Path(sys.argv[2])
+
+def load(name):
+    with (run_dir / name).open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+replay = load("replay_report.json")
+post = load("post_tamper_replay_report.json")
+tamper = load("tamper_report.json")
+genesis = load("genesis_report.json")
+agent_pubkeys = json.loads((run_dir / "runtime_repo" / "agent_pubkeys.json").read_text())
+
+for label, report in [("replay", replay), ("post_tamper_replay", post)]:
+    if report.get("l4_entries", 0) < 15:
+        raise SystemExit(f"{label}: expected at least 15 L4 entries")
+    for key in [
+        "ledger_root_verified",
+        "system_signatures_verified",
+        "state_reconstructed",
+        "economic_state_reconstructed",
+        "cas_payloads_retrievable",
+        "agent_signatures_verified",
+        "proposal_telemetry_cas_retrievable",
+    ]:
+        if report.get(key) is not True:
+            raise SystemExit(f"{label}: replay indicator {key} did not pass")
+
+if tamper.get("detected_count") != 3 or tamper.get("expected") != 3:
+    raise SystemExit("tamper report did not detect 3/3 corruptions")
+if tamper.get("all_detected") is not True:
+    raise SystemExit("tamper report all_detected is not true")
+for row in tamper.get("tamper_results", []):
+    if row.get("detected") is not True:
+        raise SystemExit(f"tamper row did not detect corruption: {row.get('label')}")
+
+constitution_hash = hashlib.sha256((project / "constitution.md").read_bytes()).hexdigest()
+if genesis.get("constitution_hash") != constitution_hash:
+    raise SystemExit("genesis_report constitution_hash does not match live constitution.md")
+if not agent_pubkeys.get("agents"):
+    raise SystemExit("runtime_repo/agent_pubkeys.json has no agent keys")
+PY
+
+cat > "$RUN_DIR/replay_cas_run_manifest.json" <<EOF
+{
+  "schema_version": "turingosv4.true_suite.replay_cas_tamper_current.v1",
+  "run_id": "$RUN_ID",
+  "git_head": "$(cd "$PROJECT_ROOT" && git rev-parse HEAD)",
+  "entrypoint": "scripts/run_true_suite_replay_cas_tamper_current_kernel.sh",
+  "runtime_repo": "$RUN_DIR/runtime_repo",
+  "cas": "$RUN_DIR/cas",
+  "genesis_report": "$RUN_DIR/genesis_report.json",
+  "full_system_augmentation_manifest": "$RUN_DIR/full_system_augmentation_manifest.json",
+  "governance_capsule_index": "$RUN_DIR/governance_capsule_index.json",
+  "replay_report": "$RUN_DIR/replay_report.json",
+  "tamper_report": "$RUN_DIR/tamper_report.json",
+  "post_tamper_replay_report": "$RUN_DIR/post_tamper_replay_report.json",
+  "restore_replay_report": "$RUN_DIR/restore_replay_report.json",
+  "full_system_participation": "$RUN_DIR/full_system_participation.json",
+  "notes": [
+    "fresh evidence is generated through public turingos init",
+    "fc3_governance_reinit_current_kernel emits typed FC1 WorkTx, FC2 MapReduceTick, and FC3 governance/reinit rows",
+    "full_system_augment_current_kernel appends a tape-visible agent market action",
+    "public turingos verify chaintape reconstructs the original tape before and after tamper forks",
+    "audit_tape_tamper corrupts only temporary forks and must detect 3/3 corruptions",
+    "full_system_participation_current_kernel requires FULL_SYSTEM_LIT for replay/CAS tamper evidence"
+  ]
+}
+EOF
+
+echo "TRUE-SUITE replay/CAS tamper evidence: $RUN_DIR"

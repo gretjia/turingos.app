@@ -1,0 +1,21 @@
+---
+description: Cross-CLI harness alignment — Cursor follows the same AGENTS.md contract as every other platform
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Cursor cold-start alignment (K-HARDEN-8)
+
+**Start here:** read `AGENTS.md` — the canonical cross-agent contract. It
+defines the full read order (§2), risk classes (§5), restricted surfaces (§6),
+the PR-only workflow (§14a), the audit doctrine (§9), the obligation ledger
+(§16), and the Karpathy coding principles (§13). This file does not restate
+those rules.
+
+Cursor obeys that one contract identically to every other platform, and is free
+to use its own native strengths — this `.mdc` rule format, `globs`,
+`alwaysApply` — to realize it. That is the Layer 1 / Layer 2 model in
+`AGENTS.md` §2.
+
+If any rule here contradicts `AGENTS.md`, **`AGENTS.md` wins**. This file exists
+because Cursor's auto-discovery prefers `.cursor/rules/*.mdc`.

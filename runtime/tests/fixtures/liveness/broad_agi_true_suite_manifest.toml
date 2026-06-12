@@ -1,0 +1,681 @@
+schema_version = "turingosv4.broad_agi_true_suite_manifest.v1"
+authority = "constitution.md + fresh current-kernel true-problem evidence"
+closure_status = "OBL005_FINAL_CLOSURE_VERIFIED"
+old_15_is_not_sufficient = true
+leaderboard_score_is_not_liveness = true
+full_system_required_for_final = true
+full_system_sample_manifest = "full_system_participation.json"
+per_sample_fc_union_is_not_sufficient = true
+market_participation_required_for_every_sample = true
+tracked_substrate_groups_are_not_closure_requirements = true
+market_participation_modes = [
+  "invest",
+  "abstain_with_tape_visible_market_opportunity",
+]
+minimum_family_count = 10
+required_failure_classes = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+]
+required_fc_blocks = [
+  "FC1",
+  "FC2",
+  "FC3",
+]
+tracked_substrate_groups = [
+  "axiom_boot_trust_root",
+  "canonical_tape_cas_state",
+  "predicate_registry_top_white",
+  "fc1_bus_read_view_bridge",
+  "economy_market_settlement",
+  "runtime_replay_evidence_audit",
+  "agent_prompt_model_boundary",
+  "fc3_runtime_meta_roles",
+  "tool_registry_current",
+]
+allowed_entry_boundaries = [
+  "public_cli",
+  "local_openai_proxy",
+  "browser_sandbox",
+  "container_sandbox",
+  "tdma_domain_tape",
+  "current_kernel_market_router",
+]
+
+[[family]]
+id = "gaia_general_assistant"
+source_family = "GAIA"
+public_source = "https://arxiv.org/abs/2311.12983"
+risk_class = "Class 2"
+entry_boundary = "local_openai_proxy"
+fc_trace = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:boot->Q0->replay",
+  "FC3:logs-archive->feedback",
+]
+kernel_liveness_modules = [
+  "agent_prompt_model_boundary",
+  "canonical_tape_cas_state",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "input_capsule_cid",
+  "prompt_context_cid",
+  "work_tx_or_l4e",
+  "replay_report",
+  "aggregate_fc_trace_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "tool_use_dead_end",
+]
+anti_contamination_guards = [
+  "do not use old 15-question transcript as source",
+  "score is capability signal only, not liveness proof",
+  "all task inputs must be hashed before model call",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/gaia/input_capsules/",
+  "handover/evidence/true_suite/<run>/gaia/runtime_repo/",
+  "handover/evidence/true_suite/<run>/gaia/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/gaia/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/gaia/cas/",
+  "handover/evidence/true_suite/<run>/gaia/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/gaia/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/gaia/genesis_report.json",
+  "handover/evidence/true_suite/<run>/gaia/gaia_general_assistant_manifest.json",
+  "handover/evidence/true_suite/<run>/gaia/gaia_general_assistant_run_manifest.json",
+  "handover/evidence/true_suite/<run>/gaia/replay_report.json",
+  "handover/evidence/true_suite/<run>/gaia/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/gaia/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/gaia/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/gaia/failure_taxonomy.json",
+  "handover/evidence/true_suite/<run>/gaia/fc_trace_report.json",
+]
+
+[[family]]
+id = "gpqa_science_reasoning"
+source_family = "GPQA"
+public_source = "https://arxiv.org/abs/2311.12022"
+risk_class = "Class 2"
+entry_boundary = "local_openai_proxy"
+fc_trace = [
+  "FC1:input->agent-delta->output->predicates",
+  "FC2:pinned-benchmark-replay",
+  "FC3:logs-archive->feedback->architectAI->vetoAI",
+]
+kernel_liveness_modules = [
+  "agent_prompt_model_boundary",
+  "predicate_registry_top_white",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "question_capsule_cid",
+  "answer_claim_capsule_cid",
+  "predicate_verdict",
+  "replay_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "unjustified_science_claim",
+]
+anti_contamination_guards = [
+  "multiple-choice answer alone cannot pass without rationale capsule",
+  "web lookup may be a tool signal, never source of truth",
+  "leaderboard accuracy cannot close module liveness",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/gpqa/input_capsules/",
+  "handover/evidence/true_suite/<run>/gpqa/cas/",
+  "handover/evidence/true_suite/<run>/gpqa/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/gpqa/gpqa_science_reasoning_manifest.json",
+  "handover/evidence/true_suite/<run>/gpqa/gpqa_science_reasoning_run_manifest.json",
+  "handover/evidence/true_suite/<run>/gpqa/replay_report.json",
+  "handover/evidence/true_suite/<run>/gpqa/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/gpqa/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/gpqa/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/gpqa/failure_taxonomy.json",
+]
+
+[[family]]
+id = "math_formal_proof"
+source_family = "Hendrycks MATH competition reasoning plus TDMA formal-proof substrate"
+public_source = "https://huggingface.co/datasets/EleutherAI/hendrycks_math"
+risk_class = "Class 2"
+entry_boundary = "local_openai_proxy"
+fc_trace = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:boot->replay",
+  "FC3:logs-archive->feedback",
+]
+kernel_liveness_modules = [
+  "agent_prompt_model_boundary",
+  "predicate_registry_top_white",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "problem_capsule_cid",
+  "answer_claim_capsule_cid",
+  "evaluation_capsule_cid",
+  "work_tx_or_l4e",
+  "replay_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "wrong_final_answer",
+]
+anti_contamination_guards = [
+  "public problem text is hashed into CAS before the model call",
+  "solution and expected answer must not enter the model prompt",
+  "TDMA substrate evidence alone cannot close the MATH benchmark family",
+  "benchmark exact-match score cannot close OBL-005 without ChainTape/CAS replay evidence",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/math/input_capsules/",
+  "handover/evidence/true_suite/<run>/math/runtime_repo/",
+  "handover/evidence/true_suite/<run>/math/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/math/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/math/cas/",
+  "handover/evidence/true_suite/<run>/math/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/math/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/math/genesis_report.json",
+  "handover/evidence/true_suite/<run>/math/math_competition_reasoning_manifest.json",
+  "handover/evidence/true_suite/<run>/math/math_competition_reasoning_run_manifest.json",
+  "handover/evidence/true_suite/<run>/math/replay_report.json",
+  "handover/evidence/true_suite/<run>/math/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/math/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/math/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/math/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/math/failure_taxonomy.json",
+]
+
+[[family]]
+id = "swebench_live_coding_repair"
+source_family = "SWE-bench family with live or freshly curated issues"
+public_source = "https://arxiv.org/abs/2505.23419"
+risk_class = "Class 2"
+entry_boundary = "container_sandbox"
+fc_trace = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:pinned-benchmark-replay",
+  "FC3:logs-archive->feedback",
+]
+kernel_liveness_modules = [
+  "agent_prompt_model_boundary",
+  "canonical_tape_cas_state",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "repo_snapshot_hash",
+  "patch_artifact_cid",
+  "structural_patch_evaluation_capsule",
+  "work_tx_or_l4e",
+  "replay_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "patch_regression",
+]
+anti_contamination_guards = [
+  "prefer fresh/live issue split over stale leaderboard rows",
+  "patch must be replayable from CAS artifacts",
+  "gold patch and test patch must not enter the model prompt",
+  "structural patch plausibility is not enough for final SWE-bench scoring without ChainTape/CAS binding",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/swebench/repo_snapshots/",
+  "handover/evidence/true_suite/<run>/swebench/runtime_repo/",
+  "handover/evidence/true_suite/<run>/swebench/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/swebench/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/swebench/cas/",
+  "handover/evidence/true_suite/<run>/swebench/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/swebench/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/swebench/genesis_report.json",
+  "handover/evidence/true_suite/<run>/swebench/swebench_live_coding_repair_manifest.json",
+  "handover/evidence/true_suite/<run>/swebench/swebench_live_coding_repair_run_manifest.json",
+  "handover/evidence/true_suite/<run>/swebench/replay_report.json",
+  "handover/evidence/true_suite/<run>/swebench/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/swebench/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/swebench/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/swebench/failure_taxonomy.json",
+]
+
+[[family]]
+id = "webarena_web_agent"
+source_family = "WebArena"
+public_source = "https://arxiv.org/abs/2307.13854"
+risk_class = "Class 2"
+entry_boundary = "browser_sandbox"
+fc_trace = [
+  "FC1:rtool->input->agent-delta->output->predicates",
+  "FC2:replay",
+  "FC3:tools/logs->logs-archive",
+]
+kernel_liveness_modules = [
+  "agent_prompt_model_boundary",
+  "web_product_surface",
+  "frontend_product_surface",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "task_capsule_cid",
+  "observation_capsule_cid",
+  "answer_claim_capsule_cid",
+  "browser_action_trace_cid",
+  "browser_action_trace_hash",
+  "proposal_telemetry_cid",
+  "work_tx_id",
+  "benchmark_verdict",
+  "failure_taxonomy",
+  "fc_trace_report",
+  "replay_report",
+  "full_system_participation",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "browser_state_drift",
+]
+anti_contamination_guards = [
+  "screenshots and DOM logs must be CAS-bound or quarantined",
+  "browser success cannot bypass predicates",
+  "no live account credentials or unscoped network side effects",
+  "hidden reference answers and eval fields must not enter the prompt",
+  "exact-match score cannot be treated as OBL-005 closure",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/webarena/browser_traces/",
+  "handover/evidence/true_suite/<run>/webarena/input_capsules/",
+  "handover/evidence/true_suite/<run>/webarena/runtime_repo/",
+  "handover/evidence/true_suite/<run>/webarena/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/webarena/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/webarena/cas/",
+  "handover/evidence/true_suite/<run>/webarena/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/webarena/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/webarena/genesis_report.json",
+  "handover/evidence/true_suite/<run>/webarena/webarena_web_agent_manifest.json",
+  "handover/evidence/true_suite/<run>/webarena/webarena_web_agent_run_manifest.json",
+  "handover/evidence/true_suite/<run>/webarena/replay_report.json",
+  "handover/evidence/true_suite/<run>/webarena/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/webarena/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/webarena/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/webarena/failure_taxonomy.json",
+  "handover/evidence/true_suite/<run>/webarena/fc_trace_report.json",
+]
+
+[[family]]
+id = "mind2web_open_web"
+source_family = "Mind2Web"
+public_source = "https://arxiv.org/abs/2306.06070"
+risk_class = "Class 2"
+entry_boundary = "browser_sandbox"
+fc_trace = [
+  "FC1:rtool->input->agent-delta->output->predicates",
+  "FC2:boot->Q0->map-reduce-tick->replay",
+  "FC3:tools/logs->logs-archive",
+]
+kernel_liveness_modules = [
+  "agent_prompt_model_boundary",
+  "web_product_surface",
+  "frontend_product_surface",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "instruction_capsule_cid",
+  "action_sequence_hash",
+  "predicate_verdict",
+  "fc_trace_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "website_schema_drift",
+]
+anti_contamination_guards = [
+  "open-web pages must be snapshotted or self-hosted before scoring",
+  "dynamic website drift is infrastructure failure, not model failure",
+  "action traces must be hash-bound",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/mind2web/page_snapshots/",
+  "handover/evidence/true_suite/<run>/mind2web/runtime_repo/",
+  "handover/evidence/true_suite/<run>/mind2web/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/mind2web/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/mind2web/cas/",
+  "handover/evidence/true_suite/<run>/mind2web/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/mind2web/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/mind2web/genesis_report.json",
+  "handover/evidence/true_suite/<run>/mind2web/mind2web_browser_action_manifest.json",
+  "handover/evidence/true_suite/<run>/mind2web/mind2web_browser_action_run_manifest.json",
+  "handover/evidence/true_suite/<run>/mind2web/replay_report.json",
+  "handover/evidence/true_suite/<run>/mind2web/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/mind2web/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/mind2web/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/mind2web/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/mind2web/fc_trace_report.json",
+]
+
+[[family]]
+id = "osworld_computer_use"
+source_family = "OSWorld"
+public_source = "https://arxiv.org/abs/2404.07972"
+risk_class = "Class 3"
+entry_boundary = "container_sandbox"
+fc_trace = [
+  "FC1:rtool->input->agent-delta->output->predicates->wtool",
+  "FC2:replay",
+  "FC3:tools/logs->logs-archive",
+]
+kernel_liveness_modules = [
+  "agent_prompt_model_boundary",
+  "tool_registry_current",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "sandbox_snapshot_hash",
+  "task_capsule_cid",
+  "answer_claim_capsule_cid",
+  "sandbox_action_trace_cid",
+  "evaluation_capsule_cid",
+  "proposal_telemetry_cid",
+  "file_state_diff_hash",
+  "work_tx_or_l4e",
+  "replay_report",
+  "fc_trace_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "sandbox_escape_attempt",
+]
+anti_contamination_guards = [
+  "all OS actions are represented by offline disposable sandbox snapshots",
+  "file diffs are evidence only if hash-bound",
+  "expected action and final state must not enter the model prompt",
+  "raw provider prompt/response must not be persisted",
+  "unsafe action attempts become L4.E or quarantine",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/osworld/sandbox_snapshots/",
+  "handover/evidence/true_suite/<run>/osworld/runtime_repo/",
+  "handover/evidence/true_suite/<run>/osworld/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/osworld/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/osworld/cas/",
+  "handover/evidence/true_suite/<run>/osworld/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/osworld/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/osworld/genesis_report.json",
+  "handover/evidence/true_suite/<run>/osworld/osworld_computer_use_manifest.json",
+  "handover/evidence/true_suite/<run>/osworld/osworld_computer_use_run_manifest.json",
+  "handover/evidence/true_suite/<run>/osworld/replay_report.json",
+  "handover/evidence/true_suite/<run>/osworld/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/osworld/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/osworld/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/osworld/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/osworld/failure_taxonomy.json",
+  "handover/evidence/true_suite/<run>/osworld/fc_trace_report.json",
+]
+
+[[family]]
+id = "toolbench_api_tool_use"
+source_family = "ToolBench/ToolLLM"
+public_source = "https://arxiv.org/abs/2307.16789"
+risk_class = "Class 2"
+entry_boundary = "public_cli"
+fc_trace = [
+  "FC1:rtool->input->agent-delta->output->predicates",
+  "FC2:boot->Q0->map-reduce-tick->replay",
+  "FC3:tools/logs->logs-archive",
+]
+kernel_liveness_modules = [
+  "tool_registry_current",
+  "agent_prompt_model_boundary",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "input_capsule_cid",
+  "answer_claim_capsule_cid",
+  "evaluation_capsule_cid",
+  "proposal_telemetry_cid",
+  "work_tx_or_l4e",
+  "replay_report",
+  "predicate_verdict",
+  "fc_trace_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "tool_schema_mismatch",
+]
+anti_contamination_guards = [
+  "tool outputs must be scoped read views, not raw private diagnostics",
+  "API failures are infrastructure failures unless predicate says otherwise",
+  "tool result must be CAS-bound before prompt reuse",
+  "ToolBench exact-match score cannot close OBL-005 without ChainTape/CAS replay evidence",
+  "selection-only structural tool calls must not be claimed as live third-party API side effects",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/toolbench/tool_capsules/",
+  "handover/evidence/true_suite/<run>/toolbench/runtime_repo/",
+  "handover/evidence/true_suite/<run>/toolbench/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/toolbench/cas/",
+  "handover/evidence/true_suite/<run>/toolbench/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/toolbench/genesis_report.json",
+  "handover/evidence/true_suite/<run>/toolbench/toolbench_api_tool_use_manifest.json",
+  "handover/evidence/true_suite/<run>/toolbench/toolbench_api_tool_use_run_manifest.json",
+  "handover/evidence/true_suite/<run>/toolbench/replay_report.json",
+  "handover/evidence/true_suite/<run>/toolbench/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/toolbench/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/toolbench/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/toolbench/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/toolbench/fc_trace_report.json",
+]
+
+[[family]]
+id = "cybench_security_sandbox"
+source_family = "Cybench"
+public_source = "https://arxiv.org/abs/2408.08926"
+risk_class = "Class 3"
+entry_boundary = "container_sandbox"
+fc_trace = [
+  "FC1:rtool->input->agent-delta->output->predicates",
+  "FC2:replay",
+  "FC3:tools/logs->logs-archive",
+]
+kernel_liveness_modules = [
+  "tool_registry_current",
+  "canonical_tape_cas_state",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "challenge_snapshot_hash",
+  "sandbox_network_policy_hash",
+  "challenge_capsule_cid",
+  "answer_claim_capsule_cid",
+  "sandbox_trace_cid",
+  "evaluation_capsule_cid",
+  "proposal_telemetry_cid",
+  "artifact_state_diff_hash",
+  "benchmark_verdict",
+  "work_tx_or_l4e",
+  "replay_report",
+  "fc_trace_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "unsafe_exploit_attempt",
+]
+anti_contamination_guards = [
+  "challenge context is an offline disposable sandbox snapshot hashed into CAS before the model call",
+  "expected safe action, final state, and hidden flag must not enter the model prompt",
+  "network egress must be disabled or allowlisted",
+  "exploit success is not allowed outside controlled challenge sandbox",
+  "raw provider prompt/response must not be persisted",
+  "live target contact is an unsafe-exploit failure, not benchmark success",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/cybench/challenge_snapshots/",
+  "handover/evidence/true_suite/<run>/cybench/runtime_repo/",
+  "handover/evidence/true_suite/<run>/cybench/runtime_repo.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/cybench/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/cybench/cas/",
+  "handover/evidence/true_suite/<run>/cybench/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/cybench/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/cybench/genesis_report.json",
+  "handover/evidence/true_suite/<run>/cybench/cybench_security_sandbox_manifest.json",
+  "handover/evidence/true_suite/<run>/cybench/cybench_security_sandbox_run_manifest.json",
+  "handover/evidence/true_suite/<run>/cybench/replay_report.json",
+  "handover/evidence/true_suite/<run>/cybench/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/cybench/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/cybench/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/cybench/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/cybench/failure_taxonomy.json",
+  "handover/evidence/true_suite/<run>/cybench/fc_trace_report.json",
+]
+
+[[family]]
+id = "market_economy_polymarket"
+source_family = "TuringOS prediction-market workload"
+public_source = "internal_current_kernel_market_suite"
+risk_class = "Class 3"
+entry_boundary = "current_kernel_market_router"
+fc_trace = [
+  "FC1:input->agent-delta->output->predicates->wtool->Q_t+1",
+  "FC2:replay",
+  "FC3:logs-archive->feedback",
+]
+kernel_liveness_modules = [
+  "economy_market_settlement",
+  "role_economic_learning_sidecars",
+  "runtime_replay_evidence_audit",
+]
+evidence_shape = [
+  "market_snapshot_capsule_cid",
+  "signed_market_tx",
+  "integer_balance_delta",
+  "replay_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "money_conservation_failure",
+]
+anti_contamination_guards = [
+  "paper or simulated exchange only until live custody is explicitly authorized",
+  "market price is signal, never predicate truth",
+  "all money and share math uses integer units",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/market_action/runtime_repo/",
+  "handover/evidence/true_suite/<run>/market_action/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_action/cas/",
+  "handover/evidence/true_suite/<run>/market_action/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/market_action/replay_report.json",
+  "handover/evidence/true_suite/<run>/market_action/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/market_action/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/market_action/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/market_action/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/market_action/market_external_agent_run_manifest.json",
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+]
+
+[[family]]
+id = "memory_feedback_reinit"
+source_family = "NIAH-style long-context retrieval plus TuringOS FC3 reinit"
+public_source = "https://arxiv.org/abs/2406.11230"
+risk_class = "Class 2"
+entry_boundary = "public_cli"
+fc_trace = [
+  "FC1:rtool->input",
+  "FC2:resume->replay",
+  "FC3:logs-archive->feedback->architectAI->vetoAI->re-init",
+]
+kernel_liveness_modules = [
+  "fc3_runtime_meta_roles",
+  "runtime_replay_evidence_audit",
+  "canonical_tape_cas_state",
+]
+evidence_shape = [
+  "log_feedback_capsule_cid",
+  "architect_proposal_cid",
+  "veto_decision_tx",
+  "reinit_boot_tx",
+  "replay_report",
+]
+failure_taxonomy = [
+  "kernel_invariant_failure",
+  "model_task_failure",
+  "infrastructure_failure",
+  "benchmark_adapter_failure",
+  "provider_policy_failure",
+  "constitutional_rejection",
+  "reinit_state_drift",
+]
+anti_contamination_guards = [
+  "external PR ceremony cannot substitute for runtime ArchitectAI/Veto-AI",
+  "old genesis reports are not rewritten",
+  "reinit must be tape-visible and replayable",
+]
+final_evidence_artifacts = [
+  "handover/evidence/true_suite/<run>/evidence_package_manifest.json",
+  "handover/evidence/true_suite/<run>/fc3/chaintape.jsonl",
+  "handover/evidence/true_suite/<run>/fc3/cas/",
+  "handover/evidence/true_suite/<run>/fc3/cas.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/fc3/cas.worktree.tar.gz",
+  "handover/evidence/true_suite/<run>/fc3/fc3_replay_report.json",
+  "handover/evidence/true_suite/<run>/fc3/restore_replay_report.json",
+  "handover/evidence/true_suite/<run>/fc3/governance_capsule_index.json",
+  "handover/evidence/true_suite/<run>/fc3/full_system_participation.json",
+  "handover/evidence/true_suite/<run>/fc3/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/<run>/fc3/fc3_governance_reinit_run_manifest.json",
+  "handover/evidence/true_suite/<run>/fc3/runtime_repo.dotgit.tar.gz",
+  "handover/evidence/true_suite/<run>/fc3/runtime_repo.worktree.tar.gz",
+]

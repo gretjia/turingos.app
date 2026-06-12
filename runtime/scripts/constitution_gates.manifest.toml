@@ -1,0 +1,987 @@
+# Constitution Gate Manifest
+# 
+# This manifest authorizes all constitutional gates that CI must run.
+# Each entry maps a gate name to the architect directive that authorized it.
+#
+# Rules:
+# - Discovered gates (tests/constitution_*.rs) MUST exist in this manifest
+# - Missing tests for manifest entries cause CI failure
+# - Gates may only be added via explicit architect directive
+# 
+# Authority: See RUN_CONSTITUTION_GATES_HISTORY.md for K-1.5 migration rationale
+#
+# NOTE: Gates marked with "extracted-from-original-runner" were part of the
+# original 67-gate hard-coded array. Gates added after 2026-05-20 reference
+# the directive that authorized them.
+
+
+[[gate]]
+name = "constitution_admission_no_fail_open_default"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_OVERALL_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_agent_sig_ingress_failclosed"
+authority = "OBS_AGENT_SIG_REPLAY_GAP closure: user §8 token (Class-4) APPROVE-AGENT-SIG-INGRESS-FAILCLOSED-ALL-12 — every agent-submitted ECONOMIC TypedTx variant is signature-verified FAIL-CLOSED at ingress (src/state/sequencer.rs::submit_agent_tx via the shared verify_economic_agent_sig helper) AND at replay (src/runtime/verify.rs Gate 4). Fail-closed = no agent-pubkey manifest configured REJECTS economic agent txs with the NEW SubmitError::AgentManifestRequired; a configured manifest verifies the signature and REJECTS (AgentSignatureInvalid) on unregistered-signer or bad-signature. Covers all 12 signable economic variants (Work/Verify/Challenge/TaskOpen/EscrowLock newly gated at ingress + the 7 TB-13/Stage-C CompleteSet/MarketSeed/Cpmm/Router variants moved from manifest-when-set to fail-closed); replay Gate 4 extended to Challenge/TaskOpen/EscrowLock. The gate asserts 4 states (accept-valid / reject-forged-zero / reject-impostor / reject-no-manifest) for a representative subset (the 5 newly-covered + CompleteSetMint + MarketSeed); mutation-sensitive (reverting any arm to _ => {} or to manifest-when-set flips a case RED). Touches PINNED trust-root files sequencer.rs + verify.rs (genesis_payload.toml pins rehashed in the same change)."
+added = "2026-06-09"
+
+[[gate]]
+name = "constitution_all_canonical_writers_verify_trust_root"
+authority = "handover/section8/APPROVE_ALL_CANONICAL_WRITERS_VERIFY_TRUST_ROOT_2026-06-07.md (§8 token APPROVE-ALL-CANONICAL-WRITERS-VERIFY-TRUST-ROOT)"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_arg_taint_admission"
+authority = "arg-taint sub-article: §8 token APPROVE-ARG-TAINT-ADMISSION-SUBARTICLE — value-level wtool-argument taint (ArgTaint Trusted/AgentGenerated/ToolOutput/UntrustedExternal + join propagation, src/predicate_admission/arg_taint.rs, nested as a #[path] submodule of the UNPINNED src/predicate_admission.rs) plus the admission HARD-GATE: a tainted (non-Trusted) argument value flowing into a privileged sink (economic-wallet/system-only/oracle/sandboxed/external-side-effect tool, or a wallet//system/ write-set namespace) is REJECTED by the shared admission contract via decide_admission_with_taint, routed from the UNPINNED memory-kernel leg (MemoryKernel::step_forward_with_taint) so the verified head does NOT advance (no Q_{t+1}); a Trusted-arg call is ADMITTED (non-vacuous positive control). ZERO genesis-pinned-file edits — the taint reject reuses the existing AcceptancePredicateFalse reason (no new AdmissionFailReason variant) so the pinned sequencer.rs exhaustive match stays valid, and the pinned sequencer adapter keeps calling the unchanged decide_admission."
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_arg_taint_provenance_live"
+authority = "arg-taint sub-article forward-wiring (LIVE-FC1 Phase 4): §8 token APPROVE-ARG-TAINT-ADMISSION-SUBARTICLE — the PRODUCTION MemoryKernel::step_forward entry-point now DERIVES real arg-taint findings from the proposal's on-tape raw_output (src/predicate_admission/arg_taint_provenance.rs::derive_wtool_call_from_proposal, nested as a #[path] submodule of the UNPINNED src/predicate_admission.rs), closing the prior empty-`&[]` gap at the UNPINNED src/memory_kernel.rs::step_forward_with_workspace. NO FALSE REJECT: an ordinary proposal (no wtool_call declaration) yields an empty WtoolCall → no findings → admits exactly as before; only a genuinely external/tool-provenance arg flowing into a privileged sink newly produces a finding. Deterministic + replay-stable (pure function of raw_output bytes; no RNG/wall-clock). ZERO genesis-pinned-file edits."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_aggregate_report"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_architect_verbatim_struct_binding"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_PM2_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_art_v3_amendment_log"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_audit_tamper_3_of_3"
+authority = "handover/directives/2026-05-10_TB_N1_AGENT_ECONOMY_PHASE_2_FORWARD_§8_GRANT.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_audit_views"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_VETO_REMEDIATION_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_boltzmann_selection_observe_only"
+authority = "S3 Boltzmann observe-only selection trace — brings the dead-but-tested integer-rational scheduler boltzmann_select_parent_v2 ONLINE as a tape-anchored OBSERVE-ONLY selection record (src/runtime/boltzmann_selection_trace.rs, nested as a #[path] submodule of the UNPINNED src/runtime/agent_scheduler.rs). record_boltzmann_selection_over_econ runs the full live derivation chain compute_price_index → compute_mask_set → boltzmann_select_parent_v2 over a BORROWED &EconomicState and persists the recommendation to CAS via CasStore::put (ObjectType::Generic + free-form schema_id s3.boltzmann_selection_trace.v1, no pinned cas/schema.rs variant; the CAS commit IS the L4 anchor). 'Price is signal, not truth' (CR-14.1): a derived view, never canonical state, never an admission/predicate input. Triple-coupled gate: (1) RECONSTRUCTABLE — a realistic EconomicState with three DISTINCT-priced nodes (price_yes = long/(long+short)) round-trips from CAS (self-addressed Cid::from_content(stored)==trace_id; restore_*==read_*==in-memory; schema-id discoverable); (2) REPLAY-DETERMINISM / REAL-WIRING — the recorded selected_parent EQUALS a fresh independent boltzmann_select_parent_v2 call with the same inputs+seed (records the REAL function output, not a hand-set value; identical inputs+seed → identical trace_id across CAS instances); (3) NON-VACUOUS — epsilon_exploration_num=0 picks the genuine highest-price_yes node with selection_branch==ArgmaxExploit, AND an epsilon policy + firing seed makes selection_branch==EpsilonExploration reachable with a non-argmax pick; (4) OBSERVE-ONLY — econ is byte-identical before/after (no mutation, no head advance; recorder returns only a Cid) and writing the trace mints NO filesystem side-store (canonical store is CAS/tape, Art. 0.2); plus an inline mutation-sanity witness proving the gate is falsifiable. INTEGER MATH ONLY — every persisted numeric field is u64/i64/u128 (RationalPrice numerator/denominator cross-multiplication); the f64 boltzmann_softmax variant is deliberately not used. ZERO genesis-pinned-file edits — nested under the UNPINNED agent_scheduler.rs so the pinned runtime/mod.rs stays untouched."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_benchmark_manifest"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_class4_atomic_rollback_witness"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_PM6_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_closure_3_no_trivial_asserts"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_completeset_hardening"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_completeset_merge"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_PM2_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_cpmm_pool"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_PM4_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_cpmm_swap"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_VETO_REMEDIATION_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_diversity"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_economy_gate"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_economy_strict_equality"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_fc1_runtime_loop"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_fc2_boot"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_fc3_evidence_binding"
+authority = "handover/directives/2026-05-08_STAGE_A3_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_fc3_inv1_capsule_integrity_regen"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_fc3_meta"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_fc3_meta_loop_closure"
+authority = "handover/section8/APPROVE_FC3_RUNTIME_VETO_AND_TRUSTROOT_REINIT_2026-06-07.md (§8 token APPROVE-FC3-RUNTIME-VETO-AND-TRUSTROOT-REINIT) — FC3 IRREVERSIBLE leg: runtime Veto-AI deterministic {Accept,Reject} clause-walker (src/runtime/real5_roles/fc3_veto.rs, whitelisted to constitutionality, fail-closed, constitution.md out of range) gating a PASS-only ArchitectCommit + SANDBOX trust-root recompute (src/runtime/real5_roles/fc3_commit_reinit.rs; reuses the sole boot::verify_trust_root over a TEMP-DIR manifest, NEVER the real genesis_payload.toml) + a tape-visible re-init whose terminal status closes_fc3_loop()==true (reinit:committed). Promoted from tests/pending/constitution_fc3_meta_loop_closure.rs (G5 standing-pending); both observations now GREEN: (A) the live fc3_proposer carries a real ArchitectProposalCapsule spec, (B) a Veto-AI PASS reaches the loop-closing committed-reinit terminal. constitution-bound hash asserted UNCHANGED across the recompute; reversibility (prior trust-root + prior Q) recorded per Art. V.2. Canary observable half (sandbox:canary_only, S1 gate) untouched."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_fc_liveness_observer"
+authority = "LIVE-FC1 self-verification keystone (constitution.md Art.0.2 tape-canonical + Art.III shielded read-views). Observe-only FC-liveness OBSERVER: src/runtime/fc_liveness_observer.rs (nested as a #[path] submodule of the UNPINNED src/runtime/agent_scheduler.rs) reconstructs FC1/FC2/FC3 node liveness PURELY from the canonical tape (L4 accepted spine + L4.E rejection chain + CAS payloads) and classifies each FC node Live / ReachableNotFired / Zombie. observe_fc_liveness(tape:&LoadedTape, inventory:&LivenessInventory)->FcLivenessReport takes shared refs only — it mutates no QState/EconomicState, advances no head, changes no admission; the persisted witness anchors via CasStore::put (ObjectType::Generic + free-form schema_id v1/fc_liveness_report), never a filesystem-side store. ANTI-OVERCLAIM binding: FC3 disposition is hard-stamped reached_observable_canary (proposer fired + canary MetricEstimate + sandbox:canary_only terminal); the report NEVER claims FC3 fully-closed / live self-modification. SHIELDED projection: bounded node ids + integer counts + CAS cids only, no raw Lean stderr / autopsy / PPUT metric values. ZERO genesis-pinned-file edits — all touched files pin-count 0; genesis_payload.toml + constitution.md not in diff."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_g1_2_batch_continuation_manifest"
+authority = "handover/directives/2026-05-11_TB_G_G1_2_OPTION_B_PLUS_RULING.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g1_2_chain_tape_lease"
+authority = "handover/directives/2026-05-11_TB_G_G1_2_OPTION_B_PLUS_RULING.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g1_2_persistence_evidence_binding"
+authority = "handover/directives/2026-05-11_TB_G_G1_2_OPTION_B_PLUS_RULING.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g1_2_resume_preflight"
+authority = "handover/directives/2026-05-11_TB_G_G1_2_OPTION_B_PLUS_RULING.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g1_resume"
+authority = "handover/directives/2026-05-08_STAGE_A3_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g2_dashboard_no_trade_rows"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g2_failed_invest_l4e"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g2_no_trade_reason_taxonomy"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g2p_peer_verify_coverage"
+authority = "handover/directives/2026-05-12_TB_G_G2P_MODULES_§8_RATIFICATION.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g2p_pending_peer_reviews"
+authority = "handover/directives/2026-05-12_TB_G_G2P_MODULES_§8_RATIFICATION.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g2p_verify_reward_bond_return"
+authority = "handover/directives/2026-05-10_TB_N1_AGENT_ECONOMY_A4_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g3_bankruptcy_risk_cap"
+authority = "handover/directives/2026-05-12_TB_G_G3_2_§8_ARCHITECT_RATIFICATION.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g3_pnl"
+authority = "handover/directives/2026-05-12_TB_G_G3_2_§8_ARCHITECT_RATIFICATION.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g3_pnl_trajectory_evidence_binding"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g3_your_position_prompt"
+authority = "handover/directives/2026-05-12_TB_G_G2P_MODULES_§8_RATIFICATION.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g7_structural_smoke"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_head_t_c2_multi_ref"
+authority = "handover/directives/2026-05-08_STAGE_A3_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_head_t_witness"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_interop_surface_capsule"
+authority = "S5 interop surface — tape-anchored AgentCard / CapabilityDescriptor + inbound A2A-message capsules (src/runtime/interop_capsule.rs, nested as a #[path] submodule of the UNPINNED src/runtime/markov_capsule.rs). Replaces the HTML-only AgentCard read-view block (src/web/ir.rs) + the bare 'task-a2a' string literal (src/runtime/adapter.rs) with REAL CAS+L4-anchored evidence objects, so external-agent/tool interactions become auditable on the canonical tape (AGENTS.md §1). Triple-coupled gate: (1) an AgentCardCapsule AND an A2aMessageCapsule are reconstructable from CAS/tape (self-addressed round-trip; message links to a resolvable sender card); (2) the inbound message is taint-labelled ArgTaint::UntrustedExternal (ingress shield) — the SAME label the existing arg_taint_v1 admission hard-gate REJECTS at a privileged sink, with a fail-closed UNKNOWN-tag → UntrustedExternal witness; (3) non-vacuous — real multi-tag capability set + real intent/payload, taint label is the SOLE admission discriminator (Trusted-arg positive control is ADMITTED). ZERO genesis-pinned-file edits — ObjectType::Generic + free-form schema_ids (v1/agent_card_capsule, v1/a2a_message_capsule), no pinned cas/schema.rs variant; reuses the skill_capsule/markov CAS+L4 R3 write pattern."
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_l4e_body_integrity"
+authority = "handover/directives/2026-05-10_TB_N1_AGENT_ECONOMY_PHASE_2_FORWARD_§8_GRANT.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_market_quarantine"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_market_seed_hardening"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_VETO_REMEDIATION_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_n1_agent_economy_a3"
+authority = "handover/directives/2026-05-10_TB_N1_AGENT_ECONOMY_A3_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_n1_agent_economy_a4"
+authority = "handover/directives/2026-05-10_TB_N1_AGENT_ECONOMY_A3_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_n2_event_resolve"
+authority = "handover/directives/2026-05-11_TB_N2_B2_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_no_evidence_drift_in_tests"
+authority = "handover/directives/2026-05-07_ARCHITECT_ALIGNMENT_AUTONOMOUS_EXECUTION_AUTHORIZATION.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_no_parallel_ledger"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_pcp_corpus"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_pcp_corpus_phase2"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_polymarket_event_state_gate"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_OVERALL_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_polymarket_smoke"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_VETO_REMEDIATION_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_pending_gates_compile"
+authority = "S6 conformance-harness Phase 2 (CI bit-rot tripwire for tests/pending/*.rs); handover/audits/CONSTITUTION_CONFORMANCE_SWEEP_2026-06-07.md + handover/design/CONSTITUTION_CONFORMANCE_HARNESS_2026-06-07.md"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_predicate_gate"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_kernel_predicate_gate"
+authority = "M07 single-admission predicate gate: user §8 token APPROVE-M07-A4-SINGLE-ADMISSION-PREDICATE-GATE (2026-06-07); handover/design/M07_SINGLE_ADMISSION_IMPLEMENTATION_SPEC_2026-06-07.md §9 (G1 promotion)"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_single_admission_contract"
+authority = "M07 single-admission predicate gate: user §8 token APPROVE-M07-A4-SINGLE-ADMISSION-PREDICATE-GATE (2026-06-07); handover/design/M07_SINGLE_ADMISSION_IMPLEMENTATION_SPEC_2026-06-07.md §6 (structural anti-duplication witness)"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_single_admission_behavioral"
+authority = "M07 single-admission predicate gate: user §8 token APPROVE-M07-A4-SINGLE-ADMISSION-PREDICATE-GATE (2026-06-07); handover/section8/M07_G2_G3_GATE_REDESIGN_DECISION_2026-06-07.md §5 (G2 behavioral witness — both admission authorities reach the same verdict for the same claim; replaces the retired self-contradictory pending G2)"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_kernel_predicate_receipt_replay"
+authority = "M07 single-admission predicate gate: user §8 token APPROVE-M07-A4-SINGLE-ADMISSION-PREDICATE-GATE (2026-06-07); handover/design/M07_SINGLE_ADMISSION_IMPLEMENTATION_SPEC_2026-06-07.md §10 (replay/reconstruction witness — receipt verdict matches re-execution of decide_admission from dump_all_nodes alone)"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_predicate_zero_root_is_not_oracle"
+authority = "M07 G3 oracle-not-verdict-trust: user §8 token APPROVE-M07-G3-OS-QUALIFIED-RUN-FIELD (2026-06-07, Class-4); handover/section8/M07_G2_G3_GATE_REDESIGN_DECISION_2026-06-07.md §6 (G3 promotion — run-level QState::os_qualified_t makes the zero-root refuse-path live; promoted from tests/pending after the field landed)"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_predicate_binding_activation"
+authority = "handover/tracer_bullets/TB-PREDICATE-REGISTRY-BIND_charter_2026-05-24.md (§8 APPROVED v8 ALL-IN-ONE)"
+added = "2026-05-24"
+
+[[gate]]
+name = "constitution_predicate_registry_binding"
+authority = "handover/tracer_bullets/TB-PREDICATE-REGISTRY-BIND_charter_2026-05-24.md (§8 APPROVED v8 ALL-IN-ONE)"
+added = "2026-05-24"
+
+[[gate]]
+name = "constitution_predicate_registry_immutability"
+authority = "handover/tracer_bullets/TB-PREDICATE-REGISTRY-BIND_charter_2026-05-24.md (§8 APPROVED v8 ALL-IN-ONE)"
+added = "2026-05-24"
+
+[[gate]]
+name = "constitution_predicate_registry_replay"
+authority = "handover/tracer_bullets/TB-PREDICATE-REGISTRY-BIND_charter_2026-05-24.md (§8 APPROVED v8 ALL-IN-ONE)"
+added = "2026-05-24"
+
+[[gate]]
+name = "constitution_predicate_result_wire_freeze"
+authority = "handover/tracer_bullets/TB-PREDICATE-REGISTRY-BIND_charter_2026-05-24.md (§8 APPROVED v8 ALL-IN-ONE)"
+added = "2026-05-24"
+
+[[gate]]
+name = "constitution_prompt_capsule"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real6_attempt_prediction_market"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real8_market_ab_benchmark"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real9_launch_synthesis"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_router_buy_with_coin"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_PM4_§8_SIGN_OFF.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_router_price_quote"
+authority = "handover/directives/2026-05-09_STAGE_C_POLYMARKET_VETO_REMEDIATION_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_runner_invariant_formula"
+authority = "handover/directives/2026-05-06_TBC0_CONSTITUTION_LANDING_RESET_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_shielding_evidence_binding"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_shielding_gate"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_tape_canonical_gate"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_tb_n3_a3_emit"
+authority = "handover/directives/2026-05-11_TB_N3_§8_PACKET.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_tb_n3_invest_routing"
+authority = "handover/directives/2026-05-11_TB_N3_§8_PACKET.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_wave3_evidence_binding"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_wilson_ci"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g4_multi_llm"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (G4-G6)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g4_no_hidden_model_switch"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (G4-G6)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g5_action_menu"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (G4-G6)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g5_role_classifier"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (G4-G6)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g5_scheduler"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (G4-G6)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g6_observe_only"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (G4-G6)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g6_unresolved_challenged_not_safe"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (G4-G6)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_digest"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_half_async"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_market_no_trade"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_no_raw_leakage"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_prompt_injection"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_real_evidence_binding"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_role_projector"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_selector"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_librarian_source_scope"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md (Librarian)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_market_autonomy_research_envelope"
+authority = "handover/directives/2026-05-11_G_PHASE_GENERATIVE_ARENA_DIRECTIVE.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_policy_trader_trace"
+authority = "handover/directives/2026-05-12_TB_G_G3_2_§8_ARCHITECT_RATIFICATION.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real10_emergence_metrics"
+authority = "handover/directives/2026-05-15_REAL10_CONTROLLED_MARKET_EVIDENCE_EXPANSION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real10_trace_cleanup"
+authority = "handover/directives/2026-05-15_REAL10_CONTROLLED_MARKET_EVIDENCE_EXPANSION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_claim_boundary"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_e2_micro_probe"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_evidence_hygiene"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_market_opportunity_trace"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_market_tx_category"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_matrix_update"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_no_live_real6b"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_router_positive_control"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real11_trader_pnl_visibility"
+authority = "handover/directives/2026-05-15_REAL11_AGENT_ECONOMIC_ACTION_ACTIVATION_EXECUTION_PLAN.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real12_bull_bear_positive_control"
+authority = "forward-bound REAL-12 directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real12_claim_boundary"
+authority = "forward-bound REAL-12 directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real12_economic_judgment"
+authority = "forward-bound REAL-12 directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real12_live_micro_probe"
+authority = "forward-bound REAL-12 directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real12_role_specialization"
+authority = "forward-bound REAL-12 directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real12_role_views"
+authority = "forward-bound REAL-12 directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real12_task_market_action"
+authority = "forward-bound REAL-12 directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real13a_display_coin"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real13a_ev_decision_trace"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real13b_market_review_window"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real13d_signal_purification"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real13h_market_pressure_probe"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real14_e2_candidate_verifier"
+authority = "forward-bound REAL-13+ directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real14g_positive_ev_ignored"
+authority = "TB-C0 baseline (constitution.md direct binding)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real15_role_differentiation"
+authority = "forward-bound REAL-13+ directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real16_market_performance"
+authority = "forward-bound REAL-13+ directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_g0_market_activation_boundary"
+authority = "OBL-005 market A/B fresh source evidence boundary"
+added = "2026-06-04"
+
+[[gate]]
+name = "constitution_real17_evaluator_prompt_provenance_wire"
+authority = "forward-bound REAL-13+ directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real17_market_decision_provenance_link"
+authority = "forward-bound REAL-13+ directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real17_market_order_ticket"
+authority = "forward-bound REAL-13+ directive"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_architect_veto_scaffold"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_prompt_capsule_v2"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_role_assignment"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_role_based_smoke"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_role_scoped_view"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_tick_budget"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_trader_activation"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_typed_generation_gateway"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5_verifier_challenger"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real5s_scaffold_ratification"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real6_conviction_budget"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_real6_task_outcome_market"
+authority = "handover/directives/2026-05-15_REAL5S_REAL6_REAL7_REAL8_REAL9_EXECUTION_PLAN_APPROVED.md"
+added = "2026-05-20"
+
+
+[[gate]]
+name = "constitution_matrix_drift"
+authority = "K-2.3 (Phase 4): matrix drift detection; references handover/alignment/CONSTITUTION_EXECUTION_MATRIX.md"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_rules_ci_mirror"
+authority = "K-3.1' (Phase 5): CI redundancy mirror of rules/active/R-*.yaml (subset). Engine.py remains primary PreToolUse enforcement."
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_demo_filesystem_check"
+authority = "Task A adversarial test (Karpathy v3 plan post-completion harness validation)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_subagent_pr_hygiene"
+authority = "K-HARDEN-4 (2026-05-20): meta-gate verifying L5/L7/L8 hardening infrastructure stays in place"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_harden_validation_probe"
+authority = "K-HARDEN validation run (probe gate, can be deleted after validation)"
+added = "2026-05-20"
+
+[[gate]]
+name = "constitution_flowchart_source_alignment"
+authority = "OBL-005 source-of-truth cleanup: constitution.md FC blocks are the only current flowchart topology authority"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_flowchart_livenow"
+authority = "OBL-005 LiveNow probes: typed FC1 L4/L4.E path, FC2 boot/replay/resume, FC2 terminal summary"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_fc3_closure"
+authority = "TB-FLOWCHART-FC3-CLOSURE v2 APPROVED-FC3-v2-ALL-IN-ONE: FC3 feedback/re-init typed L4 + CAS + replay closure"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_production_module_liveness"
+authority = "OBL-005 no-zombie AGI liveness contract: every production code group and standalone binary must be classified, smoke-gated, and either tied to historical real-world ChainTape/CAS candidate evidence or explicitly quarantined"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_realworld_liveness_coverage"
+authority = "OBL-005 user-expanded no-zombie stop condition + handover/audits/REALWORLD_NO_ZOMBIE_COVERAGE_CONTRACT_2026-05-25.md: fresh current-kernel ChainTape/CAS evidence contract across market, artifact, TDMA, FC3 governance/reinit, replay/CAS, and boot/CLI domains"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_broad_agi_true_suite_manifest"
+authority = "OBL-005 broad true-problem expansion: AGI benchmark families must be machine-checkable by FC trace, risk class, entry boundary, evidence shape, and failure taxonomy; old 15-question or leaderboard-score evidence is insufficient"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_boot_cli_runner"
+authority = "OBL-005 true-suite execution layer: boot_cli_current_kernel_fresh must be produced by public turingos init + current runtime ChainTape boot + public turingos verify chaintape, not by historical evaluator fixtures"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_market_external_agent_runner"
+authority = "OBL-005 true-suite market/economy execution layer: provider-backed external agent decision via local LLM proxy must become signed BuyWithCoinRouterTx on current ChainTape and replay through public turingos verify chaintape; no old scripted REAL fixtures"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_generate_artifact_runner"
+authority = "OBL-005 true-suite generate/artifact execution layer: provider-backed spec/generate path via local LLM proxy must anchor spec and artifact bundle CIDs in CAS, land accepted WorkTx evidence on current ChainTape, and replay through public turingos verify chaintape"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_tdma_runner"
+authority = "OBL-005 true-suite TDMA/proof execution layer: provider-backed proof steps via local LLM proxy must enter through public turingos tdma run, write durable TDMA GitTapeLedger evidence plus per-attempt probes, and verify replay-style tape/probe hashes without pretending TDMA tape is bottom-white L4"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_fc3_governance_runner"
+authority = "OBL-005 true-suite FC3 governance/re-init execution layer: runtime ArchitectAI, Veto-AI, tools/logs, and re-init must be typed ChainTape/CAS system tx evidence replayed through public turingos verify chaintape, not external PR ceremony or dashboard proof"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_gpqa_runner"
+authority = "OBL-005 broad AGI true-suite GPQA execution layer: public benchmark input plus external local-proxy LLM answer must be CAS-bound, rationale-gated, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads or old-15 contamination"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_gaia_runner"
+authority = "OBL-005 broad AGI true-suite GAIA general-assistant execution layer: public GAIA-compatible task input plus external local-proxy LLM answer must be CAS-bound, rationale-gated, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads, hidden expected-answer leakage, or old-15 contamination"
+added = "2026-05-27"
+
+[[gate]]
+name = "constitution_true_suite_math_runner"
+authority = "OBL-005 broad AGI true-suite MATH execution layer: public Hendrycks/EleutherAI benchmark problem plus external local-proxy LLM answer must be CAS-bound, rationale-gated, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads, hidden solution leakage, or old-15 contamination"
+added = "2026-05-26"
+
+[[gate]]
+name = "constitution_true_suite_swebench_runner"
+authority = "OBL-005 broad AGI true-suite SWE-bench execution layer: public coding-repair issue plus external local-proxy LLM patch claim must be CAS-bound, structurally evaluated, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads, hidden gold/test patch leakage, or old-15 contamination"
+added = "2026-05-26"
+
+[[gate]]
+name = "constitution_true_suite_webarena_runner"
+authority = "OBL-005 broad AGI true-suite WebArena execution layer: public WebArena task config plus offline browser observation and external local-proxy LLM browser action must be CAS-bound, recorded as ProposalTelemetry ToolCallRecord hashes, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads, hidden reference-answer leakage, live account side effects, or old-15 contamination"
+added = "2026-05-27"
+
+[[gate]]
+name = "constitution_true_suite_osworld_runner"
+authority = "OBL-005 broad AGI true-suite OSWorld execution layer: offline sandbox snapshot plus external local-proxy LLM computer action must be CAS-bound, recorded as ProposalTelemetry ToolCallRecord hashes, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads, hidden expected-action leakage, host OS side effects, or old-15 contamination"
+added = "2026-05-27"
+
+[[gate]]
+name = "constitution_true_suite_cybench_runner"
+authority = "OBL-005 broad AGI true-suite Cybench security-sandbox execution layer: offline disposable challenge snapshot plus external local-proxy LLM safe triage action must be CAS-bound, recorded as ProposalTelemetry ToolCallRecord hashes, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads, hidden flag/expected-action leakage, live target contact, exploit execution, or old-15 contamination"
+added = "2026-05-27"
+
+[[gate]]
+name = "constitution_true_suite_toolbench_runner"
+authority = "OBL-005 broad AGI true-suite ToolBench execution layer: public benchmark API-selection input plus external local-proxy LLM tool choice must be CAS-bound, recorded as ProposalTelemetry ToolCallRecord hashes, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads or old-15 contamination"
+added = "2026-05-26"
+
+[[gate]]
+name = "constitution_true_suite_mind2web_runner"
+authority = "OBL-005 broad AGI true-suite Mind2Web execution layer: public offline webpage snapshot plus external local-proxy LLM browser action must be CAS-bound, recorded as a structural browser action trace, submitted through current-kernel signed WorkTx, and replayed without raw provider payloads, hidden target leakage, live website side effects, or old-15 contamination"
+added = "2026-05-26"
+
+[[gate]]
+name = "constitution_true_suite_replay_cas_tamper_runner"
+authority = "OBL-005 true-suite replay/CAS integrity execution layer: current-kernel ChainTape/CAS must be generated from public turingos init + runtime boot helper, verified through public turingos verify chaintape, and proven tamper-detecting 3/3 through audit_tape_tamper temp forks"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_evidence_packaging"
+authority = "OBL-005 true-suite evidence packaging layer: nested current-kernel evidence git stores must be exported as deterministic tarballs with a restore manifest before broad real-world evidence can be committed as reconstructable ChainTape/CAS proof"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_broad_agi_batch_runner"
+authority = "OBL-005 broad true-problem batch control plane: aggregate current-kernel true-suite runners and broad AGI family contracts without counting pending adapters, old-15 evidence, leaderboard scores, raw provider payloads, or TDMA domain tape as final no-zombie closure"
+added = "2026-05-25"
+
+[[gate]]
+name = "constitution_true_suite_evidence_reconciliation"
+authority = "OBL-005 cross-run true-suite evidence reconciliation: every fresh real-world domain and broad AGI family must map to immutable FULL_SYSTEM_LIT evidence roots without rewriting historical evidence or treating a single batch directory as the only closure shape"
+added = "2026-05-27"
+
+[[gate]]
+name = "constitution_obligation_repair_reconciliation"
+authority = "OBL-004 repair reconciliation: stale PR-B/PR-C/PR-D/PR-E planned branch placeholders must not remain live blockers once current merged receipts and gates close the underlying constitutional repair surfaces"
+added = "2026-05-27"
+
+[[gate]]
+name = "constitution_script_liveness_inventory"
+authority = "OBL-005 no-zombie script inventory: every retained scripts/ file must be classified exactly once and production true-suite entrypoints must bind to realworld or broad contracts"
+added = "2026-05-27"
+
+[[gate]]
+name = "constitution_web_cli_kernel_invariant"
+authority = "Session #56 (2026-05-21): web layer must share src/runtime/* kernel with CLI binary. Two static-grep invariants — (1) src/web/* never calls chat_complete_blocking / siliconflow_client directly; (2) src/web/* never declares pub const *_SCHEMA_ID. See README.md 'V4 Product-CAK Hardening' section + session 56 audit docs."
+added = "2026-05-21"
+
+[[gate]]
+name = "constitution_obl005_final_closure_witness"
+authority = "OBL-005 final closure witness: verify OBL-005 satisfied under APPROVED-OBL005-NO-ZOMBIE-SCOPE, fresh 2026-06-06 audit file contains OBL005-FINAL-CLOSURE-VERIFIED, all five manifests closed, historical evidence remains immutable, capability failures stay annotated, and no A03/runtime/Agentic-OS completion claim is made"
+added = "2026-05-27"
+
+[[gate]]
+name = "constitution_headline_recompute_from_chaintape"
+authority = "A05 Tape Event Envelope and Projection Trait: headline claims must recompute from ChainTape-derived TapeEventEnvelope and cannot be accepted from manifest, dashboard, or stdout text"
+added = "2026-06-05"
+
+[[gate]]
+name = "constitution_router_name_matches_mechanism"
+authority = "A05 Tape Event Envelope and Projection Trait: mechanism names must match implementation; softmax labels over argmax-like routers are rejected as claim drift"
+added = "2026-06-05"
+
+[[gate]]
+name = "constitution_tc_boot_trust_root_manifest"
+authority = "A03 Boot Trust Root Manifest Gate KEEP-SRC-BOOT: user ratified APPROVE-A03-SECTION8-KEEP-SRC-BOOT; keep src/boot.rs::verify_trust_root authoritative, use existing turingos boot --verify-manifest CLI hook, and reject mismatch/missing manifest states without wrapper, rehash, env bypass, or second authority"
+added = "2026-06-06"
+
+[[gate]]
+name = "constitution_llm_err_lands_on_tape"
+authority = "Constitution conformance sweep remediation #1 (handover/audits/CONSTITUTION_CONFORMANCE_SWEEP_2026-06-07.md §2/§3 Gate 1, append-only-rubber): every llm_call failure arm in src/tdma_runner.rs must land a verified=false reject_class=llm_err tape commit before break, so FC1 completed_llm_calls = step + parse_fail + llm_err is reconstructable from tape"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_external_attempt_anchored_on_failure"
+authority = "Constitution conformance sweep remediation #2 (handover/audits/CONSTITUTION_CONFORMANCE_SWEEP_2026-06-07.md §2/§3 Gate 2, evidence-cas-anchor): every src/bin/*_current_kernel.rs external-LLM runner must anchor its completed attempt-evidence capsule in CAS before any parse/guard abort (swebench parse_patch_claim reference); no parse_*(..)? or return Err between LLM completion and first put_json"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_judge_reason_no_raw_subprocess_stderr"
+authority = "Constitution conformance sweep remediation #4 (handover/audits/CONSTITUTION_CONFORMANCE_SWEEP_2026-06-07.md §2/§3 Gate 4, raw-diagnostic-shield): no src/judges/*.rs may pipe a raw subprocess stderr tail (tail_chars over stderr) into a Fail reason that reaches the LLM retry prompt; swebench harness errors route through the bounded classify_harness_error class label"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_metric_leak_guard_wired"
+authority = "Constitution conformance sweep remediation #5 (handover/audits/CONSTITUTION_CONFORMANCE_SWEEP_2026-06-07.md §2/§3 Gate 5, goodhart-shield): the trust-root-pinned runtime guard assert_no_metric_leak must be CALLED at every final prompt-assembly site (assemble_o1_prompt, sdk build_agent_prompt, market bin prompt), closing the Art. III.4 pinned-but-dead vacuum"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_fc3_proposer_canary_observable"
+authority = "FC3 observable+canary half: §8 token APPROVE-FC3-OBSERVABLE-CANARY-HALF — runtime ArchitectAI proposer (src/runtime/fc3_proposer.rs) emits a tape-anchored ArchitectProposal carrying a REAL candidate spec (non-Noop kind + target_path + proposed_artifact_cid, NOT the {proposal_id} shell), and a canary evaluator (src/runtime/fc3_canary.rs) scores the candidate against the existing executable Predicate and writes an integer-only MetricEstimate to CAS; both reconstructable from tape. ASSERTS NON-CLOSURE (terminal status stays sandbox:canary_only) — the irreversible Veto-gate/trust-root-recompute/re-init leg is NOT implemented and G5 (tests/pending/constitution_fc3_meta_loop_closure.rs) stays standing-pending."
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_agentic_os_minimum_qualification"
+authority = "S6 Agentic-OS minimum-qualification acceptance suite (research report §5 operational definition; handover/reports/AGENTIC_OS_MINIMUM_QUALIFICATION_PACKET_2026-06-07.md): SOURCE-STRUCTURAL Class-2 meta-gate that makes the OS-qualifying CONJUNCTION explicit + falsifiable — asserts every OS-qualifying gate is present in tests/ AND registered in this manifest, so removing/disabling any one leg (tape-canonicality, predicate-gated advance, trust-root anchoring, FC1 tape-reconstructable attempt accounting, read-view shield, money conservation, clean-context closure witness) turns the meta-gate RED; non-vacuous (fails LOUD on empty set or missing name)"
+added = "2026-06-07"
+
+[[gate]]
+name = "constitution_vpput_reconstructed_from_tape"
+authority = "LIVE-FC1 VPPUT-from-tape reconstruction (architect North Star PPUT_DRIVEN_FULL_PASS_2026-04-25 = held-out Verified PPUT): Class 1-2 SOURCE-BEHAVIORAL gate that proves runtime::agent_scheduler::vpput_reconstruction::reconstruct_vpput_from_tape reconstructs the architect PPUT definition (VPPUT_i = 1[GroundTruth(G_i)=1] / (C_i x T_i)) FROM THE CANONICAL TAPE ALONE (L4 accepted spine + L4.E rejection chain + CAS) — no sidecar JSON (Art.0.2 tape-canonical). Locks six coupled properties, each with a paired mutation that flips a dedicated assert RED: (1) TAPE-RECONSTRUCTED — a real LoadedTape (accepted WorkTx + ProposalTelemetry + verified VerificationResult + L4.E-rejected WorkTx + OmegaAccepted TerminalSummary) yields a per-task row derived from those bytes; (2) C_i COUNTS FAILED BRANCHES + TOOL STDOUT — cost sums accepted AND L4.E-rejected WorkTx token_counts.total() (prompt+completion+tool), dropping the rejected branch lowers C_i; (3) GROUND-TRUTH GATED (Art.I.1) — progress=1 ONLY with a verified golden path (OmegaAccepted terminal AND a CAS VerificationResult.verified), removing the oracle witness flips progress + metric to 0 (predicate/omega alone is NOT progress); (4) INTEGER-ONLY (Art.0) — verified_pput_micro is the u64 micro-unit (1_000_000 x progress)/(C_i x T_i) reusing the market_performance_e4 verified_pput_micro shape, a cheaper verified solve scores strictly higher, render carries no <digit>.<digit> f64 leak; (5) HELD-OUT H-VPPUT — integer mean over held-out-split tasks present on tape, ghost tags excluded; (6) OBSERVE-ONLY/SHIELDED (Art.III.4) — reconstruction mutates no tape byte, returns observe_only, and the module references no prompt-assembly surface (the metric never enters an agent prompt). Registered as the EFFICIENCY dimension of the OS-qualifying conjunction (constitution_agentic_os_minimum_qualification). ZERO genesis-pinned-file edits: the new module src/runtime/vpput_reconstruction.rs is nested as a #[path] submodule of the UNPINNED src/runtime/agent_scheduler.rs (pin-count 0); genesis_payload.toml + constitution.md not in diff."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_no_explicit_id_to_llm"
+authority = "EXPLICIT_ID_HALLUCINATION_EXPOSURE_AUDIT_2026-06-08 (read-only predecessor PR #327): render/parse MEMBRANE gate — the agent-visible projection shows OPAQUE content-hash HANDLES of canonical ids, and agent-echoed ids are validated equality/membership/exact-handle, while canonical state keeps keying on the legacy strings internally (canonical identity types TxId/AgentId/TaskId/EventId, their minting in q_state.rs, the typed-tx wire schema, sequencer admission, and signing payloads are UNCHANGED — a separate Class-4 §8 atom). Non-vacuous + falsifiable: (1) MISMATCH REJECTED — an agent-echoed StateUpdate.task_id != system task.id is NOT persisted as canonical on the advancing StateAccepted tape (memory_kernel.rs stamps task.id; fix #1), and an agent-emitted AgentAction.node / target_work_tx_id not in the rendered candidate set is REJECTED (MembraneError::NotInCandidateSet) before any pinned sequencer lookup (sdk/protocol.rs fixes #7/#8); (2) NO SILENT FALLBACK — g1's parent resolution over a hallucinated/missing handle yields None, never node_tx_ids.last() (g1_market_live_agent.rs fix #2), proven behaviorally (HandleSet::resolve seam) AND structurally (no .last()/prefix binding survives in source); (3) HANDLES NOT EXPLICIT — the fixed render projections (g1 self-id + market node block fixes #3/#4, rtool level_4 MinimalHeadOnly fix #6, market_external prompt fix #5, your_position block fix #9) emit a content-hash handle and do NOT leak the explicit Agent_i / worktx- / bare task- / true-suite-market- literal. ZERO genesis-pinned-file edits — all touched render-membrane files (src/sdk/id_handle.rs, src/sdk/protocol.rs, src/sdk/your_position.rs, src/memory_kernel.rs, src/rtool.rs, src/bin/g1_market_live_agent.rs, src/bin/market_external_agent_current_kernel.rs) are pin-count 0."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_pput_anti_goodhart_battery"
+authority = "LIVE-FC1 architect anti-Goodhart PPUT conformance battery (PPUT_DRIVEN_FULL_PASS_2026-04-25 §10 — the 11 named guardrails that make held-out Verified PPUT NON-GAMEABLE: Art. III.4 / Gate H Goodhart shield + accounting integrity). Class 1-2; ZERO genesis-pinned-file edits (tests/ + manifest/matrix/OS-qualifying-set only; genesis_payload.toml + constitution.md not in diff). All 11 architect tests exist here as named #[test]s, each non-vacuous (behavioral on a constructed LoadedTape, OR enumerate-all-sites source-structural) with a documented caught mutant. (1) all_model_tokens_counted — behavioral via reconstruct_vpput_from_tape, C_i includes every model's tokens across accepted L4 + L4.E (drop a branch → C_i falls). (2) tool_stdout_hash_logged [MISSING→FULL] — ProposalTelemetry.tool_calls[].result_hash = sha256(tool stdout) reconstructed from CAS, non-zero, and tool tokens metered into C_i (zero-hash placeholder mutant rejected). (3) no_hidden_unmetered_generation [MISSING→FULL] — enumerate every production LLM .generate(&GenerateRequest site in src/bin/*; each must wire prompt_tokens/completion_tokens into accounting (a generation site with stripped token wiring → RED), with a detector-bites control. (4) no_problem_id_hardcode [MISSING→FULL] — enumerate the scoring/predicate path files; none may compare an id field to a quoted benchmark problem-id literal in a verdict branch (a `task_id == \"putnam_2024_a1\"` mutant detected). (5) no_metric_file_access_by_agents — delegates to constitution_metric_leak_guard_wired + behaviorally confirms assert_no_metric_leak blocks a file-sourced metric scalar. (6) golden_path_requires_ground_truth_acceptance — behavioral: progress=1 only with OmegaAccepted terminal AND a CAS VerificationResult.verified (remove oracle → progress+metric 0). (7) failed_branches_count_toward_total_cost — behavioral: L4.E rejected branch counted into C_i + failed_branch_attempt_count (drop branch → 0). (8) wall_clock_measured_from_first_read_to_final_accept [MISSING→FULL] — behavioral: T_i = max(logical_t)−min(logical_t)+1 first-read→final-accept span (=4 for task_a t=1..4), proven equal to an independently reconstructed span, not a single-point tick. (9) heldout_ids_inaccessible [MISSING→FULL] — held-out split tag lives only system-side: a prompt embedding a held-out scalar is blocked by the guard AND the held-out-aware VPPUT module references no prompt-assembly surface. (10) no_pput_in_agent_prompt — delegates to assert_no_metric_leak: clean prompt passes, PPUT-scalar prompt blocked. (11) test_no_metric_file_access — pre-reg 11th, folds with #5. Registered as the ANTI-GOODHART dimension of the OS-qualifying conjunction (constitution_agentic_os_minimum_qualification). The new test file src/-free; all touched files pin-count 0."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_budget_hard_ceiling"
+authority = "LIVE-FC1 Phase 5 BUDGET HARD-CEILING admission (§8 token APPROVE-BUDGET-HARD-CEILING-FROM-MANIFEST, handover/section8/APPROVE_BUDGET_HARD_CEILING_FROM_MANIFEST_2026-06-08.md): the Turing-completeness fuel = FC2-HALT — a Turing-complete substrate cannot self-halt (the halting problem), so an EXTERNAL integer resource bound forces termination. Class 1-2 LIVE-FC1 gate that proves the ceiling is ENFORCING, not advisory, on a real MemoryKernel<MemoryTapeLedger> (the live FC1 loop), each property paired with a documented mutation that flips a dedicated assert RED. (1) FORWARD-ONLY — cost_ceiling_microcoin==0 is UNLIMITED (today's behavior): a costly run with a huge tape-derived spend (>=5M) still ADVANCES the verified head and produces NO budget reject (mutation: a non-zero default ceiling → an unrelated run halts → RED). (2) ON-EXCEED REJECT, NO HEAD ADVANCE (the FC2-HALT) — with a POSITIVE ceiling, once cumulative tape-derived spend reaches it the next valid Proceed proposal is REJECTED, the verified head does NOT move, the receipt carries the PINNED RejectionClass::BudgetExceeded label, and the halt is STICKY (every further proposal rejects) (mutation: drop the pre-admission check / flip >= → the proposal advances → RED). (3) CHECKPOINT-RESUME — append-only tape, head frozen on halt: RAISING the ceiling (a new approved manifest) lets the previously-halted proposal admit from the same checkpoint head (mutation: keep the low ceiling → stays rejected → RED). (4) CEILING FROM A SIGNED MANIFEST FILE (not a const) — read from a separate budget-manifest TOML (NEVER genesis_payload.toml); mutating the manifest's integer moves the halt boundary; a float ceiling is a parse error (no f64). (5) REUSES THE PINNED DISCRIMINANT — reject_class_label is provably format!(\"{:?}\", RejectionClass::BudgetExceeded) (typed_tx.rs:174); NO new RejectionClass/RunOutcome/HaltReason variant. (6) DETERMINISTIC + TAPE-DERIVED INTEGER SPEND (reuses VPPUT C_i) — spend = integer token sum over the tape incl FAILED branches (the decisive 60-accepted+50-failed=110>=100 halt), same tape+ceiling ⇒ same verdict, cross-checked against the pure budget_check decision function. ZERO genesis-pinned-file edits: the mechanism lives in the UNPINNED src/runtime/budget_ceiling.rs (nested as a #[path] submodule of the UNPINNED src/runtime/agent_scheduler.rs, pin-count 0, reusing vpput_reconstruction C_i) + the UNPINNED src/memory_kernel.rs membrane (pin-count 0); the PINNED q_state.rs (BudgetSnapshot.cost_ceiling_microcoin read-only) / typed_tx.rs (RejectionClass::BudgetExceeded reused) / sequencer.rs / genesis_payload.toml are NOT in the diff."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_provider_identity_and_replay"
+authority = "LIVE-FC1 Phase 6 BRAND-GENERIC provider identity + from-genesis replay (user directive 2026-06-08, BRAND-GENERIC binding): the canonical tape/CAS MUST carry NO LLM brand name (deepseek/Qwen/SiliconFlow/gpt/…) or model-specific detail — the provider identity on the tape is a GENERIC opaque sha256 HANDLE = id_handle::handle(\"model\", <external descriptor>) (reuses src/sdk/id_handle.rs from #328); two DISTINCT external models ⇒ two DISTINCT handles ⇒ swarm heterogeneity (>= 2 providers) is provable from the tape ALONE, WITHOUT brands; the brand→handle mapping lives only in an EXTERNAL sidecar, NEVER on the canonical tape. Class 1-2 LIVE-FC1 gate proving three coupled properties, each with a paired mutation that flips a dedicated assert RED. (1) TWO DISTINCT PROVIDERS — anchor >= 2 ProviderHandleCapsules with DIFFERENT generic handles (two different external descriptors) on a canonical CAS, reconstruct them from the CAS ALONE (Art. 0.2 — write_provider_handle_capsule → provider_handle_capsule_cids → read_provider_handle_capsule_from_cas), and assert distinct_provider_handles_on_tape >= 2 (mutation: identical descriptors collapse to ONE handle → 1 < 2 → RED). (2) NO BRAND ON TAPE — the SERIALIZED capsule bytes AND raw CAS-resident bytes contain NO brand literal (deepseek/qwen/siliconflow/gpt, case-insensitive) and NOT the external descriptor; the brand→handle mapping appears ONLY in the external sidecar (mutation witness: the very same case-insensitive scan, run over a brand-bearing serialized object, DETECTS the brand — proving the scan bites, not vacuous). (3) REPLAY IDENTICAL ROOTS — build a small VALID chaintape on disk (build_chaintape_sequencer → submit a synthetic TaskOpen → shutdown drain), run the PINNED verify_chaintape FROM GENESIS via replay_roots_match_genesis_at_paths, and assert the reconstructed state_root/ledger_root EQUAL the recorded roots (mutation: tamper the on-disk initial_q_state.json state_root_t so the from-genesis fold starts from a divergent root → the first L4 entry's recorded parent_state_root no longer matches the reconstructed state_root_t → ParentStateMismatch → acceptance flips to false → RED). ZERO genesis-pinned-file edits: the mechanism lives in the UNPINNED src/runtime/provider_handle_capsule.rs + src/runtime/replay_diff_acceptance.rs (both nested as #[path] submodules of the UNPINNED src/runtime/agent_scheduler.rs, pin-count 0), reusing the PINNED-FREE crate::sdk::id_handle (#328) and the PINNED crate::runtime::verify::verify_chaintape (TB-6 Atom 4); this gate file + manifest/matrix coupling only — genesis_payload.toml + constitution.md are NOT in the diff."
+added = "2026-06-08"
+
+[[gate]]
+name = "constitution_e2e_1_0_product_flow"
+authority = "E2E 1.0 product-flow hardening (claude/e2e-1.0-hardening): locks the four turingos generate / observe product-flow fixes, each property paired with a documented mutation that flips a dedicated assert RED. Class 1-2; ZERO genesis-pinned-file edits — all touched product files are pin-count 0 (src/bin/turingos.rs, src/bin/turingos/cmd_generate.rs, src/bin/turingos/cmd_observe.rs, src/runtime/test_scenario.rs, src/runtime/test_run.rs); genesis_payload.toml + constitution.md NOT in diff. (1) DELIVERY-SUCCESS-EXIT (blocker #3, Art. 0.2 tape-first): an artifact delivered + spec-derived tests passed but whose POST-delivery market-settle leg FAILS must exit 0 (NOT exit 2), WARN, and ANCHOR the economic break on tape as a market_settle_failed rejection capsule — never swallow it silently. Behavioral leg: the exact production anchoring call write_generate_rejection_capsule_observed writes a reason=market_settle_failed:{e}, retryable=false, world_head_unchanged=true capsule that is reconstructable from CAS by CID. Source-structural leg: print_generate_success fires BEFORE the market-settle match; the Err(e) arm of match emit_polymarket_market_for_session WARNs + anchors and does NOT contain `return Err`/`ExitCode::from(2)` (the exit-2-on-market-fail regression flips this RED). (2) PYTHON-BUNDLE-PASSES (blocker #1): a correct main.py bundle passes (no HtmlParses false-reject) and a syntactically broken main.py FAILS; HtmlParses is derived ONLY for .html entrypoints (re-introducing the unconditional HtmlParses push gives a .py bundle an HtmlParses scenario that fails the doctype → RED). (3) FUNCTIONAL-REJECTS-WRONG (blocker #2): the spec-derived RequiredTextPresent functional scenario is NON-VACUOUS — it REJECTS a well-formed-but-wrong HTML artifact that omits the spec-required control and PASSES one that surfaces it (both pass the structural gate; weakening the producer to exists=>pass flips this RED); the needle is spec-derived and lives in a separate self-describing CAS scenario-set object, NOT injected into the generation prompt (C11 / Art. III.4 hidden oracle). (4) OBSERVE-ROLLUP (blocker #5): turingos observe --workspace <WS> over a constructed real bootstrapped chaintape prints the FC1/FC2/FC3 liveness observer + no-zombie verdict (zombie_count/no_zombie) + the per-task integer VPPUT rollup (ground_truth_solved), READ-ONLY (no head advance, no economic state)."
+added = "2026-06-09"

@@ -1,0 +1,998 @@
+schema_version = "turingosv4.production_module_liveness.v1"
+authority = "constitution.md + ChainTape/CAS evidence"
+policy = "real_world_required_for_final"
+final_closure_status = "OBL005_FINAL_CLOSURE_VERIFIED"
+smoke_is_not_final_evidence = true
+constitution_blocks = [
+  "constitution.md:455-509",
+  "constitution.md:571-660",
+  "constitution.md:826-870",
+]
+
+[[real_world_suite]]
+id = "broad_agi_gpqa_20260525T234028Z"
+path = "handover/evidence/true_suite/broad_agi_gpqa_20260525T234028Z"
+families = ["gpqa", "science_reasoning", "current_kernel", "replay"]
+evidence = ["public_gpqa_sample", "local_openai_proxy", "ChainTape", "CAS", "replay", "restore_replay"]
+
+[[real_world_suite]]
+id = "obl005_fresh_gaia_20260604T213500Z"
+path = "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z"
+families = ["gaia", "general_assistant", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_gaia_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "broad_agi_webarena_20260527T053225Z"
+path = "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z"
+families = ["webarena", "web_agent", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_webarena_config", "offline_browser_observation", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "browser_action_trace", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "broad_agi_installed_20260526T001843Z"
+path = "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z"
+families = ["boot_cli", "replay_cas", "market", "generate_artifact", "tdma", "fc3", "gpqa", "current_kernel"]
+evidence = ["ChainTape", "CAS", "TDMA GitTapeLedger", "local_openai_proxy", "replay", "restore_replay", "packaged_restore"]
+
+[[real_world_suite]]
+id = "broad_agi_consolidated_continue_20260526T102330Z"
+path = "handover/evidence/true_suite/broad_agi_consolidated_continue_20260526T102330Z"
+families = ["boot_cli", "replay_cas", "market", "generate_artifact", "tdma", "fc3", "gpqa", "math", "swebench", "toolbench", "mind2web", "current_kernel"]
+evidence = ["ChainTape", "CAS", "TDMA GitTapeLedger", "local_openai_proxy", "runner_failure_accounting", "full_system_participation", "replay", "restore_replay", "packaged_restore"]
+
+[[real_world_suite]]
+id = "broad_agi_toolbench_20260526T013607Z"
+path = "handover/evidence/true_suite/broad_agi_toolbench_20260526T013607Z"
+families = ["toolbench", "api_tool_use", "current_kernel", "replay"]
+evidence = ["public_toolbench_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore"]
+
+[[real_world_suite]]
+id = "obl005_fresh_mind2web_20260604T210300Z"
+path = "handover/evidence/true_suite/obl005_fresh_mind2web_20260604T210300Z"
+families = ["mind2web", "browser_action", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_mind2web_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "browser_action_trace", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "broad_agi_math_20260526T042841Z"
+path = "handover/evidence/true_suite/broad_agi_math_20260526T042841Z"
+families = ["math", "competition_reasoning", "current_kernel", "replay"]
+evidence = ["public_math_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore"]
+
+[[real_world_suite]]
+id = "broad_agi_swebench_20260526T052213Z"
+path = "handover/evidence/true_suite/broad_agi_swebench_20260526T052213Z"
+families = ["swebench", "coding_repair", "current_kernel", "replay"]
+evidence = ["public_swebench_lite_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore"]
+
+[[real_world_suite]]
+id = "broad_agi_cybench_20260527T032017Z"
+path = "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z"
+families = ["cybench", "security_sandbox", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["offline_cybench_style_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "broad_agi_osworld_20260527T035423Z"
+path = "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z"
+families = ["osworld", "computer_use", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["offline_osworld_style_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_tdma_20260604T203708Z"
+path = "handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z"
+families = ["tdma", "proof", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_putnam_2025_b3_style_task", "local_openai_proxy", "TDMA GitTapeLedger", "ChainTape", "CAS", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "replay_cas_full_system_evidence_20260526T190754Z"
+path = "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z"
+families = ["replay_cas", "tamper", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["ChainTape", "CAS", "replay", "restore_replay", "tamper_detection", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "market_ab_full_system_evidence_20260526T194445Z"
+path = "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z"
+families = ["market_ab", "market", "current_kernel", "full_system_participation", "fc3"]
+evidence = ["ChainTape", "CAS", "audit_tape", "market_ab_full_system_receipts", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_market_20260604T235308Z"
+path = "handover/evidence/true_suite/obl005_fresh_market_20260604T235308Z"
+families = ["market", "external_agent", "current_kernel", "full_system_participation", "fc3"]
+evidence = ["ChainTape", "CAS", "BuyWithCoinRouterTx", "YES_NO", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_ci_market_ab_20260606T143144Z"
+path = "handover/evidence/true_suite/obl005_ci_market_ab_20260606T143144Z"
+families = ["market_ab", "market", "current_kernel", "full_system_participation", "fc3"]
+evidence = ["ChainTape", "CAS", "YES_NO", "ChallengeTx", "price_discovery", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_ci_generate_20260606T142742Z"
+path = "handover/evidence/true_suite/obl005_ci_generate_20260606T142742Z"
+families = ["generate_artifact", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["ChainTape", "CAS", "ArtifactBundleManifest", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_swebench_20260604T192100Z"
+path = "handover/evidence/true_suite/obl005_fresh_swebench_20260604T192100Z"
+families = ["swebench", "coding_repair", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_swebench_lite_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_osworld_20260604T171857Z"
+path = "handover/evidence/true_suite/obl005_fresh_osworld_20260604T171857Z"
+families = ["osworld", "computer_use", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["offline_osworld_style_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_cybench_20260604T164533Z"
+path = "handover/evidence/true_suite/obl005_fresh_cybench_20260604T164533Z"
+families = ["cybench", "security_sandbox", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["offline_cybench_style_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_fc3_20260604T150936Z"
+path = "handover/evidence/true_suite/obl005_fresh_fc3_20260604T150936Z"
+families = ["fc3", "governance", "reinit", "current_kernel", "full_system_participation", "market"]
+evidence = ["ChainTape", "CAS", "typed_fc3_feedback_archive", "ArchitectProposalTx", "VetoDecisionTx", "ReinitBootTx", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_ci_replay_cas_20260606T142221Z"
+path = "handover/evidence/true_suite/obl005_ci_replay_cas_20260606T142221Z"
+families = ["replay_cas", "tamper", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["ChainTape", "CAS", "replay", "restore_replay", "tamper_detection", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_boot_replay_20260604T143328Z"
+path = "handover/evidence/true_suite/obl005_fresh_boot_replay_20260604T143328Z"
+families = ["boot_cli", "current_kernel", "full_system_participation", "replay", "market", "fc3"]
+evidence = ["ChainTape", "CAS", "turingos_init", "verify_chaintape", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_gpqa_20260604T183931Z"
+path = "handover/evidence/true_suite/obl005_fresh_gpqa_20260604T183931Z"
+families = ["gpqa", "science_reasoning", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_gpqa_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_math_20260604T191000Z"
+path = "handover/evidence/true_suite/obl005_fresh_math_20260604T191000Z"
+families = ["math", "competition_reasoning", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_math_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_fresh_webarena_20260604T200738Z"
+path = "handover/evidence/true_suite/obl005_fresh_webarena_20260604T200738Z"
+families = ["webarena", "web_agent", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_webarena_config", "offline_browser_observation", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "browser_action_trace", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_ci_mind2web_20260606T143633Z"
+path = "handover/evidence/true_suite/obl005_ci_mind2web_20260606T143633Z"
+families = ["mind2web", "browser_action", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_mind2web_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "browser_action_trace", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[real_world_suite]]
+id = "obl005_ci_toolbench_20260606T143903Z"
+path = "handover/evidence/true_suite/obl005_ci_toolbench_20260606T143903Z"
+families = ["toolbench", "api_tool_use", "current_kernel", "full_system_participation", "market", "fc3"]
+evidence = ["public_toolbench_sample", "local_openai_proxy", "ChainTape", "CAS", "ProposalTelemetry", "tool_call_trace", "replay", "restore_replay", "packaged_restore", "full_system_participation"]
+
+[[group]]
+id = "axiom_boot_trust_root"
+classification = "required_substrate"
+status = "historical_real_world_candidate"
+risk_class = 3
+allowed_as_fc_authority = true
+restricted_surface = false
+module_ids = ["boot", "main"]
+paths = ["src/boot.rs", "src/main.rs", "genesis_payload.toml"]
+constitutional_anchors = ["Art.0.4", "FC2:boot", "FC3:constitution"]
+necessity = "Boot rejects trust-root drift before any AGI run can claim constitutional tape truth."
+smoke_gates = ["tests/fc_alignment_conformance.rs::fc3_n34_readonly_guard_verify_trust_root_intact_repo"]
+real_world_evidence = [
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/genesis_report.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/replay_report.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/restore_replay_report.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/full_system_participation.json",
+]
+evidence_requires = ["fresh boot", "trusted constitution bytes"]
+
+[[group]]
+id = "canonical_tape_cas_state"
+classification = "required_substrate"
+status = "historical_real_world_candidate"
+risk_class = 4
+allowed_as_fc_authority = true
+restricted_surface = true
+module_ids = [
+  "bottom_white",
+  "bottom_white::cas",
+  "bottom_white::cas::git_chain",
+  "bottom_white::cas::schema",
+  "bottom_white::cas::store",
+  "bottom_white::ledger",
+  "bottom_white::ledger::rejection_evidence",
+  "bottom_white::ledger::system_keypair",
+  "bottom_white::ledger::transition_ledger",
+  "state",
+  "state::head_t_witness",
+  "state::q_state",
+  "state::sequencer",
+  "state::typed_tx",
+]
+paths = [
+  "src/bottom_white/cas",
+  "src/bottom_white/ledger",
+  "src/state/q_state.rs",
+  "src/state/sequencer.rs",
+  "src/state/typed_tx.rs",
+  "src/state/head_t_witness.rs",
+]
+constitutional_anchors = ["Art.0.2", "Art.0.4", "FC1:Q_t", "FC1:wtool", "FC2:replay", "FC3:logs"]
+necessity = "The accepted/rejected tape, CAS payloads, state root, and replay verifier are the source of truth."
+smoke_gates = [
+  "tests/constitution_flowchart_livenow.rs::fc1_typed_worktx_routes_to_l4_or_l4e",
+  "tests/constitution_fc3_closure.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/broad_batch/aggregate_fc_trace_report.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/replay_cas/restore_replay_report.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/replay_report.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/restore_replay_report.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_participation.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/replay_report.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/aggregate_verdict.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/full_system_participation.json",
+]
+evidence_requires = ["L4", "L4.E", "CAS", "replay"]
+
+[[group]]
+id = "predicate_registry_top_white"
+classification = "required_substrate"
+status = "historical_real_world_candidate"
+risk_class = 4
+allowed_as_fc_authority = true
+restricted_surface = true
+module_ids = [
+  "top_white",
+  "top_white::predicates",
+  "top_white::predicates::registry",
+  "top_white::predicates::visibility",
+  "runtime::predicate_registry_loader",
+]
+paths = ["src/top_white", "src/runtime/predicate_registry_loader.rs"]
+constitutional_anchors = ["Art.I.1", "FC1:predicates", "FC2:initAI->predicates"]
+necessity = "Predicate truth must be executable and replay-bound, not runner stamped."
+smoke_gates = [
+  "tests/constitution_predicate_registry_binding.rs",
+  "tests/constitution_predicate_registry_replay.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/aggregate_verdict.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/replay_report.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/full_system_participation.json",
+]
+evidence_requires = ["predicate activation", "registry root", "admission verification"]
+
+[[group]]
+id = "fc1_bus_read_view_bridge"
+classification = "required_substrate"
+status = "historical_real_world_candidate"
+risk_class = 3
+allowed_as_fc_authority = true
+restricted_surface = true
+module_ids = ["bus", "kernel", "sdk::snapshot", "state::price_index", "state::router_quote"]
+paths = ["src/bus.rs", "src/kernel.rs", "src/sdk/snapshot.rs", "src/state/price_index.rs", "src/state/router_quote.rs"]
+constitutional_anchors = ["FC1:rtool", "FC1:input", "FC1:wtool", "Art.I.2"]
+necessity = "Agents need a scoped read view and typed write ingress; price and quote views are projections only."
+smoke_gates = [
+  "tests/constitution_flowchart_livenow.rs::fc1_rtool_input_snapshot_is_chain_cas_derived",
+  "tests/constitution_router_price_quote.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/market_action/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/replay_report.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/full_system_participation.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_participation.json",
+]
+evidence_requires = ["read-view", "market projection", "no price-as-truth"]
+
+[[group]]
+id = "economy_market_settlement"
+classification = "required_substrate"
+status = "historical_real_world_candidate"
+risk_class = 4
+allowed_as_fc_authority = true
+restricted_surface = true
+module_ids = [
+  "economy",
+  "economy::conservation",
+  "economy::escrow_vault",
+  "economy::events",
+  "economy::ledger",
+  "economy::monetary_invariant",
+  "economy::money",
+  "economy::price_broadcast",
+  "economy::projections",
+  "economy::settlement",
+  "sdk::tools",
+  "sdk::tools::wallet",
+]
+paths = ["src/economy", "src/sdk/tools", "src/state/router_quote.rs", "src/state/sequencer.rs", "src/state/typed_tx.rs"]
+constitutional_anchors = ["Law:1Coin=1YES+1NO", "Art.0.2", "FC1:wtool", "market:Coin/YES/NO"]
+necessity = "The market/economy activates agents while preserving integer conservation and no ghost liquidity."
+smoke_gates = [
+  "tests/economy_conservation.rs",
+  "tests/economy_no_parallel_ledger.rs",
+  "tests/economy_predicate_price_blindness.rs",
+  "tests/economy_tape_replay.rs",
+  "tests/constitution_polymarket_smoke.rs",
+  "tests/constitution_router_buy_with_coin.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/market_action/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/market_action/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/market_action/restore_replay_report.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/replay_report.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/restore_replay_report.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/full_system_participation.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_participation.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/full_system_participation.json",
+]
+evidence_requires = ["integer money", "market tx", "wallet projection", "market projection", "replay", "no price-as-truth", "no ghost liquidity"]
+
+[[group]]
+id = "runtime_replay_evidence_audit"
+classification = "required_substrate"
+status = "historical_real_world_candidate"
+risk_class = 3
+allowed_as_fc_authority = true
+restricted_surface = false
+module_ids = [
+  "bin::audit_dashboard",
+  "bin::audit_tape",
+  "bin::audit_tape_tamper",
+  "bin::boot_cli_current_kernel_fresh",
+  "bin::cybench_security_sandbox_current_kernel",
+  "bin::full_system_augment_current_kernel",
+  "bin::full_system_participation_current_kernel",
+  "bin::gaia_general_assistant_current_kernel",
+  "bin::gpqa_science_reasoning_current_kernel",
+  "bin::gen_run_summary",
+  "bin::g0_market_activation_current_kernel",
+  "bin::g1_market_live_agent",
+  "bin::lean_market_agent",
+  "bin::livefc1_swarm_runner",
+  "bin::livefc1_swarm_verify",
+  "bin::livefc1_lean_runner",
+  "bin::reputation_constitutional",
+  "bin::market_external_agent_current_kernel",
+  "bin::math_competition_reasoning_current_kernel",
+  "bin::mind2web_browser_action_current_kernel",
+  "bin::osworld_computer_use_current_kernel",
+  "bin::resume_preflight",
+  "bin::swebench_live_coding_repair_current_kernel",
+  "bin::tb_18r_compute_invariant",
+  "bin::tdma_proof_current_kernel",
+  "bin::toolbench_api_tool_use_current_kernel",
+  "bin::tb_g_persistence_report",
+  "bin::webarena_web_agent_current_kernel",
+  "bin::verify_chaintape",
+  "runtime",
+  "runtime::adapter",
+  "runtime::agent_audit_trail",
+  "runtime::agent_keypairs",
+  "runtime::agent_keystore",
+  "runtime::attempt_telemetry",
+  "runtime::audit_assertions",
+  "runtime::audit_tamper",
+  "runtime::audit_views",
+  "runtime::batch_continuation_manifest",
+  "runtime::batch_orchestrator",
+  "runtime::bootstrap",
+  "runtime::chain_derived_run_facts",
+  "runtime::chain_tape_lease",
+  "runtime::cid_hex",
+  "runtime::evidence_capsule",
+  "runtime::external_call",
+  "runtime::generation_attempt",
+  "runtime::genesis_report",
+  "runtime::orphan_intent_sweeper",
+  "runtime::persistence_evidence",
+  "runtime::peer_verify_coverage",
+  "runtime::predicate_receipt",
+  "runtime::projection",
+  "runtime::proposal_telemetry",
+  "runtime::rejection_capsule",
+  "runtime::replay",
+  "runtime::resume_preflight",
+  "runtime::run_summary",
+  "runtime::tape_event",
+  "runtime::tc_agent_view",
+  "runtime::verification_result",
+  "runtime::verify",
+]
+paths = ["src/bin/boot_cli_current_kernel_fresh.rs", "src/bin/full_system_augment_current_kernel.rs", "src/bin/full_system_participation_current_kernel.rs", "src/bin/gaia_general_assistant_current_kernel.rs", "src/bin/gpqa_science_reasoning_current_kernel.rs", "src/bin/market_external_agent_current_kernel.rs", "src/bin/math_competition_reasoning_current_kernel.rs", "src/bin/swebench_live_coding_repair_current_kernel.rs", "src/bin/tdma_proof_current_kernel.rs", "src/bin/toolbench_api_tool_use_current_kernel.rs", "src/bin/mind2web_browser_action_current_kernel.rs", "src/bin/webarena_web_agent_current_kernel.rs", "src/bin/osworld_computer_use_current_kernel.rs", "src/bin/cybench_security_sandbox_current_kernel.rs", "src/runtime/adapter.rs", "src/runtime/bootstrap.rs", "src/runtime/verify.rs", "src/runtime/chain_derived_run_facts.rs", "src/runtime/attempt_telemetry.rs", "src/runtime/evidence_capsule.rs", "src/runtime/audit_assertions.rs", "src/runtime/projection.rs", "src/runtime/tape_event.rs", "src/runtime/external_call.rs", "src/runtime/orphan_intent_sweeper.rs", "src/runtime/tc_agent_view.rs", "src/runtime/predicate_receipt.rs"]
+constitutional_anchors = ["Art.0.2", "FC2:replay", "FC2:resume", "FC3:logs"]
+necessity = "Real runs must reconstruct from ChainTape/CAS, including attempts, leases, persistence, tamper checks, and replay."
+smoke_gates = [
+  "tests/constitution_true_suite_boot_cli_runner.rs",
+  "tests/constitution_true_suite_broad_agi_batch_runner.rs",
+  "tests/constitution_true_suite_gaia_runner.rs",
+  "tests/constitution_true_suite_gpqa_runner.rs",
+  "tests/constitution_true_suite_math_runner.rs",
+  "tests/constitution_true_suite_swebench_runner.rs",
+  "tests/constitution_true_suite_market_external_agent_runner.rs",
+  "tests/constitution_true_suite_generate_artifact_runner.rs",
+  "tests/constitution_true_suite_replay_cas_tamper_runner.rs",
+  "tests/constitution_true_suite_toolbench_runner.rs",
+  "tests/constitution_true_suite_webarena_runner.rs",
+  "tests/constitution_true_suite_osworld_runner.rs",
+  "tests/constitution_true_suite_cybench_runner.rs",
+  "tests/constitution_true_suite_mind2web_runner.rs",
+  "tests/tb_6_verify_chaintape.rs",
+  "tests/constitution_tape_canonical_gate.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_gpqa_20260525T234028Z/gpqa/gpqa_science_reasoning_manifest.json",
+  "handover/evidence/true_suite/broad_agi_gpqa_20260525T234028Z/gpqa/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_gpqa_20260525T234028Z/gpqa/restore_replay_report.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/gaia_general_assistant_manifest.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/replay_report.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/restore_replay_report.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/full_system_participation.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/webarena/webarena_web_agent_manifest.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/webarena/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/webarena/restore_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/webarena/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/boot_cli/restore_replay_report.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/restore_replay_report.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/full_system_participation.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/replay_cas/restore_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/market_action/restore_replay_report.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/restore_replay_report.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/full_system_participation.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/restore_replay_report.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/restore_replay_report.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/full_system_participation.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/fc3/fc3_restore_replay_report.json",
+  "handover/evidence/true_suite/fc3_full_system_evidence_20260526T174426Z/fc3/restore_replay_report.json",
+  "handover/evidence/true_suite/fc3_full_system_evidence_20260526T174426Z/fc3/full_system_participation.json",
+  "handover/evidence/true_suite/fc3_full_system_evidence_20260526T174426Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/gpqa/restore_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/tdma/tdma_restore_report.json",
+  "handover/evidence/true_suite/obl005_ci_toolbench_20260606T143903Z/toolbench/toolbench_api_tool_use_manifest.json",
+  "handover/evidence/true_suite/obl005_ci_toolbench_20260606T143903Z/toolbench/replay_report.json",
+  "handover/evidence/true_suite/obl005_ci_toolbench_20260606T143903Z/toolbench/restore_replay_report.json",
+  "handover/evidence/true_suite/obl005_ci_toolbench_20260606T143903Z/toolbench/full_system_participation.json",
+  "handover/evidence/true_suite/obl005_ci_toolbench_20260606T143903Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/obl005_ci_mind2web_20260606T143633Z/mind2web/mind2web_browser_action_manifest.json",
+  "handover/evidence/true_suite/obl005_ci_mind2web_20260606T143633Z/mind2web/replay_report.json",
+  "handover/evidence/true_suite/obl005_ci_mind2web_20260606T143633Z/mind2web/restore_replay_report.json",
+  "handover/evidence/true_suite/obl005_ci_mind2web_20260606T143633Z/mind2web/full_system_participation.json",
+  "handover/evidence/true_suite/obl005_ci_mind2web_20260606T143633Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_math_20260526T042841Z/math/math_competition_reasoning_manifest.json",
+  "handover/evidence/true_suite/broad_agi_math_20260526T042841Z/math/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_math_20260526T042841Z/math/restore_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_swebench_20260526T052213Z/swebench/swebench_live_coding_repair_manifest.json",
+  "handover/evidence/true_suite/broad_agi_swebench_20260526T052213Z/swebench/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_swebench_20260526T052213Z/swebench/restore_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/cybench/cybench_security_sandbox_manifest.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/cybench/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/cybench/restore_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/cybench/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/osworld/osworld_computer_use_manifest.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/osworld/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/osworld/restore_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/osworld/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/replay_report.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/tamper_report.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/restore_replay_report.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_participation.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/evidence_package_manifest.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_A/aggregate_verdict.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_A/replay_report.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/aggregate_verdict.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/replay_report.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/full_system_participation.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/evidence_package_manifest.json",
+]
+evidence_requires = ["ChainTapeLease", "resume", "CAS", "audit verdict"]
+
+[[group]]
+id = "fc3_runtime_meta_roles"
+classification = "required_substrate"
+status = "historical_real_world_candidate"
+risk_class = 4
+allowed_as_fc_authority = true
+restricted_surface = true
+module_ids = [
+  "bin::fc3_governance_reinit_current_kernel",
+  "bin::generate_markov_capsule",
+  "runtime::autopsy_capsule",
+  "runtime::markov_capsule",
+]
+paths = [
+  "src/bin/fc3_governance_reinit_current_kernel.rs",
+  "src/runtime/autopsy_capsule.rs",
+  "src/runtime/markov_capsule.rs",
+  "src/state/sequencer.rs",
+  "src/state/typed_tx.rs",
+]
+constitutional_anchors = ["FC3:architectAI", "FC3:vetoAI", "FC3:feedback", "FC3:re-init"]
+necessity = "FC3 is internal runtime governance: logs feed ArchitectAI, Veto-AI gates, and error halt re-inits without evidence rewrite."
+smoke_gates = [
+  "tests/constitution_fc3_closure.rs",
+  "tests/constitution_true_suite_fc3_governance_runner.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_fc3_governance_20260525T225140Z/fc3/governance_capsule_index.json",
+  "handover/evidence/true_suite/broad_agi_fc3_governance_20260525T225140Z/fc3/fc3_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/fc3/governance_capsule_index.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/fc3/fc3_replay_report.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/fc3/fc3_restore_replay_report.json",
+  "handover/evidence/true_suite/fc3_full_system_evidence_20260526T174426Z/fc3/governance_capsule_index.json",
+  "handover/evidence/true_suite/fc3_full_system_evidence_20260526T174426Z/fc3/fc3_replay_report.json",
+  "handover/evidence/true_suite/fc3_full_system_evidence_20260526T174426Z/fc3/restore_replay_report.json",
+  "handover/evidence/true_suite/fc3_full_system_evidence_20260526T174426Z/fc3/full_system_participation.json",
+  "handover/evidence/true_suite/fc3_full_system_evidence_20260526T174426Z/fc3/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/governance_capsule_index.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_participation.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/governance_capsule_index.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/cybench/governance_capsule_index.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/cybench/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/cybench/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/osworld/governance_capsule_index.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/osworld/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/osworld/full_system_participation.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/governance_capsule_index.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/webarena/governance_capsule_index.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/webarena/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/webarena/full_system_participation.json",
+]
+evidence_requires = ["L4", "CAS", "replay", "LogFeedbackArchive", "ArchitectAI", "Veto-AI", "Reinit"]
+
+[[group]]
+id = "fc3_observable_canary_half"
+classification = "required_substrate"
+status = "claim_boundary_support"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+# Nested under `real5_roles` (`src/runtime/real5_roles/{fc3_proposer,fc3_canary}.rs`,
+# declared as `#[path]` submodules in the UNPINNED `src/runtime/real5_roles.rs`) to
+# avoid a Trust-Root pin rehash on the genesis-pinned `src/runtime/mod.rs`. The
+# no-zombie `declared_inventory()` scan is FLAT over the module roots, so it does
+# not surface these nested submodule ids; the parent `runtime::real5_roles` module
+# is already owned by its own liveness group. This group therefore claims no
+# top-level module id and is accounted for purely by its owned `paths` + smoke_gates.
+module_ids = []
+paths = [
+  "src/runtime/real5_roles/fc3_proposer.rs",
+  "src/runtime/real5_roles/fc3_canary.rs",
+]
+smoke_gates = [
+  "tests/constitution_fc3_proposer_canary_observable.rs::fc3_proposer_emits_real_spec_on_tape",
+  "tests/constitution_fc3_proposer_canary_observable.rs::fc3_canary_writes_metric_and_loop_stays_open",
+]
+real_world_evidence = []
+evidence_requires = ["L4", "CAS", "ArchitectProposalTx", "MetricEstimate", "replay"]
+closure_action = "Observable + safety-evaluation half of the FC3 self-evolution loop (token APPROVE-FC3-OBSERVABLE-CANARY-HALF): the proposer emits a real ArchitectProposal capsule and the canary writes a MetricEstimate; both are tape-anchored and exercised by the live constitution_fc3_proposer_canary_observable gate. The irreversible Veto-gate/trust-root-recompute/re-init leg landed 2026-06-08 under §8 token APPROVE-FC3-RUNTIME-VETO-AND-TRUSTROOT-REINIT (src/runtime/real5_roles/fc3_veto.rs + fc3_commit_reinit.rs; live gate tests/constitution_fc3_meta_loop_closure.rs, promoted out of tests/pending/), closing the meta-loop against a SANDBOX temp-dir trust root only. This is NOT FC authority and carries NO historical real-world AGI evidence: no real production re-init has fired (a concrete live boot-manifest re-pin needs its own signed v4-ratify tag + attended supervision). Smoke-gate evidence is not capability evidence."
+
+[[group]]
+id = "agent_prompt_model_boundary"
+classification = "product_workload"
+status = "historical_real_world_candidate"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+module_ids = [
+  "drivers",
+  "drivers::llm_http",
+  "sdk",
+  "sdk::actor",
+  "sdk::econ_position",
+  "sdk::error_abstraction",
+  "sdk::id_handle",
+  "sdk::market_context",
+  "sdk::pending_peer_reviews",
+  "sdk::prompt",
+  "sdk::prompt_guard",
+  "sdk::protocol",
+  "sdk::sanitized_runner",
+  "sdk::your_position",
+  "runtime::embedded_prompts",
+  "runtime::prompt_capsule",
+  "runtime::prompt_promotion",
+]
+# `sdk::id_handle` (EXPLICIT_ID_HALLUCINATION_EXPOSURE_AUDIT_2026-06-08): the
+# shared content-hash ID-handle helper for the render/parse membrane. Same
+# product-workload class as `sdk::protocol`/`sdk::your_position` (already in
+# this group) — renders explicit canonical ids as opaque handles in
+# LLM-visible projections and resolves agent-echoed handles exact-or-reject.
+paths = ["src/drivers", "src/sdk/protocol.rs", "src/sdk/prompt.rs", "src/sdk/sanitized_runner.rs", "src/sdk/market_context.rs", "src/sdk/id_handle.rs", "src/runtime/prompt_capsule.rs"]
+constitutional_anchors = ["FC1:input", "FC1:agent delta", "Art.III"]
+necessity = "LLM prompts and process boundaries are product workload surfaces; they must stay shielded and tape-bound."
+smoke_gates = [
+  "tests/production_shellouts_must_use_sanitized_runner.rs",
+  "tests/constitution_g3_your_position_prompt.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_gpqa_20260525T234028Z/gpqa/gpqa_science_reasoning_manifest.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/gaia_general_assistant_manifest.json",
+  "handover/evidence/true_suite/obl005_fresh_gaia_20260604T213500Z/gaia/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/market_action/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/generate_artifact_run_manifest.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/gpqa/gpqa_science_reasoning_manifest.json",
+  "handover/evidence/true_suite/obl005_ci_toolbench_20260606T143903Z/toolbench/toolbench_api_tool_use_manifest.json",
+  "handover/evidence/true_suite/obl005_ci_toolbench_20260606T143903Z/toolbench/full_system_participation.json",
+  "handover/evidence/true_suite/obl005_ci_mind2web_20260606T143633Z/mind2web/mind2web_browser_action_manifest.json",
+  "handover/evidence/true_suite/obl005_ci_mind2web_20260606T143633Z/mind2web/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_math_20260526T042841Z/math/math_competition_reasoning_manifest.json",
+  "handover/evidence/true_suite/broad_agi_swebench_20260526T052213Z/swebench/swebench_live_coding_repair_manifest.json",
+  "handover/evidence/true_suite/broad_agi_cybench_20260527T032017Z/cybench/cybench_security_sandbox_manifest.json",
+  "handover/evidence/true_suite/broad_agi_osworld_20260527T035423Z/osworld/osworld_computer_use_manifest.json",
+  "handover/evidence/true_suite/broad_agi_webarena_20260527T053225Z/webarena/webarena_web_agent_manifest.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/external_agent_market_manifest.json",
+]
+evidence_requires = ["CAS", "prompt", "role view", "no raw private leakage"]
+
+[[group]]
+id = "workload_adapter_boundary"
+classification = "product_workload"
+status = "claim_boundary_support"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+module_ids = ["workloads"]
+paths = ["src/workloads"]
+constitutional_anchors = ["FC3:audit", "L8:workload_adapters", "L9:reports"]
+necessity = "Workload adapters classify user workload evidence and report claims without becoming kernel, sequencer, or benchmark authority."
+smoke_gates = [
+  "tests/workload_adapter_claim_boundary.rs::structural_smoke_cannot_claim_task_pass",
+  "tests/market_preregistration_contract.rs::all_market_tracks_validate_when_preregistered",
+]
+real_world_evidence = []
+support_evidence = [
+  "handover/reports/A14_WORKLOAD_ADAPTER_BOUNDARY_2026-06-06.md",
+  "handover/audits/A14_WORKLOAD_ADAPTER_BOUNDARY_CLEAN_CONTEXT_AUDIT_2026-06-06.md",
+  "handover/audits/OBL005_FINAL_CLOSURE_WITNESS_2026-06-06.md",
+]
+evidence_requires = ["adapter claim boundary", "market preregistration", "no FC authority", "clean-context audit", "no benchmark capability claim"]
+closure_action = "Closed for OBL-005 no-zombie accounting as retained claim-boundary support; support evidence is not benchmark/domain capability evidence."
+
+[[group]]
+id = "role_economic_learning_sidecars"
+classification = "product_workload"
+status = "historical_real_world_candidate"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+module_ids = [
+  "bin::real14_e2_candidate_verifier",
+  "bin::real15_role_differentiation_verifier",
+  "bin::real16_market_performance_verifier",
+  "runtime::agent_pnl",
+  "runtime::agent_role_classifier",
+  "runtime::agent_scheduler",
+  "runtime::benchmark_manifest",
+  "runtime::diversity",
+  "runtime::economic_judgment",
+  "runtime::ev_decision_trace",
+  "runtime::market_decision_provenance_link",
+  "runtime::market_decision_trace",
+  "runtime::market_decision_trace_summary",
+  "runtime::market_e2_candidate_verifier",
+  "runtime::market_opportunity_trace",
+  "runtime::market_order_ticket",
+  "runtime::market_performance_e4",
+  "runtime::market_review",
+  "runtime::market_tx_category",
+  "runtime::policy_trader_trace",
+  "runtime::positive_ev_ignored",
+  "runtime::real5_roles",
+  "runtime::real6_conviction_budget",
+  "runtime::real6_task_outcome",
+  "runtime::risk_cap_impact_report",
+  "runtime::role_differentiation",
+  "runtime::signal_purification",
+  "runtime::wilson_ci",
+]
+paths = ["src/runtime/economic_judgment.rs", "src/runtime/market_*", "src/runtime/real5_roles.rs", "src/runtime/real6_task_outcome.rs"]
+constitutional_anchors = ["Art.I.2", "Art.II", "market:price/wallet state"]
+necessity = "These modules make market incentives observable and learnable; they are not truth, but they activate AGI behavior."
+smoke_gates = [
+  "tests/constitution_real12_economic_judgment.rs",
+  "tests/constitution_real16_market_performance.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/market_action/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/market_external_agent_full_system_20260526T163638Z/market_action/full_system_participation.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_participation.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/REAL16_VERIFIER_INPUT.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/REAL16_ARM_D_E2_VERIFIER.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/arm_D/external_agent_market_manifest.json",
+  "handover/evidence/true_suite/market_ab_full_system_evidence_20260526T194445Z/market_ab/full_system_participation.json",
+]
+evidence_requires = ["market decision trace", "economic judgment", "role differentiation"]
+
+[[group]]
+id = "librarian_spec_grill_product"
+classification = "product_workload"
+status = "historical_real_world_candidate"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+module_ids = [
+  "runtime::aggregate_report",
+  "runtime::artifact_bundle",
+  "runtime::build_session_view",
+  "runtime::display_coin",
+  "runtime::g7_structural_smoke",
+  "runtime::grill_envelope",
+  "runtime::grill_predicates",
+  "runtime::librarian_broadcast",
+  "runtime::preview_run",
+  "runtime::spec_capsule",
+  "runtime::spec_synthesis",
+  "runtime::test_run",
+  "runtime::test_scenario",
+]
+paths = ["src/runtime/grill_*", "src/runtime/spec_*", "src/runtime/librarian_broadcast.rs", "src/runtime/artifact_bundle.rs"]
+constitutional_anchors = ["FC2:initAI", "FC3:logs"]
+necessity = "The current product path turns human spec into CAS/tape-bound work and delivered artifacts."
+smoke_gates = [
+  "tests/constitution_librarian_real_evidence_binding.rs",
+  "tests/constitution_true_suite_generate_artifact_runner.rs",
+  "tests/artifact_bundle_files_have_cids.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/artifact_bundle_cid.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/restore_replay_report.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/artifact_bundle_cid.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/replay_report.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/restore_replay_report.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/full_system_participation.json",
+]
+evidence_requires = ["real user simulator", "artifact fetched via API", "CAS-bound artifact"]
+
+[[group]]
+id = "web_product_surface"
+classification = "product_workload"
+status = "historical_real_world_candidate"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+module_ids = [
+  "bin::turingos_web",
+  "web::artifact",
+  "web::artifact_bundle",
+  "web::build_session",
+  "web::dag_view",
+  "web::fixtures",
+  "web::generate",
+  "web::ir",
+  "web::market_view",
+  "web::preview",
+  "web::progress",
+  "web::render",
+  "web::router",
+  "web::session_snapshot",
+  "web::spec",
+  "web::spec_view",
+  "web::store",
+  "web::verify",
+  "web::welcome",
+  "web::write",
+  "web::ws",
+]
+paths = ["src/web", "src/bin/turingos_web.rs"]
+constitutional_anchors = ["FC2:initAI", "FC1:input/output"]
+necessity = "The web surface is not a constitutional node, but it is the current real-world delivery path."
+smoke_gates = [
+  "tests/cli_web_generate_smoke.rs",
+  "tests/web_spec_turn_endpoint.rs",
+  "tests/constitution_web_cli_kernel_invariant.rs",
+  "tests/build_session_derived_from_cas.rs::build_session_derived_from_cas",
+  "tests/preview_run_capsule_written.rs::test_preview_run_capsule_written",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/artifacts/index.html",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/artifact_bundle_cid.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/artifacts/index.html",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/artifact_bundle_cid.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/full_system_participation.json",
+]
+evidence_requires = ["real API session", "artifact delivery", "backend observer"]
+
+[[group]]
+id = "frontend_product_surface"
+classification = "product_workload"
+status = "historical_real_world_candidate"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+module_ids = []
+paths = ["frontend/package.json", "frontend/src", "frontend/test"]
+constitutional_anchors = ["FC2:initAI", "FC1:input/output"]
+necessity = "The frontend is not a constitutional node, but it is retained product code for the current browser-facing user path and must not evade no-zombie accounting."
+smoke_gates = [
+  "frontend/test/welcome.test.ts",
+  "frontend/test/spec-result.test.ts",
+  "frontend/test/agent-attempts-panel.test.ts",
+  "tests/cli_web_welcome_smoke.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/artifacts/index.html",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/artifacts/index.html",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/full_system_participation.json",
+]
+evidence_requires = ["real user simulator", "artifact delivery", "backend observer"]
+
+[[group]]
+id = "tdma_bounded_solver"
+classification = "product_workload"
+status = "historical_real_world_candidate"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+module_ids = [
+  "charter_core",
+  "distiller",
+  "git_tape_ledger",
+  "judges",
+  "judges::generate_judge",
+  "judges::injected_judge",
+  "judges::lean_judge",
+  "judges::lean_theorem_bank",
+  "judges::math_step_judge",
+  "judges::nesbitt_step_judge",
+  "judges::putnam_2024_a1_judge",
+  "judges::putnam_2025_b3_judge",
+  "judges::swebench_test_judge",
+  "judges::shared_output_adapter",
+  "ledger",
+  "memory_kernel",
+  "predicate_admission",
+  "rtool",
+  "state_update",
+  "tdma_runner",
+  "token_budget",
+  "tokenizer",
+]
+paths = ["src/ledger.rs", "src/memory_kernel.rs", "src/predicate_admission.rs", "src/tdma_runner.rs", "src/judges", "src/git_tape_ledger.rs"]
+constitutional_anchors = ["FC1:agent delta", "FC1:rtool", "FC3:replay"]
+necessity = "The bounded solver is an AGI work loop candidate; it must be lit by real proof/code tasks, not only unit tests."
+smoke_gates = [
+  "tests/tdma_memory_harness_v1.rs",
+  "tests/realworld_tdma_judge_ai_step_proof.rs",
+  "tests/constitution_true_suite_tdma_runner.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/tdma/manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/tdma/replay_report.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/tdma/tdma_restore_report.json",
+  "handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z/tdma/manifest.json",
+  "handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z/tdma/tdma_replay_report.json",
+  "handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z/tdma/full_system_participation.json",
+  "handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z/tdma/restore_replay_report.json",
+  "handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z/evidence_package_manifest.json",
+]
+evidence_requires = ["real task attempts", "retry tape", "bounded prompt"]
+
+[[group]]
+id = "cli_orchestration_surface"
+classification = "product_workload"
+status = "historical_real_world_candidate"
+risk_class = 2
+allowed_as_fc_authority = false
+restricted_surface = false
+module_ids = [
+  "bin::turingos",
+  "bin::turingos::chat_client",
+  "bin::turingos::cmd_agent",
+  "bin::turingos::cmd_audit_dashboard",
+  "bin::turingos::cmd_audit_tamper",
+  "bin::turingos::cmd_audit_tape",
+  "bin::turingos::cmd_batch",
+  "bin::turingos::cmd_boot",
+  "bin::turingos::cmd_config",
+  "bin::turingos::cmd_export_evidence",
+  "bin::turingos::cmd_generate",
+  "bin::turingos::cmd_init",
+  "bin::turingos::cmd_llm",
+  "bin::turingos::cmd_observe",
+  "bin::turingos::cmd_os",
+  "bin::turingos::cmd_preflight",
+  "bin::turingos::cmd_render",
+  "bin::turingos::cmd_replay",
+  "bin::turingos::cmd_report_bankruptcy",
+  "bin::turingos::cmd_report_markov",
+  "bin::turingos::cmd_report_positions",
+  "bin::turingos::cmd_report_run",
+  "bin::turingos::cmd_report_wallet",
+  "bin::turingos::cmd_spec",
+  "bin::turingos::cmd_spec_audit",
+  "bin::turingos::cmd_tape_migrate",
+  "bin::turingos::cmd_task_open",
+  "bin::turingos::cmd_task_tick",
+  "bin::turingos::cmd_task_view",
+  "bin::turingos::cmd_tdma",
+  "bin::turingos::cmd_verify_chaintape",
+  "bin::turingos::cmd_verify_e2_candidate",
+  "bin::turingos::cmd_welcome",
+  "bin::turingos::cmd_wizard",
+  "bin::turingos::common",
+]
+paths = ["src/bin/turingos.rs", "src/bin/turingos"]
+constitutional_anchors = ["FC2:initAI", "FC2:replay", "FC3:logs"]
+necessity = "The CLI is how broad real-world tasks enter and how evidence is exported/replayed."
+smoke_gates = [
+  "tests/cli_init_smoke.rs",
+  "tests/cli_task_open_smoke.rs",
+  "tests/constitution_true_suite_generate_artifact_runner.rs",
+  "tests/constitution_true_suite_replay_cas_tamper_runner.rs",
+  "tests/constitution_true_suite_tdma_runner.rs",
+  "tests/generate_emits_work_tx_smoke.rs",
+  "tests/os_agent_view_e2e.rs",
+  "tests/os_boot_to_replay_e2e.rs",
+  "tests/os_market_settlement_e2e.rs",
+]
+real_world_evidence = [
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/boot_cli/boot_cli_current_kernel_manifest.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/boot_cli_current_kernel_manifest.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/full_system_augmentation_manifest.json",
+  "handover/evidence/true_suite/boot_cli_full_system_evidence_20260526T182219Z/boot_cli/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/generate_artifact/generate_artifact_run_manifest.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/generate_artifact_run_manifest.json",
+  "handover/evidence/true_suite/generate_artifact_full_system_20260526T170808Z/generate_artifact/full_system_participation.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/tdma/tdma_run_manifest.json",
+  "handover/evidence/true_suite/broad_agi_installed_20260526T001843Z/replay_cas/replay_cas_run_manifest.json",
+  "handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z/tdma/tdma_run_manifest.json",
+  "handover/evidence/true_suite/obl005_fresh_tdma_20260604T203708Z/tdma/full_system_participation.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/replay_cas_run_manifest.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_participation.json",
+]
+evidence_requires = ["real command path", "generated artifact", "runtime repo"]
+
+[[group]]
+id = "tool_registry_current"
+classification = "required_substrate"
+status = "historical_real_world_candidate"
+risk_class = 3
+allowed_as_fc_authority = true
+restricted_surface = false
+module_ids = ["bottom_white::tools", "bottom_white::tools::registry", "sdk::tool"]
+paths = ["src/bottom_white/tools/registry.rs", "src/sdk/tool.rs"]
+constitutional_anchors = ["FC2:tools", "FC3:tools-to-log"]
+necessity = "Tool permissions and lifecycle hook signals must be rooted in deterministic tool substrate for FC3 tool/log boundaries."
+smoke_gates = ["tests/constitution_fc3_closure.rs"]
+real_world_evidence = [
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/governance_capsule_index.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/replay_report.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/restore_replay_report.json",
+  "handover/evidence/true_suite/replay_cas_full_system_evidence_20260526T190754Z/replay_cas/full_system_participation.json",
+]
+evidence_requires = ["tool registry root", "system-only meta tx"]
