@@ -1,6 +1,8 @@
-// Main-window shell skeleton: V6 sidebar structure (NAVIGATION_MODEL ten
-// navs; only what P1 ships is enabled) + connection visibility. The radar
-// canvas itself is A1_08 - this window proves the shell + live counts.
+// Kernel debug pane (内核调试面): full-frame detail view + connection
+// visibility. A1_30 (用户裁决 2026-06-12): the V6 left sidebar (split-view
+// + List) is REMOVED — panel switching now arrives over the AppCommandBus
+// from the macOS system menu bar (视图 menu). NavItem stays as the panel
+// enumeration (NAVIGATION_MODEL ten navs; only what P1 ships is enabled).
 
 import SwiftUI
 
@@ -30,6 +32,8 @@ enum NavItem: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @ObservedObject var store: GlanceStore
+    /// A1_30: panel switching arrives over the bus (视图 menu), not a sidebar.
+    @EnvironmentObject private var commandBus: AppCommandBus
     // Landing screen == the Attention Stack home (S-stage blocker: the
     // atom's whole deliverable must be what the user opens into).
     @State private var selection: NavItem? = .globalOps
@@ -39,41 +43,50 @@ struct ContentView: View {
     @AppStorage("daemonSocketPath") private var socketPath = ""
 
     var body: some View {
-        NavigationSplitView {
-            List(selection: $selection) {
-                Section("Workspace") {
-                    navRow(.globalOps)
-                    navRow(.projects)
-                    navRow(.worktreeRadar)
-                    navRow(.missions)
-                    navRow(.proposals)
-                }
-                Section("Security & Trust") {
-                    navRow(.identity)
-                    navRow(.ratification)
-                    navRow(.replay)
-                }
-                Section("Signals") {
-                    navRow(.marketSignals)
-                    navRow(.settings)
+        detail
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Tokens.Space.background)
+            .frame(minWidth: 960, minHeight: 600)
+            .onReceive(commandBus.$pending) { command in
+                // @Published replays the current value on subscription, so a
+                // command sent BEFORE this pane was presented still lands.
+                guard let command else { return }
+                var target = selection
+                if Self.applyCommand(command, to: &target) {
+                    selection = target
+                    commandBus.consume()
                 }
             }
-            .navigationSplitViewColumnWidth(min: 200, ideal: 240)
-        } detail: {
-            detail
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Tokens.Space.background)
-        }
-        .frame(minWidth: 960, minHeight: 600)
     }
 
-    @ViewBuilder
-    private func navRow(_ item: NavItem) -> some View {
-        Text(item.rawValue)
-            .font(Tokens.Typography.ui(13))
-            .foregroundStyle(item.enabledInP1 ? Tokens.Text.primary : Tokens.Text.tertiary)
-            .tag(item)
-            .selectionDisabled(!item.enabledInP1)
+    // MARK: - Menu command mapping (A1_30)
+
+    /// Pure command → panel mapping. `nonisolated static` so tests exercise
+    /// it without SwiftUI rendering. Returns whether ContentView handled the
+    /// command (unhandled commands belong to OrbView and stay on the bus).
+    @discardableResult
+    nonisolated static func applyCommand(_ command: AppCommand, to selection: inout NavItem?) -> Bool {
+        switch command {
+        case .showRadar:
+            selection = .worktreeRadar
+            return true
+        case .showAttention:
+            // Home == the Attention Stack (default detail branch).
+            selection = .globalOps
+            return true
+        case .showCI:
+            // P1 has no dedicated CI NavItem yet: CI evidence surfaces in
+            // the attention stack home (visible-but-shared, never hidden).
+            selection = .globalOps
+            return true
+        case .showKernelDebug:
+            // ContentView IS the kernel debug pane — presentation is
+            // OrbView's sheet; the current panel selection is kept.
+            return true
+        case .newInit, .connectRepo, .projectOverview, .showOrb,
+             .runCICheck, .morningRitual:
+            return false
+        }
     }
 
     @ViewBuilder

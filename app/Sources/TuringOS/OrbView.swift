@@ -22,6 +22,10 @@ public struct OrbView: View {
     @State private var inputDraft: String = ""
     @State private var showKernelDebug: Bool = false
     @ObservedObject var store: GlanceStore
+    /// A1_30: system menu bar → bus → Orb. Intent commands funnel through
+    /// the SAME typed-intent path as the input field (menu = formal entry
+    /// for what you could type; docs/02 §6 escape hatch).
+    @EnvironmentObject private var commandBus: AppCommandBus
 
     public init(store: GlanceStore, probe: any FacilitatorRuntimeProbe = SystemFacilitatorProbe()) {
         _vm = StateObject(wrappedValue: OrbViewModel(probe: probe))
@@ -63,16 +67,70 @@ public struct OrbView: View {
         }
         .sheet(isPresented: $showKernelDebug) {
             ContentView(store: store)
+                .environmentObject(commandBus)
                 .frame(minWidth: 960, minHeight: 600)
+        }
+        .onReceive(commandBus.$pending) { command in
+            guard let command else { return }
+            handleAppCommand(command)
         }
         .task { vm.resolveRuntime() }
         .preferredColorScheme(.dark)
         .frame(minWidth: 640, minHeight: 520)
     }
 
+    // MARK: - Menu command handling (A1_30)
+
+    /// Consume bus commands addressed to the Orb. Intent commands replay
+    /// the exact typed path (`vm.send(.inputSubmitted)`), so menu and input
+    /// field stay behaviorally identical. Panel commands only PRESENT the
+    /// kernel debug sheet and are left on the bus — ContentView consumes
+    /// them to select its panel (its @Published subscription replays the
+    /// pending value even when the sheet mounts afterwards).
+    private func handleAppCommand(_ command: AppCommand) {
+        switch command {
+        case .newInit:
+            // Same hook as typing 立项: starts the spec wizard
+            // (OrbViewModel.handleInput → WizardSession).
+            vm.send(.inputSubmitted(text: "立项"))
+            commandBus.consume()
+        case .projectOverview:
+            // IntentRouter routes 项目 → projectPicker.
+            vm.send(.inputSubmitted(text: "项目"))
+            commandBus.consume()
+        case .morningRitual:
+            // IntentRouter routes 早 → morningRitual projection.
+            vm.send(.inputSubmitted(text: "早"))
+            commandBus.consume()
+        case .connectRepo:
+            // No 连接 route exists in IntentRouter yet — this lands on the
+            // intent-suggestions escape hatch (visible, not silent).
+            // TODO(A1_3x): route 连接仓库 to a real connect pane backed by
+            // GitConnect.detect(runner:) (GitConnect.swift).
+            vm.send(.inputSubmitted(text: "连接仓库"))
+            commandBus.consume()
+        case .runCICheck:
+            // TODO(A1_3x): IntentRouter.routeBase does not yet call
+            // IntentRouter.routeCIIntent(lower:observationSource:projectContext:)
+            // (CIProjections.swift) — wire it with a real RepoObservationSource
+            // so this projects live CI status instead of suggestions.
+            vm.send(.inputSubmitted(text: "ci 检查"))
+            commandBus.consume()
+        case .showOrb:
+            showKernelDebug = false
+            commandBus.consume()
+        case .showKernelDebug, .showRadar, .showAttention, .showCI:
+            // Present only; ContentView consumes to pick the panel.
+            showKernelDebug = true
+        }
+    }
+
     // MARK: - Debug toolbar
 
-    /// Debug path to ContentView (内核调试面) — keyboard shortcut cmd+D.
+    /// Debug path to ContentView (内核调试面) — in-view button kept from
+    /// A1_16. A1_30: the FORMAL ⌘D entry is now the 视图 menu item (menu
+    /// key equivalents match before view shortcuts, so the menu owns the
+    /// keystroke); this button stays as the visible on-canvas affordance.
     /// Existing radar/attention features stay reachable here (§6.2).
     private var debugToolbar: some View {
         HStack {

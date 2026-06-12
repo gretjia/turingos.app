@@ -1,0 +1,40 @@
+atom: A1_30_menubar_no_sidebar
+shipped_at: 2026-06-12T14:45:00Z
+git_head: a43427dc (pre-ship)
+gate: bash scripts/shipgate.sh p1
+
+note: User ruling 2026-06-12 — left menu panel fully removed, functionality moved
+to the macOS system menu bar. Software 3.0 compatible: Orb stays the first screen;
+the menu bar is the quiet discoverability escape hatch (docs/02 §6), not primary nav.
+
+DELIVERED (Workflow: 1 Sonnet implementer + 3 parallel adversarial lenses, ALL_GREEN):
+- AppCommandBus.swift: 10 AppCommand cases, ObservableObject send/consume
+  (pure, testable, last-intent-wins). Single source of truth for menu titles +
+  shortcut keys (charter table test-asserted).
+- TuringOSApp.swift: .commands with CommandMenu 项目(立项⌘N/连接仓库⌘O/项目总览⌘1) /
+  视图(Orb主屏⌘0/内核调试面⌘D/Radar/Attention/CI) / 检查(CI检查⌘R/MorningRitual⌘M).
+  WindowGroup remains FIRST scene (A1_10 lesson preserved); OrbView remains
+  onboarded first screen; MenuBarExtra dot untouched.
+- ContentView.swift: NavigationSplitView REMOVED (grep == 0 app-wide). NavItem
+  enum + detail switch retained, full-frame; selection via pure nonisolated
+  static applyCommand (tested without SwiftUI rendering).
+- OrbView.swift: consumes intent commands by replaying the exact typed-intent
+  path (vm.send(.inputSubmitted)); panel commands consumed by ContentView via
+  @Published replay-on-subscription.
+- 235 tests (+7 AppCommandBusTests), MIN_TESTS 228->235.
+
+ARCHITECT-APPROVED DEVIATIONS (reviewed against card):
+1. CommandGroup(replacing: .newItem) {} — REQUIRED: default File > New Window
+   owns ⌘N (File menu matches key equivalents first); without this the
+   chartered 立项 ⌘N is dead. Approved as functional enabler.
+2. CJK-Latin spacing in menu titles ("Orb 主屏" vs card's "Orb主屏") — typography.
+3. .connectRepo/.runCICheck land on the visible intent-suggestions escape hatch
+   with precise TODOs naming GitConnect.detect(runner:) and
+   IntentRouter.routeCIIntent(...) — honest visible deferral, future atom wires deep.
+
+VERIFY LENSES (independent re-runs, no implementer transcript):
+  predicates: PASS — grep 0, build pass, 235/0 fail, MIN_TESTS==235, ⌘D traced to source
+  design-contract: PASS — menus exact, bus pure, scope clean (git diff ⊆ allowlist)
+  regression-hunt: PASS — scene order, first screen, dot, daemon wiring, bus injection all intact
+---
+SHIPGATE p1: PASS (16/16)
