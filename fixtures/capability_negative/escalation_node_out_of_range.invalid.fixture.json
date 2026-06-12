@@ -1,0 +1,26 @@
+{
+  "schema_version": "tos.app.capability_manifest.v0",
+  "id": "tool_negative_escalation_node_99",
+  "kind": "connector",
+  "version": "2.0.0",
+  "vendor_tier": "community",
+  "action_classes": {
+    "default": "class_2_remote_draft",
+    "escalation": {
+      "protected_branch_write": 99
+    }
+  },
+  "permissions": {
+    "network": ["outbound"]
+  },
+  "credential_scopes": {},
+  "provenance": {
+    "action_receipt": true,
+    "replay": true
+  },
+  "evals": {
+    "install": "scripts/evals/escalation_install.sh",
+    "replay": "scripts/evals/escalation_replay.sh"
+  },
+  "audit_nodes": {}
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "tos.app.capability_manifest.v0",
+  "id": "tool_negative_no_action_classes",
+  "kind": "tool",
+  "version": "1.0.0",
+  "vendor_tier": "local",
+  "permissions": {},
+  "credential_scopes": {},
+  "provenance": {
+    "action_receipt": true,
+    "replay": false
+  },
+  "evals": {
+    "install": "scripts/evals/no_action_classes_install.sh",
+    "replay": "scripts/evals/no_action_classes_replay.sh"
+  },
+  "audit_nodes": {}
+}
