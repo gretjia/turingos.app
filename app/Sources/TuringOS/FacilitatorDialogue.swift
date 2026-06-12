@@ -101,7 +101,9 @@ public struct FacilitatorDialogue: Sendable {
                 deriveSource: ["user_input", "model_call:facilitator:\(preset.model)"],
                 blocks: [.summaryCard(SummaryCardPayload(
                     title: "Facilitator",
-                    body: response.content
+                    body: response.finishReason == "length"
+                        ? response.content + "\n\n（注：回复因长度上限被截断）"
+                        : response.content
                 ))]
             )
         } catch let error as GatewayError {

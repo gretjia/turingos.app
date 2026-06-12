@@ -1,0 +1,39 @@
+atom: A1_35_meta_drafting_and_projection_routes
+shipped_at: 2026-06-12T16:05:00Z (UTC; local 2026-06-13 00:05 CST)
+git_head: 2ee7820e (pre-ship)
+gate: bash scripts/shipgate.sh p1
+
+note: Three whitepaper features (lawful-now):
+(a) Meta AI REAL invocation — MetaDrafting service (FacilitatorDialogue
+pattern): preset .meta = deepseek-v4-pro thinking ENABLED. Trigger 起草/draft/
+帮我写 + active wizard → answered steps serialized as drafting context →
+proposal text in summary_card titled "Meta AI 起草建议（提案，未写入）".
+RED LINE 4 enforced structurally (session by value; meta path cannot reach any
+wizardSession write site — verifier traced all three) + test asserts session
+byte-equality across the full async flow. No wizard → deterministic
+requires-wizard notice, zero gateway.
+(b) 预算/budget intent → A1_19 BudgetProjections.budgetDraftCard FIRST TIME
+wired into UI routing (wizard projectId or proj_default). Deterministic ×2.
+(c) 批准/approval/审批 intent → A1_23 ApprovalEnvelopeBuilder demo draft with
+all entropy injected as constants → exactly ONE .approvalRequest block →
+first-party ApprovalCard render law verified (count==1, ViewIRRenderer sole
+view path).
+
+VERIFY: determinism-zerocall lens PASS (full findings incl. ApprovalCard
+render-path uniqueness). redline4-golden lens FAILED on a REAL finding:
+maxTokens=1024 too small for v4-pro thinking (reasoning consumes budget) AND
+finish_reason=="length" decoded but never checked → silent truncation.
+ARCHITECT FIX: maxTokens 1024→4096; truncation notice "（注：回复因长度上限
+被截断）" appended in BOTH lanes (MetaDrafting + FacilitatorDialogue —
+verifier's adjacent observation adopted). Golden updated. Verifier calibration
+note recorded: A1_31 receipt did not log the probe's token budget — the 2048
+figure came from the orchestrator's brief; the missing finish_reason guard was
+independently source-verified.
+
+UX note from implementer (recorded): triggers are substring matches — a wizard
+ANSWER containing 起草/预算/批准 will route to the new intents instead of
+being recorded as an answer. Matches card wording; future refinement candidate.
+
+271 tests (+9), MIN_TESTS 262→271.
+---
+SHIPGATE p1: PASS (16/16)

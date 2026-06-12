@@ -274,6 +274,66 @@ extension TemplateProjections {
             blocks: [.summaryCard(summary), .credentialField(cred)]
         )
     }
+
+    /// A1_35 (c): deterministic demo ApprovalEnvelopeDraft → approval_request
+    /// block (rendered ONLY by the first-party ApprovalCard, 渲染铁律 §3.3).
+    ///
+    /// All entropy is FIXED (nonce/expiry/hashes injected as constants — the
+    /// A1_23 builder never calls Date()/UUID()), so the document is byte-
+    /// identical across calls. Draft only: zero signing ceremony, zero model.
+    public static func approvalDraftDemo() -> ViewIRDocument {
+        let content = ApprovalCardContent(
+            actor: "meta_ai_demo",
+            actionKind: "create_worktree",
+            actionClass: 1,
+            target: "demo://worktree/feature_demo",
+            paramsSummary: "branch=feature_demo base=main",
+            riskCategory: "low",
+            reversibility: "reversible",
+            consequenceStatement: "在本地创建一个可回滚的 worktree（演示，不执行）。",
+            humanReadableSummary: "演示审批草案：为 proj_default 创建 feature_demo worktree。"
+        )
+        let result = ApprovalEnvelopeBuilder.build(
+            content: content,
+            signatureNode: 2,
+            projectId: "proj_default",
+            specHash: "sha256:deadbeef",
+            budgetHash: "sha256:deadbeef",
+            policyHash: "sha256:deadbeef",
+            payloadHash: "sha256:deadbeef",
+            targetResourceHash: "sha256:deadbeef",
+            prevTapeHead: "sha256:00000000",
+            nonce: "demo-nonce",
+            expiryUtc: "2027-01-01T00:00:00Z",
+            hostThreatLevel: .t0
+        )
+        switch result {
+        case .success(let draft):
+            return ViewIRDocument(
+                kind: "approval_draft_demo",
+                deriveSource: ["approval_draft:demo"],
+                blocks: [
+                    .summaryCard(SummaryCardPayload(
+                        title: "审批草案（演示）",
+                        body: "信封 \(draft.envelopeId) 已构造（draft，未签名）。\n"
+                            + "visible_card_hash 已绑定渲染内容（红线 2）。"
+                    )),
+                    .approvalRequest(ApprovalRequestPayload(envelopeRef: draft.envelopeId)),
+                ]
+            )
+        case .failure:
+            // Structurally unreachable with the fixed inputs above (T0, node
+            // 2, class 1) — kept fail-visible rather than force-unwrapped.
+            return ViewIRDocument(
+                kind: "approval_draft_demo",
+                deriveSource: ["approval_draft:demo"],
+                blocks: [.summaryCard(SummaryCardPayload(
+                    title: "审批草案（演示）",
+                    body: "构造被拒绝（builder fail-closed）。"
+                ))]
+            )
+        }
+    }
 }
 
 // MARK: - OrbViewModel (ObservableObject wrapper)
@@ -302,19 +362,30 @@ public final class OrbViewModel: ObservableObject {
     /// Exposed read-only so tests can await the async reply deterministically.
     public private(set) var dialogueTask: Task<Void, Never>?
 
+    /// A1_35: in-flight Meta drafting task (nil when nothing pending).
+    /// Exposed read-only so tests can await the async proposal deterministically.
+    public private(set) var metaTask: Task<Void, Never>?
+
     private let probe: any FacilitatorRuntimeProbe
     /// A1_34: optional live Facilitator dialogue service. nil = escape-hatch
     /// only (all pre-A1_34 behavior unchanged — every existing test sees nil).
     /// Production wiring injects FacilitatorDialogue.production() ONLY at the
     /// app entry path (TuringOSApp → OrbView).
     private let dialogue: FacilitatorDialogue?
+    /// A1_35: optional live Meta drafting service. nil = deterministic
+    /// "Meta 未接线" card only (tests see nil unless they inject a mock).
+    /// Production wiring injects MetaDrafting.production() ONLY at the app
+    /// entry path (TuringOSApp → OrbView).
+    private let metaDrafting: MetaDrafting?
 
     public init(
         probe: any FacilitatorRuntimeProbe = SystemFacilitatorProbe(),
-        dialogue: FacilitatorDialogue? = nil
+        dialogue: FacilitatorDialogue? = nil,
+        metaDrafting: MetaDrafting? = nil
     ) {
         self.probe = probe
         self.dialogue = dialogue
+        self.metaDrafting = metaDrafting
     }
 
     /// Resolve runtime kind and transition accordingly.
@@ -338,6 +409,41 @@ public final class OrbViewModel: ObservableObject {
     // MARK: - Input dispatch (wizard-aware)
 
     private func handleInput(_ text: String) {
+        let intentLower = text.lowercased()
+
+        // A1_35 (a): Meta drafting intent — checked BEFORE the wizard answer
+        // feed so a drafting ask is never consumed as a step answer, and
+        // BEFORE generic routing so it never reaches the Facilitator lane.
+        if intentLower.contains("起草") || intentLower.contains("draft")
+            || intentLower.contains("帮我写") {
+            handleMetaDraftIntent(text)
+            return
+        }
+
+        // A1_35 (b): budget intent → A1_19 projection, deterministic, ZERO
+        // model. Active wizard supplies the projectId; spec hash is the
+        // draft placeholder (no sealed spec exists on this path yet).
+        if intentLower.contains("预算") || intentLower.contains("budget") {
+            let projectId = wizardSession?.projectId ?? "proj_default"
+            let contract = BudgetContract(
+                projectId: projectId,
+                limits: BudgetLimits(tokenLimit: 100_000, wallClockSecs: 86_400)
+            )
+            currentProjection = BudgetProjections.budgetDraftCard(
+                for: contract, specHash: "sha256:draft"
+            )
+            return
+        }
+
+        // A1_35 (c): approval intent → A1_23 builder demo draft rendered via
+        // the first-party ApprovalCard (渲染铁律). Fixed injected nonce/expiry
+        // → deterministic, ZERO model, zero signing ceremony (draft only).
+        if intentLower.contains("批准") || intentLower.contains("approval")
+            || intentLower.contains("审批") {
+            currentProjection = TemplateProjections.approvalDraftDemo()
+            return
+        }
+
         // If a wizard session is active, feed the text as a wizard answer.
         if var session = wizardSession {
             session = SpecDraftReducer.reduce(session: session, event: .submitAnswer(text))
@@ -390,6 +496,39 @@ public final class OrbViewModel: ObservableObject {
         dialogueTask?.cancel()
         dialogueTask = Task { [weak self] in
             let doc = await dialogue.respond(to: text)
+            guard !Task.isCancelled else { return }
+            self?.currentProjection = doc
+        }
+    }
+
+    // MARK: - Meta drafting intent (A1_35)
+
+    /// Drafting ask (起草/draft/帮我写). Deterministic exits first; the model
+    /// is reached ONLY with an active wizard session + an injected service.
+    ///
+    /// RED LINE 4: the session is handed to MetaDrafting BY VALUE — the
+    /// proposal NEVER writes back into `wizardSession`. The user reads the
+    /// suggestion and answers the wizard steps themselves.
+    private func handleMetaDraftIntent(_ text: String) {
+        // No active draft → deterministic notice, zero gateway.
+        guard let session = wizardSession else {
+            currentProjection = MetaDrafting.requiresWizardDocument()
+            return
+        }
+        // Service not wired (default nil — tests, previews) → deterministic
+        // unavailable card, zero gateway. Fail-visible, never a stuck spinner.
+        guard let metaDrafting else {
+            currentProjection = MetaDrafting.unavailableDocument(
+                reason: "Meta 服务未接线（仅生产入口注入）"
+            )
+            return
+        }
+        // Deterministic placeholder shown IMMEDIATELY; the async proposal
+        // replaces it on arrival (mirrors the A1_34 dialogueTask pattern).
+        currentProjection = MetaDrafting.draftingInProgressDocument()
+        metaTask?.cancel()
+        metaTask = Task { [weak self] in
+            let doc = await metaDrafting.draft(for: session, userAsk: text)
             guard !Task.isCancelled else { return }
             self?.currentProjection = doc
         }
