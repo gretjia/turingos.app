@@ -1,0 +1,23 @@
+atom: A1_18_init_spec_drafting
+utc: 2026-06-12T09:23:46Z
+head: b75eca59f6c235b33a8a32a009eabdfe7bce9093
+note: Sprint 2 draft-domain subset - Init Spec drafting wizard + Retro-Init prefill + WorkOrderPackage builder. CONSTITUTIONAL SCOPING DECISION (orchestrator, C-grade): UPSTREAM_CONTRACT precedent "上游不可达时暂记 ratification -> 拒绝 fail-closed" + runtime/ not yet imported (P1.9 lane = parallel session, signer_keypair_run.log actively appending) means approvals #1/#2 + tape genesis CANNOT lawfully land until runtime import merges - no shell-side "little tape" built, ceremony unavailable = unavailable. This atom delivers the lawful draft side: SpecPackage model (specHash = SHA256 over sortedKeys canonical content JSON, status EXCLUDED from hash; SpecStatus enum = exactly {draft, awaitingRatification} - ratified NOT TYPE-REPRESENTABLE, comment cites the precedent verbatim); SpecDraftWizard pure reducer (13 steps, Retro-Init prefill from catalog, deterministic x2 byte-equal); SpecDraftStore (Workspace idiom, atomic temp+rename, three-piece projection declaration embedded per iron law 3); WorkOrderPackageBuilder (encoding covers all 13 schema required keys - test reads the REAL contracts/work_order_package.schema.json at runtime, verifier independently diffed); Orb integration (立项/init intent -> wizard session in OrbViewModel; projections reuse existing spec_draft/intent_suggestions/summary_card block types - ViewIR.swift untouched; finish -> draft saved + "awaiting kernel ceremony" honest wording). 79 tests (+6), MIN_TESTS 73->79, verifier 7/7 PASS 0 blockers (boundary grep: 14 hits all comments/enum-case, zero executable approval/tape writes). shipgate p1 16/16 PASS. NEXT-ATOM DEPENDENCY recorded: A1_19 (budget contract + approvals + genesis) BLOCKED on P1.9 runtime import; Sprint 3 read-only observation parts remain lawful.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

@@ -256,12 +256,23 @@ extension TemplateProjections {
 
 /// SwiftUI-observable wrapper around OrbReducer.
 /// The view layer must only mutate state through `send(_:)`.
+///
+/// Wizard integration (A1_18):
+/// When a "立项"/"init" intent is detected, the Orb enters wizard mode.  Each
+/// subsequent inputSubmitted feeds an answer into the WizardSession reducer.
+/// The wizard step is projected as a spec_draft IR block via
+/// ProjectProjections.specDraftCard.  On finish, the draft is saved via
+/// SpecDraftStore and a summary_card confirms the specHash + "awaiting kernel
+/// ceremony" status.
 @MainActor
 public final class OrbViewModel: ObservableObject {
     @Published public private(set) var state: OrbStateValue = .idle
     @Published public private(set) var currentProjection: ViewIRDocument?
     @Published public private(set) var inputText: String = ""
     @Published public private(set) var runtimeKind: FacilitatorRuntimeKind = .degraded
+
+    /// Active wizard session (nil when not in wizard mode).
+    @Published public private(set) var wizardSession: WizardSession?
 
     private let probe: any FacilitatorRuntimeProbe
 
@@ -281,10 +292,66 @@ public final class OrbViewModel: ObservableObject {
         // Side effects on state change
         if case .inputSubmitted(let text) = event {
             inputText = text
-            currentProjection = IntentRouter.route(input: text, runtimeKind: runtimeKind)
+            handleInput(text)
             send(.facilitatorReceived)
             send(.taskCompleted)
         }
+    }
+
+    // MARK: - Input dispatch (wizard-aware)
+
+    private func handleInput(_ text: String) {
+        // If a wizard session is active, feed the text as a wizard answer.
+        if var session = wizardSession {
+            session = SpecDraftReducer.reduce(session: session, event: .submitAnswer(text))
+            wizardSession = session
+
+            if session.finished {
+                // Build and save the draft.
+                if let pkg = SpecDraftReducer.buildPackage(from: session) {
+                    let savedHash = (try? SpecDraftStore.save(pkg)) != nil ? pkg.specHash : "(save failed)"
+                    currentProjection = ProjectProjections.specDraftSummaryCard(
+                        specHash: savedHash,
+                        projectId: pkg.projectId
+                    )
+                } else {
+                    currentProjection = IntentRouter.intentSuggestionsDoc()
+                }
+                wizardSession = nil
+            } else {
+                // Project the current wizard step.
+                currentProjection = ProjectProjections.specDraftCard(from: session)
+            }
+            return
+        }
+
+        // Check for "立项" / "init" intent → start wizard.
+        let lower = text.lowercased()
+        if lower.contains("立项") || lower.hasPrefix("init ") || lower == "init" {
+            // Extract a project ID hint from the input (fallback to UUID prefix).
+            let projectId = extractProjectId(from: text) ?? "proj_\(UUID().uuidString.prefix(8).lowercased())"
+            let session = WizardSession(projectId: projectId)
+            wizardSession = session
+            currentProjection = ProjectProjections.specDraftCard(from: session)
+            return
+        }
+
+        // Default: standard intent routing.
+        currentProjection = IntentRouter.route(input: text, runtimeKind: runtimeKind)
+    }
+
+    private func extractProjectId(from text: String) -> String? {
+        // "立项 my_project" or "init my_project" → "my_project"
+        let parts = text.split(separator: " ", maxSplits: 1)
+        if parts.count == 2 {
+            let candidate = String(parts[1]).trimmingCharacters(in: .whitespaces)
+            if !candidate.isEmpty {
+                return candidate
+                    .lowercased()
+                    .replacingOccurrences(of: "[^a-z0-9_]", with: "_", options: .regularExpression)
+            }
+        }
+        return nil
     }
 }
 
