@@ -1,0 +1,23 @@
+atom: A1_21_capability_manifest_validation
+utc: 2026-06-12T09:59:17Z
+head: fabf8d987163dfdd8eb1ed850e6f53d1efb8993b
+note: Capability Registry enforcement core (lawful pure-function subset; install/update/remove lifecycle awaits runtime tape - "安装入带" cannot be staged shell-side). Delivered: CapabilityManifest.swift (schema-mirror Codable, vendor_tier doc = identity attestation not quality); ManifestValidator.swift (required[] loaded from the REAL contracts/capability_manifest.schema.json at init - single source of truth, no drifting duplicate list, test asserts set equality); FailClosedClassifier.swift (whitepaper §13.8 / §7.3 node 16 / non-negotiable 19 mechanized: missing/invalid action_classes -> treatAsClass3, unparseable -> deny, escalation node outside 1..8 -> deny, class_3 minimum signature node 4 encoded as SignatureNode.class3Minimum); Disposition = exactly {classified, treatAsClass3, deny} with compile-level exhaustiveness test. 3 hostile negative fixtures in fixtures/capability_negative/ (kept out of contracts validator glob). Verifier independently constructed hostile manifests and traced code paths (action_classes absent -> treatAsClass3; garbage escalation node 0 -> deny - never permissive). 99 tests (+8), MIN_TESTS 91->99, app lane x2 + validate_contracts both green, verifier 7/7 PASS 0 blockers. shipgate p1 16/16 PASS.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

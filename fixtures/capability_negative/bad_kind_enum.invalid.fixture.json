@@ -1,0 +1,21 @@
+{
+  "schema_version": "tos.app.capability_manifest.v0",
+  "id": "tool_negative_bad_kind",
+  "kind": "invalid_unknown_kind",
+  "version": "1.0.0",
+  "vendor_tier": "local",
+  "action_classes": {
+    "default": "class_0_read"
+  },
+  "permissions": {},
+  "credential_scopes": {},
+  "provenance": {
+    "action_receipt": true,
+    "replay": false
+  },
+  "evals": {
+    "install": "scripts/evals/bad_kind_install.sh",
+    "replay": "scripts/evals/bad_kind_replay.sh"
+  },
+  "audit_nodes": {}
+}
