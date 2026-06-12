@@ -1,0 +1,13 @@
+{
+  "content": [
+    {
+      "text": "Hello! How can I help you today?",
+      "type": "text"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 9
+  }
+}

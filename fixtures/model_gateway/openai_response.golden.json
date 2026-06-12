@@ -1,0 +1,15 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "message": {
+        "content": "Hello! How can I help you today?",
+        "role": "assistant"
+      }
+    }
+  ],
+  "usage": {
+    "completion_tokens": 9,
+    "prompt_tokens": 17
+  }
+}
