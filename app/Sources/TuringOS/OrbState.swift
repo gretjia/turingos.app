@@ -173,8 +173,12 @@ public enum IntentRouter {
             )
         }
 
-        // Project picker intent (generic: no specific project matched above)
-        if lower.contains("项目") || lower.contains("project") {
+        // Project picker intent (generic: no specific project matched above).
+        // A1_34: 连接/connect joins this deterministic branch — the menu's
+        // .connectRepo submits "连接仓库", which must never fall through to
+        // the model (zero-call verifier finding).
+        if lower.contains("项目") || lower.contains("project")
+            || lower.contains("连接") || lower.contains("connect") {
             return ProjectProjections.projectPicker(from: catalog)
         }
         // Morning ritual intent
@@ -196,6 +200,17 @@ public enum IntentRouter {
         // Canvas projection intent (A1_26)
         if let canvasDoc = routeCanvas(lower: lower, rawInput: rawInput) {
             return canvasDoc
+        }
+        // CI observation intent (A1_20 projection, wired A1_34 — was a dead
+        // TODO until the zero-call verifier caught menu ⌘R falling through to
+        // the model). Reducer purity: no live observation source here (running
+        // git/gh inside the reducer would be IO); nil source yields the
+        // deterministic CIUnavailableNotice card. Live async wiring is a
+        // future atom; deterministic-and-honest beats silent-model-call.
+        if let ciDoc = routeCIIntent(
+            lower: lower, observationSource: nil, projectContext: nil
+        ) {
+            return ciDoc
         }
         // Unknown → intent suggestions (discoverability escape hatch §4)
         return intentSuggestionsDoc()
@@ -283,10 +298,23 @@ public final class OrbViewModel: ObservableObject {
     /// Active wizard session (nil when not in wizard mode).
     @Published public private(set) var wizardSession: WizardSession?
 
-    private let probe: any FacilitatorRuntimeProbe
+    /// A1_34: in-flight Facilitator dialogue task (nil when nothing pending).
+    /// Exposed read-only so tests can await the async reply deterministically.
+    public private(set) var dialogueTask: Task<Void, Never>?
 
-    public init(probe: any FacilitatorRuntimeProbe = SystemFacilitatorProbe()) {
+    private let probe: any FacilitatorRuntimeProbe
+    /// A1_34: optional live Facilitator dialogue service. nil = escape-hatch
+    /// only (all pre-A1_34 behavior unchanged — every existing test sees nil).
+    /// Production wiring injects FacilitatorDialogue.production() ONLY at the
+    /// app entry path (TuringOSApp → OrbView).
+    private let dialogue: FacilitatorDialogue?
+
+    public init(
+        probe: any FacilitatorRuntimeProbe = SystemFacilitatorProbe(),
+        dialogue: FacilitatorDialogue? = nil
+    ) {
         self.probe = probe
+        self.dialogue = dialogue
     }
 
     /// Resolve runtime kind and transition accordingly.
@@ -345,8 +373,26 @@ public final class OrbViewModel: ObservableObject {
             return
         }
 
-        // Default: standard intent routing.
-        currentProjection = IntentRouter.route(input: text, runtimeKind: runtimeKind)
+        // Default: standard intent routing — synchronous, deterministic,
+        // shown IMMEDIATELY (rules first, §5.6; reducer/router stay pure).
+        let routed = IntentRouter.route(input: text, runtimeKind: runtimeKind)
+        currentProjection = routed
+
+        // A1_34: unknown intent landed on the escape hatch → if a live
+        // dialogue service is available AND the runtime probe is not
+        // degraded, fire the async Facilitator reply and replace the
+        // projection when it arrives. The async task lives HERE in the
+        // view-model layer ONLY. Deterministic route hits never reach this
+        // branch (predicate 1: zero gateway invocations).
+        guard let dialogue,
+              runtimeKind != .degraded,
+              routed == IntentRouter.intentSuggestionsDoc() else { return }
+        dialogueTask?.cancel()
+        dialogueTask = Task { [weak self] in
+            let doc = await dialogue.respond(to: text)
+            guard !Task.isCancelled else { return }
+            self?.currentProjection = doc
+        }
     }
 
     private func extractProjectId(from text: String) -> String? {

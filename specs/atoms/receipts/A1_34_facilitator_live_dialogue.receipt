@@ -1,0 +1,38 @@
+atom: A1_34_facilitator_live_dialogue
+shipped_at: 2026-06-12T16:50:00Z
+git_head: 63226405 (pre-ship)
+gate: bash scripts/shipgate.sh p1
+
+note: Facilitator live dialogue — the A1_31/32/33 pipeline lit end to end.
+Unknown Orb input (deterministic-router miss) + healthy runtime → async
+ModelGateway call (DeepSeekPresets .facilitator = deepseek-v4-flash, thinking
+disabled, system prompt = short Chinese Facilitator brief, maxTokens 512) →
+response text into summary_card body ONLY (red line 1; hostile <script>
+fixture survives as inert string — defense test). Production assembly =
+FileTapeSink.defaultSink() + LiveURLSessionTransport at exactly ONE site
+(TuringOSApp OrbView construction); every test sees dialogue=nil or a
+mock-transport gateway — zero network in tests. Failure mapping: 4 fixed
+Chinese strings (GatewayError associated values DROPPED — no scope/secret/
+provider text) + escape-hatch suggestions; deterministic ×2.
+
+WORKFLOW: implement (Sonnet) + 3 adversarial lenses. zero-call lens FAILED
+round 1 with a REAL predicate violation: 'ci 检查' and '连接仓库' had no
+deterministic route (routeCIIntent existed since A1_20 but was never wired —
+dead TODO), so menu ⌘R/.connectRepo would silently fire a model call.
+ARCHITECT FIX: routeBase now wires routeCIIntent (nil observation source →
+deterministic CIUnavailableNotice card — reducer purity: no IO in reducer;
+live async source = future atom) and 连接/connect joins the projectPicker
+branch. Negative-control test extended with both inputs. 262/262 green.
+Lens RISK noted (non-blocking): unknown-intent detection is doc-equality vs
+intentSuggestionsDoc(); future routes returning the same payload would
+silently enable dialogue — future marker refactor.
+
+SHIPGATE FLAKE FIXED: gate 16 probe window 5s→20s with WARN diagnostics
+(daemon startup exceeded 5s under post-rust-gate load; standalone PASS while
+full-run FAIL, reproduced twice before widening).
+
+262 tests (+8 FacilitatorDialogueTests, extended negative control), MIN_TESTS 254→262.
+VERIFY: golden-ir-redline PASS / failure-paths PASS / zero-call PASS after fix
+(mechanically re-verified by the extended test + full suite).
+---
+SHIPGATE p1: PASS (16/16)

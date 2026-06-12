@@ -28,7 +28,7 @@ swift build -c debug
 # Swift-Testing summary - a green receipt indistinguishable from zero
 # executed assertions). Capture everything, demand the XCTest pass line AND
 # a minimum executed-test count so silent runner drift turns the gate red.
-MIN_TESTS=254  # raised 2026-06-12 A1_33: 254 tests now passing (was 253; +1 probe-scope test)
+MIN_TESTS=262  # raised 2026-06-12 A1_34: 262 tests now passing (was 254; +8 facilitator dialogue tests)
 TEST_OUT="$(swift test 2>&1)" || { echo "$TEST_OUT" | tail -20; exit 1; }
 echo "$TEST_OUT" | grep -q "Test Suite 'All tests' passed" \
   || { echo "build_app: XCTest pass summary missing"; echo "$TEST_OUT" | tail -20; exit 1; }
@@ -74,7 +74,11 @@ if [[ -x "$DAEMON" ]]; then
   "$DAEMON" serve "$T/repo" "$T/d.sock" 2>/dev/null &
   DPID=$!
   trap 'kill "$DPID" 2>/dev/null || true' EXIT
-  for _ in $(seq 1 50); do [[ -S "$T/d.sock" ]] && break; sleep 0.1; done
+  # 20s window (was 5s): right after the rust gates the machine is still
+  # under load and daemon startup can exceed 5s — observed 2026-06-12
+  # (gate 16 flaked in full shipgate runs while standalone runs passed).
+  for _ in $(seq 1 200); do [[ -S "$T/d.sock" ]] && break; sleep 0.1; done
+  [[ -S "$T/d.sock" ]] || echo "build_app: WARN daemon socket not up after 20s" >&2
   LINE="$("$BIN" --probe "$T/d.sock")"
   kill "$DPID" 2>/dev/null || true
   trap - EXIT
@@ -96,7 +100,8 @@ print("build_app: probe received real envelope kind=%s seq=%s" % (e["kind"], e["
   "$DAEMON" serve --registry "$T/projects.json" "$T/r.sock" 2>/dev/null &
   RPID=$!
   trap 'kill "$RPID" 2>/dev/null || true' EXIT
-  for _ in $(seq 1 50); do [[ -S "$T/r.sock" ]] && break; sleep 0.1; done
+  for _ in $(seq 1 200); do [[ -S "$T/r.sock" ]] && break; sleep 0.1; done
+  [[ -S "$T/r.sock" ]] || echo "build_app: WARN registry socket not up after 20s" >&2
   RLINE="$("$BIN" --probe "$T/r.sock")"
   kill "$RPID" 2>/dev/null || true
   trap - EXIT

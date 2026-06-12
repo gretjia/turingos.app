@@ -117,7 +117,10 @@ struct TuringOSApp: App {
         WindowGroup("TuringOS") {
             Group {
                 if onboarded {
-                    OrbView(store: store)
+                    // A1_34: the ONLY FacilitatorDialogue.production() call
+                    // site — live gateway (FileTapeSink + URLSession) exists
+                    // exclusively on the app entry path, never in tests.
+                    OrbView(store: store, dialogue: FacilitatorDialogue.production())
                         .preferredColorScheme(.dark)
                         .task { startWorkspace() }
                 } else {

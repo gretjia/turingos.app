@@ -27,8 +27,15 @@ public struct OrbView: View {
     /// for what you could type; docs/02 §6 escape hatch).
     @EnvironmentObject private var commandBus: AppCommandBus
 
-    public init(store: GlanceStore, probe: any FacilitatorRuntimeProbe = SystemFacilitatorProbe()) {
-        _vm = StateObject(wrappedValue: OrbViewModel(probe: probe))
+    /// A1_34: `dialogue` defaults to nil (escape-hatch only). Production
+    /// wiring passes FacilitatorDialogue.production() at the app entry path
+    /// ONLY (TuringOSApp) — tests and previews keep the nil default.
+    public init(
+        store: GlanceStore,
+        probe: any FacilitatorRuntimeProbe = SystemFacilitatorProbe(),
+        dialogue: FacilitatorDialogue? = nil
+    ) {
+        _vm = StateObject(wrappedValue: OrbViewModel(probe: probe, dialogue: dialogue))
         self.store = store
     }
 
