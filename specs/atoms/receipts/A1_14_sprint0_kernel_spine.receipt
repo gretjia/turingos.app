@@ -1,0 +1,23 @@
+atom: A1_14_sprint0_kernel_spine
+utc: 2026-06-12T04:45:50Z
+head: 96c224105fee22ff3a055554b90d0a8be6db87f9
+note: Sprint 0 "Schema-first Kernel Spine" per user-approved execution ruling (v0.5 direction-freeze + minimal trunk; user granted token-budget window until Sunday 15:00, Fable as orchestrator only, sonnet/haiku for heavy work). DELIVERED: (a) 7 new contract schemas (tape_node w/ upstream-canonical disclaimer; approval_envelope generalizing ratification_payload to signature nodes 1-8 with visible_card_hash + Tier-2 reserved slots host_threat_level/external_anchor_id/audit_root per ruling "预留不实现"; capability_manifest w/ fail-closed semantics + vendor_tier=identity-attestation-not-quality; work_order_package; model_call w/ privacy_mode+replay_degraded honesty flag; failure_node verified:const false; merge_dossier w/ CI-evidence hardening workflow_file_hash/branch_protection_snapshot/required_checks_at_time + provenance_level enum + risk_findings channel) + 7 fixtures in fixtures/sprint0/ + validator wiring + README index. NEGATIVE CONTROL proven twice (implementer: visible_card_hash removal -> FAIL; verifier independently: dossier_id removal -> FAIL; restore -> PASS both times) - the gate has teeth. Verifier 7/7 checks PASS incl. zero forbidden combinators, locked-field audit, scope audit. (b) 4 engineering docs (1664 lines): 01_KERNEL_CONTRACTS (13-schema index + invariants I1-I9 + envelope semantics + Sprint-0 predicates), 02_SOFTWARE_3_UI_PRD (UI constitution + Orb state machine + View IR v0 with 14 block types incl. credential_field/SecureField-only rule + approval_request first-party-ApprovalCard-only + discoverability escape hatches + P1-shell disposition + degraded mode), 03_OPERATING_FLOW_ACCEPTANCE_TESTS (all 9 GPT engineering standards + 4-loop flow tests as {PASS,FAIL} predicates w/ concrete check commands), 04_ALPHA_EXECUTION_PLAN (approved/deferred scope + 5 red lines verbatim + Sprint->Atom decomposition A1_14..A1_22 + 4 pending user decisions + do-not-build list). Doc review (sonnet critic + haiku lint): 4+3 blockers all fixed - VETO-vs-FAIL schema citation corrected (VETO maps to verdict=FAIL+reject_class), envelope field list completed 14->20, provenance enum case drift fixed (lowercase would have silently bypassed the partial-provenance signature_5 guard), credential_field added to block enum, dangling section ref, table pipe escaping (python column-check PASS), 13->14 count. Traditional-character slip in one fix corrected by orchestrator. shipgate p1 16/16 PASS. Branch stacked on claude/a1-12-whitepaper-v04 (v0.5, PR #27 awaiting user merge); PR auto-retargets to main after #27. Parallel R1.9 session files untouched.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

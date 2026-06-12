@@ -75,6 +75,30 @@ for f in sorted(glob.glob("fixtures/event_streams/*.jsonl")):
     if errs: bad("fixture: %s" % f, "; ".join(errs[:6]))
     else: ok("fixture: %s (%d events)" % (f, len(seqs)))
 
+# --- sprint0 standalone fixtures (fixtures/sprint0/*.fixture.json) -----------
+# Each file is named <schema_stem>.fixture.json and validated against
+# contracts/<schema_stem>.schema.json using the same structural-subset validator.
+sprint0_map = {
+    "tape_node":            "tape_node.schema.json",
+    "approval_envelope":    "approval_envelope.schema.json",
+    "capability_manifest":  "capability_manifest.schema.json",
+    "work_order_package":   "work_order_package.schema.json",
+    "model_call":           "model_call.schema.json",
+    "failure_node":         "failure_node.schema.json",
+    "merge_dossier":        "merge_dossier.schema.json",
+}
+for stem, sf in sorted(sprint0_map.items()):
+    fpath = "fixtures/sprint0/%s.fixture.json" % stem
+    if sf not in schemas:
+        bad("sprint0 fixture: %s" % fpath, "schema %s not loaded" % sf); continue
+    try:
+        inst = json.load(open(fpath))
+    except Exception as e:
+        bad("sprint0 fixture: %s" % fpath, "bad JSON: %s" % e); continue
+    errs = validate(inst, schemas[sf])
+    if errs: bad("sprint0 fixture: %s" % fpath, "; ".join(errs[:6]))
+    else: ok("sprint0 fixture: %s" % fpath)
+
 print("validate_contracts: %s (structural-subset validator)" % ("FAIL" if FAIL else "PASS"))
 sys.exit(1 if FAIL else 0)
 PY

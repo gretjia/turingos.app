@@ -1,0 +1,62 @@
+{
+  "schema_version": "tos.app.merge_dossier.v0",
+  "dossier_id": "dos_sprint0_0001",
+  "project_id": "proj_turingos_sprint0",
+  "spec_delta": {
+    "added": ["contracts/tape_node.schema.json", "contracts/approval_envelope.schema.json", "contracts/capability_manifest.schema.json", "contracts/work_order_package.schema.json", "contracts/model_call.schema.json", "contracts/failure_node.schema.json", "contracts/merge_dossier.schema.json"],
+    "modified": ["scripts/validate_contracts.sh", "contracts/README.md"]
+  },
+  "ci_evidence": {
+    "commit_sha": "abc123def456",
+    "merge_base": "900fb563000000000000000000000000",
+    "check_run_ids": ["run_validate_contracts_001"],
+    "workflow_file_hash": "sha256:ccdd3344eeff556677889900aabbccdd",
+    "branch_protection_snapshot": {
+      "required_status_checks": ["validate_contracts"],
+      "enforce_admins": true
+    },
+    "required_checks_at_time": ["validate_contracts"],
+    "runner_type": "local",
+    "conclusion": "success"
+  },
+  "changed_files": [
+    "contracts/tape_node.schema.json",
+    "contracts/approval_envelope.schema.json",
+    "contracts/capability_manifest.schema.json",
+    "contracts/work_order_package.schema.json",
+    "contracts/model_call.schema.json",
+    "contracts/failure_node.schema.json",
+    "contracts/merge_dossier.schema.json",
+    "fixtures/sprint0/tape_node.fixture.json",
+    "fixtures/sprint0/approval_envelope.fixture.json",
+    "fixtures/sprint0/capability_manifest.fixture.json",
+    "fixtures/sprint0/work_order_package.fixture.json",
+    "fixtures/sprint0/model_call.fixture.json",
+    "fixtures/sprint0/failure_node.fixture.json",
+    "fixtures/sprint0/merge_dossier.fixture.json",
+    "scripts/validate_contracts.sh",
+    "contracts/README.md"
+  ],
+  "risk_findings": [
+    {
+      "dimension": "schema_completeness",
+      "note": "approval_envelope Tier-2 hostile-host fields are stubs (null/T0-T2); hardware not implemented. Consumers must treat host_threat_level=T3 as requiring external_anchor_id per description."
+    },
+    {
+      "dimension": "replay",
+      "note": "model_call fixtures with privacy_mode=full contain synthetic content; real production calls may be redacted, setting replay_degraded=true."
+    }
+  ],
+  "rollback_plan": "git revert the Sprint-0 contracts commit; existing event_stream fixtures remain unaffected as they use independent schema paths.",
+  "budget_used": {
+    "tokens": 28000,
+    "usd": 0.19
+  },
+  "provenance_level": "FULL",
+  "receipts": ["nd_genesis_0001"],
+  "known_limitations": [
+    "Structural-subset validator (no $ref/allOf) — full Draft 2020-12 validation deferred to Rust daemon.",
+    "Tier-2 hostile-host slots reserved; no hardware implementation in v0."
+  ],
+  "approval_route": "autonomy_contract"
+}

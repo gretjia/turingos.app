@@ -1,0 +1,42 @@
+{
+  "schema_version": "tos.app.work_order_package.v0",
+  "work_order_id": "wo_sprint0_contracts_0001",
+  "project_id": "proj_turingos_sprint0",
+  "spec_ref": "specs/atoms/a1-14-sprint0-kernel-spine.md",
+  "worktree_scope": "worktrees/sprint0",
+  "allowed_files": [
+    "contracts/*.schema.json",
+    "fixtures/sprint0/*.json",
+    "scripts/validate_contracts.sh",
+    "contracts/README.md"
+  ],
+  "forbidden_files": [
+    "constitution/**",
+    "runtime/**",
+    "app/**"
+  ],
+  "objective": "Write 7 Sprint-0 contract schemas and their fixtures; extend the validator; update README file-index.",
+  "expected_outputs": [
+    "contracts/tape_node.schema.json",
+    "contracts/approval_envelope.schema.json",
+    "contracts/capability_manifest.schema.json",
+    "contracts/work_order_package.schema.json",
+    "contracts/model_call.schema.json",
+    "contracts/failure_node.schema.json",
+    "contracts/merge_dossier.schema.json",
+    "fixtures/sprint0/*.fixture.json",
+    "scripts/validate_contracts.sh (extended)"
+  ],
+  "acceptance_predicates": [
+    "bash scripts/validate_contracts.sh exits 0",
+    "all 7 schema files present in contracts/",
+    "all 7 fixture files present in fixtures/sprint0/",
+    "negative control: corrupt fixture exits nonzero"
+  ],
+  "budget_slice": {
+    "tokens": 50000,
+    "usd": 0.50
+  },
+  "provenance_requirement": "full",
+  "prompt": "Implement Sprint 0 contract schemas for TuringOS per the architect's locked field specifications."
+}
