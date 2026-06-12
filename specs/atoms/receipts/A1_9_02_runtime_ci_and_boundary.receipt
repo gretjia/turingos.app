@@ -1,0 +1,44 @@
+atom: A1_9_02_runtime_ci_and_boundary
+shipped_at: 2026-06-12T14:20:00Z
+git_head: d7bcb3b1 (pre-ship; ship commit follows)
+gate: bash scripts/shipgate.sh p1.9
+
+note: The kernel's constitution now travels with the kernel.
+
+DELIVERED:
+1. POSIX gates-runner fix: runtime/scripts/run_constitution_gates.sh:18
+   grep -oP -> sed (byte-identical to user's own uncommitted v4 worktree fix;
+   R1.9 audit-verified, provenance hashes in baseline_step2b_patch_provenance.log).
+   Proof on macOS BSD grep: [k-1-5] total=194 failed=1 (was: grep: invalid option -- P).
+2. PINS [runtime_gates] gate_count=194 (1 known zero-test placeholder honestly
+   noted: constitution_real17_evaluator_prompt_provenance_wire.rs, R1.9 §0.3).
+3. shipgate gate 18 hardened: triple checksum PINS == constitution_*.rs file
+   count == manifest entry count (was a placeholder find heuristic).
+4. baseline_exceptions.list populated: exactly 2 catalogued reds, each with
+   owned-by + cause (sandbox_cwd platform red; final_closure squash-history red).
+   RATCHET ACTIVE: shrink-only from this commit.
+5. scripts/predicates/check_constitution_gates.sh — gate-suite shape guard
+   (total==PINS, failed<=gate-domain catalogued). Local proof: PASS.
+6. scripts/predicates/check_runtime_workspace.sh — name-level red-set ratchet
+   (FAILED set must be subset of catalogued list). Parser dry-run verified.
+7. .github/workflows/runtime-gates.yml — CI lane, matrix ubuntu+macos-26:
+   194-gate suite + workspace ratchet + boundary/count/format gates.
+   Plugs the v4-era blind spot (no workflow ran cargo test --workspace, R1.9 §0.2).
+
+BLOCKER EXEMPTION PATH REJECTED (honesty note): the failing evidence-
+reconciliation gate has a blockers[] mechanism, but every blocker class is
+receipt-derived-verified; declaring one for the squash-history red would
+require the receipt to prove a condition that is not true (data lying).
+Catalogued red is the honest disposition.
+
+LOCAL REAL-RUN EVIDENCE:
+  check_constitution_gates: total=194 == PINS, failed=1 <= 1 catalogued PASS
+  workspace (A1_9_01 run): 479 binaries, 2843 passed, 2 catalogued reds
+  gates 17/18/19 standalone: PASS / 194==194==PINS / format clean
+---
+SHIPGATE p1: PASS (16/16)
+[PASS] 17 boundary grep (daemon/app zero runtime-internal imports)
+[PASS] 18 runtime gate count (194 files == 194 manifest == PINS baseline)
+[PASS] 19 exceptions ratchet (all non-comment lines have owned-by atom)
+----------------------------------------
+SHIPGATE p1.9: PASS

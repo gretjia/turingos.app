@@ -15,7 +15,10 @@ REPORT_MD="target/constitution_gate_report.md"
 DISCOVERED=$(ls tests/constitution_*.rs 2>/dev/null | xargs -n1 basename | sed 's/\.rs$//' | sort)
 
 # Extract gates from manifest
-MANIFEST=$(grep -oP '^name = "\K[^"]+' scripts/constitution_gates.manifest.toml | sort)
+# POSIX-portable extraction (was GNU-only `grep -oP`, fails on macOS BSD grep —
+# A1_9_02, byte-identical to the user's own uncommitted fix in the v4 worktree,
+# verified green in the R1.9 audit clone: baseline_step2b_patch_provenance.log).
+MANIFEST=$(sed -n 's/^name = "\(.*\)"$/\1/p' scripts/constitution_gates.manifest.toml | sort)
 
 # Cross-check: gates discovered but missing from manifest
 ONLY_DISC=$(comm -23 <(echo "$DISCOVERED") <(echo "$MANIFEST"))

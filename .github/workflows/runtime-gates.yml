@@ -1,17 +1,14 @@
 # runtime-gates.yml — Constitutional gates CI lane (A1_9_02)
 #
-# PURPOSE: Runs the runtime's full constitutional gate suite + cargo workspace tests
-# on every push that touches runtime/**. Plugs the CI blind-spot that existed when
-# runtime lived in a separate repo (turingosv4) without checks in this repo.
+# PURPOSE: The kernel's constitution travels with the kernel. This lane runs
+# (a) the full 194-gate constitution suite, (b) the full cargo workspace with
+# the baseline-exceptions ratchet, and (c) shipgate p1.9 (boundary grep +
+# gate-count checksum + ratchet-format check) on every push touching runtime/.
+# Plugs the v4-era CI blind spot: no workflow there ran cargo test --workspace
+# (R1.9 §0.2).
 #
-# GATE SEMANTICS:
-#   shipgate p1.9 = p1 (all existing gates) + the three p1.9 gates:
-#   [A] Boundary grep: daemon/ and app/ must NOT import runtime internals
-#   [B] Runtime gate count == PINS.toml baseline (== gates in runtime/constitution/)
-#   [C] Exceptions ratchet: scripts/predicates/baseline_exceptions.list only shrinks
-#
-# CURRENT STATUS: Gate B and POSIX fix (runtime/scripts/) await P1.9 runtime import.
-# The workflow is syntactically correct and will activate once runtime/ is present.
+# Matrix: ubuntu (GNU userland) + macos-26 (BSD userland — proves the POSIX
+# gates-runner fix stays portable).
 
 name: runtime-gates
 
@@ -31,11 +28,12 @@ on:
 
 jobs:
   runtime-gates:
-    name: Constitutional gates + boundary check
+    name: Constitution gates + workspace ratchet
     strategy:
       matrix:
         os: [ubuntu-latest, macos-26]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -43,13 +41,34 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Check runtime present (P1.9 guard)
-        run: |
-          if [ ! -f runtime/Cargo.toml ]; then
-            echo "ERROR: runtime/ not yet imported (A1_9_01 pending)"
-            echo "This workflow activates after P1.9 runtime import."
-            exit 1
-          fi
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: runtime
 
-      - name: Run shipgate p1.9
-        run: bash scripts/shipgate.sh p1.9
+      - name: Runtime present (P1.9 guard)
+        run: test -f runtime/Cargo.toml
+
+      - name: Constitution gate suite (194 gates, ratchet-aware)
+        run: bash scripts/predicates/check_constitution_gates.sh
+
+      - name: Workspace tests + baseline ratchet
+        run: bash scripts/predicates/check_runtime_workspace.sh
+
+      - name: shipgate p1.9 boundary + gate-count + ratchet format
+        # Full p1.9 includes the swift app lane (macOS-only, runs in app.yml);
+        # here we run the three p1.9-specific gates standalone to keep this
+        # lane focused on the kernel. Gates 17/18/19 logic is shared with the
+        # local shipgate via the same script.
+        run: |
+          bash -c '
+            set -u; FAIL=0
+            hits=$(grep -rE "use turingosd?.*runtime|use runtime::" daemon/ app/ 2>/dev/null | grep -v "^[[:space:]]*#" || true)
+            [ -z "$hits" ] && echo "[PASS] boundary grep" || { echo "[FAIL] boundary: $hits"; FAIL=1; }
+            pins=$(python3 -c "import tomllib;print(tomllib.load(open(\"constitution/PINS.toml\",\"rb\"))[\"runtime_gates\"][\"gate_count\"])")
+            files=$(ls runtime/tests/constitution_*.rs | wc -l | tr -d " ")
+            man=$(sed -n "s/^name = \"\(.*\)\"$/\1/p" runtime/scripts/constitution_gates.manifest.toml | wc -l | tr -d " ")
+            { [ "$pins" = "$files" ] && [ "$pins" = "$man" ]; } && echo "[PASS] gate count $files" || { echo "[FAIL] count PINS=$pins files=$files manifest=$man"; FAIL=1; }
+            bad=$(grep -v "^[[:space:]]*#" scripts/predicates/baseline_exceptions.list | grep -v "^[[:space:]]*$" | grep -v "owned-by:" || true)
+            [ -z "$bad" ] && echo "[PASS] ratchet format" || { echo "[FAIL] ratchet: $bad"; FAIL=1; }
+            exit $FAIL
+          '

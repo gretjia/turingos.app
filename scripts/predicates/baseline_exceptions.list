@@ -1,13 +1,10 @@
 # baseline_exceptions.list — known-red gate exceptions (A1_9_02 ratchet)
 #
 # RATCHET LAW: This file may only SHRINK after A1_9_02 ships.
-# Each line that is NOT a comment must reference an owning atom (e.g. # owned-by: A1_XY).
+# Each line that is NOT a comment must reference an owning atom (owned-by: <atom>).
 # Any line added here requires an atom card owning the exception.
 #
-# Format: <gate-id>:<description> # owned-by: <atom>
+# Format: <test-binary>::<test-name>:<one-line cause> # owned-by: <atom>
 #
-# Example (do not uncomment without an atom card):
-# gate-17:some_known_red_from_import # owned-by: A1_9_02
-#
-# STATUS: Empty at A1_9_02 prep-work stage.
-# Populated by A1_9_02 shipment after P1.9 runtime import.
+sanitized_runner::sandbox_cwd_is_explicit_workspace:macOS /private/var vs /var symlink canonicalization (platform red, R1.9 §0.2 catalogued, present in baseline re-verification) # owned-by: A1_9_02
+constitution_true_suite_evidence_reconciliation::final_closure_source_tree_commits_must_exist_in_git_history:evidence binds v4-history commit ff5d109e unreachable after user-ruled squash import (history truncation inherent to import_mode) # owned-by: A1_9_02

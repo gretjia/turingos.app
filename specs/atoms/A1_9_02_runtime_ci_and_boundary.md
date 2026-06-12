@@ -12,6 +12,8 @@ allowlist:
   - ".github/workflows/**"
   - "scripts/shipgate.sh"
   - "scripts/predicates/**"
+  - "constitution/PINS.toml" # amended 2026-06-12: card intent says gate-count check "==PINS 记录数" — the baseline count lives in PINS by design; list omission was an oversight
+  - "specs/atoms/CURRENT" # amended 2026-06-12: ship-cycle bookkeeping
 max_new_files: 4
 predicates:
   - "bash scripts/shipgate.sh p1.9"

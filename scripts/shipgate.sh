@@ -223,8 +223,11 @@ if [ "$PHASE" = "p1.9" ]; then
   fi
 
   # [B] Runtime gate count == PINS.toml baseline.
+  # Counting law (A1_9_02): gates = runtime/tests/constitution_*.rs files.
+  # run_constitution_gates.sh enforces the manifest<->files bidirectional diff;
+  # this re-count is an independent checksum (one fewer file than PINS = red).
   if [ ! -d "runtime" ]; then
-    fail "18 runtime gate count" "runtime/ not yet imported (A1_9_01 / P1.9 pending — merge turingosv4 PR #342 + resolve U2/U4 first)"
+    fail "18 runtime gate count" "runtime/ not yet imported (A1_9_01 / P1.9 pending)"
   else
     pins_count=$(python3 -c "
 import sys
@@ -234,11 +237,12 @@ try:
     print(t.get('runtime_gates',{}).get('gate_count', 0))
 except Exception as e:
     print('ERR:%s' % e)" 2>/dev/null)
-    actual_count=$(find runtime/ -name '*.gate' -o -name 'gate_*.sh' 2>/dev/null | wc -l | tr -d ' ')
-    if [ "$pins_count" = "$actual_count" ]; then
-      pass "18 runtime gate count ($actual_count == PINS baseline)"
+    actual_count=$(ls runtime/tests/constitution_*.rs 2>/dev/null | wc -l | tr -d ' ')
+    manifest_count=$(sed -n 's/^name = "\(.*\)"$/\1/p' runtime/scripts/constitution_gates.manifest.toml 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$pins_count" = "$actual_count" ] && [ "$pins_count" = "$manifest_count" ]; then
+      pass "18 runtime gate count ($actual_count files == $manifest_count manifest == PINS baseline)"
     else
-      fail "18 runtime gate count" "PINS=$pins_count actual=$actual_count (run scripts/update_pins.sh after import)"
+      fail "18 runtime gate count" "PINS=$pins_count files=$actual_count manifest=$manifest_count (must all match; gates removed without PINS amendment = red)"
     fi
   fi
 
