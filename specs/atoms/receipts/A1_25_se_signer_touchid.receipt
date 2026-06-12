@@ -1,0 +1,23 @@
+atom: A1_25_se_signer_touchid
+utc: 2026-06-12T11:13:21Z
+head: 20253b7e2e3812ddcfccfd16bfa905cd37be4692
+note: Whitepaper §9/§13.2 SE-P256 + Touch ID signing CAPABILITY (capability != ceremony: signer signs and RETURNS a receipt; recording-on-tape still blocked on runtime import). Delivered: EnvelopeSigner protocol (ADR-013 signer.rs-isomorphic; SignerError {unavailable,rejected} fail-closed); SecureEnclaveSigner (kSecAttrTokenIDSecureEnclave + .privateKeyUsage + .biometryCurrentSet production ACL; EVERY failure path typed-error, zero silent fallback - verifier traced all guard/catch branches); SignedEnvelopeReceipt (ALL 10 signature_receipt schema required keys; payload = canonical envelope bytes WITH visible_card_hash already bound from A1_23; trust_state=human_root_signed per ADR-005 SE-is-root, signature_invalid on tamper; anchored_seq=0 honest within schema minimum:0 + "re-anchored at import" semantic; verified=false is a RETURNED state not a throw); ApprovalEnvelopeBuilder amended - required_signature_level = f(injected SignerCapability), caller still cannot pass raw level (SE available -> touch_id_se claimable, else app_approval; capability-gated claiming = A1_23's principle forward-half). CI-safe: MockSigner + non-biometric throwaway SE key (distinct tag, defer-cleanup) + XCTSkip; no biometric prompt in any test path. 139 tests (+7), MIN_TESTS 132->139. Verifier 8 checks: 2 FAIL caught + fixed (no end-to-end verified=false receipt test -> added CorruptSignatureSigner test; CLAUDE.md/audit_data out-of-allowlist edits -> reverted) + 1 EXTRA BUG caught: double-takeRetainedValue over-release in sign() CFError path (real-device Touch-ID-cancel crash, invisible to MockSigner tests) -> fixed to single capture. shipgate p1 16/16 PASS. This completes whitepaper §9 signing-capability content; ceremony RECORDING (receipt->tape) is the only remaining piece of §9, gated on P1.9 runtime import (A1_19).
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
