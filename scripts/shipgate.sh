@@ -184,6 +184,68 @@ if [ "$PHASE" = "p1" ]; then
   fi
 fi
 
+# --- p1.9 lane (runtime import gates; A1_9_02) ---------------------------------
+# Three gates:
+#   [A] Boundary grep: daemon/ and app/ must NOT import runtime internals.
+#       Runs NOW — no runtime in repo required.
+#   [B] Runtime gate count == PINS.toml baseline.
+#       Requires runtime/ to be imported (A1_9_01 / P1.9 lane).
+#   [C] Exceptions ratchet: baseline_exceptions.list has only comment lines for now
+#       (populated by A1_9_02 after runtime import; empty = trivially passes ratchet).
+if [ "$PHASE" = "p1.9" ]; then
+  # Run p1 gates first (p1.9 is a strict superset of p1).
+  bash scripts/shipgate.sh p1
+  p1_exit=$?
+  if [ "$p1_exit" -ne 0 ]; then
+    echo "----------------------------------------"
+    echo "SHIPGATE p1.9: FAIL (p1 sub-gates failed)"
+    exit 1
+  fi
+
+  # [A] Boundary grep: no daemon/app code imports runtime internals.
+  # Pattern: Rust `use turingosd?.*runtime` or `use runtime::` in daemon/ or app/
+  # Uses grep -rE for POSIX compatibility (rg not required).
+  boundary_hits=$(grep -rE 'use turingosd?.*runtime|use runtime::' daemon/ app/ 2>/dev/null | grep -v '^[[:space:]]*#' || true)
+  if [ -z "$boundary_hits" ]; then
+    pass "17 boundary grep (daemon/app zero runtime-internal imports)"
+  else
+    fail "17 boundary grep" "cross-layer imports found: $(echo "$boundary_hits" | head -3 | tr '\n' ' ')"
+  fi
+
+  # [B] Runtime gate count == PINS.toml baseline.
+  if [ ! -d "runtime" ]; then
+    fail "18 runtime gate count" "runtime/ not yet imported (A1_9_01 / P1.9 pending — merge turingosv4 PR #342 + resolve U2/U4 first)"
+  else
+    pins_count=$(python3 -c "
+import sys
+try:
+    import tomllib
+    t = tomllib.load(open('constitution/PINS.toml','rb'))
+    print(t.get('runtime_gates',{}).get('gate_count', 0))
+except Exception as e:
+    print('ERR:%s' % e)" 2>/dev/null)
+    actual_count=$(find runtime/ -name '*.gate' -o -name 'gate_*.sh' 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$pins_count" = "$actual_count" ]; then
+      pass "18 runtime gate count ($actual_count == PINS baseline)"
+    else
+      fail "18 runtime gate count" "PINS=$pins_count actual=$actual_count (run scripts/update_pins.sh after import)"
+    fi
+  fi
+
+  # [C] Exceptions ratchet: every non-comment line in the list must have owning atom.
+  exc_file="scripts/predicates/baseline_exceptions.list"
+  if [ ! -f "$exc_file" ]; then
+    fail "19 exceptions ratchet" "baseline_exceptions.list missing"
+  else
+    bad_lines=$(grep -v '^[[:space:]]*#' "$exc_file" | grep -v '^[[:space:]]*$' | grep -v 'owned-by:' || true)
+    if [ -z "$bad_lines" ]; then
+      pass "19 exceptions ratchet (all non-comment lines have owned-by atom)"
+    else
+      fail "19 exceptions ratchet" "exception lines missing 'owned-by:' annotation: $(echo "$bad_lines" | head -2 | tr '\n' ' ')"
+    fi
+  fi
+fi
+
 echo "----------------------------------------"
 if [ "$FAIL" -eq 0 ]; then echo "SHIPGATE $PHASE: PASS"; exit 0
 else echo "SHIPGATE $PHASE: FAIL"; exit 1; fi

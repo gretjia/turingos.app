@@ -1,0 +1,13 @@
+# baseline_exceptions.list — known-red gate exceptions (A1_9_02 ratchet)
+#
+# RATCHET LAW: This file may only SHRINK after A1_9_02 ships.
+# Each line that is NOT a comment must reference an owning atom (e.g. # owned-by: A1_XY).
+# Any line added here requires an atom card owning the exception.
+#
+# Format: <gate-id>:<description> # owned-by: <atom>
+#
+# Example (do not uncomment without an atom card):
+# gate-17:some_known_red_from_import # owned-by: A1_9_02
+#
+# STATUS: Empty at A1_9_02 prep-work stage.
+# Populated by A1_9_02 shipment after P1.9 runtime import.

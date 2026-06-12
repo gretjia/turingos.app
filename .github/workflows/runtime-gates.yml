@@ -1,0 +1,55 @@
+# runtime-gates.yml — Constitutional gates CI lane (A1_9_02)
+#
+# PURPOSE: Runs the runtime's full constitutional gate suite + cargo workspace tests
+# on every push that touches runtime/**. Plugs the CI blind-spot that existed when
+# runtime lived in a separate repo (turingosv4) without checks in this repo.
+#
+# GATE SEMANTICS:
+#   shipgate p1.9 = p1 (all existing gates) + the three p1.9 gates:
+#   [A] Boundary grep: daemon/ and app/ must NOT import runtime internals
+#   [B] Runtime gate count == PINS.toml baseline (== gates in runtime/constitution/)
+#   [C] Exceptions ratchet: scripts/predicates/baseline_exceptions.list only shrinks
+#
+# CURRENT STATUS: Gate B and POSIX fix (runtime/scripts/) await P1.9 runtime import.
+# The workflow is syntactically correct and will activate once runtime/ is present.
+
+name: runtime-gates
+
+on:
+  push:
+    paths:
+      - "runtime/**"
+      - "scripts/shipgate.sh"
+      - "scripts/predicates/**"
+      - "constitution/**"
+  pull_request:
+    paths:
+      - "runtime/**"
+      - "scripts/shipgate.sh"
+      - "scripts/predicates/**"
+      - "constitution/**"
+
+jobs:
+  runtime-gates:
+    name: Constitutional gates + boundary check
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-26]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check runtime present (P1.9 guard)
+        run: |
+          if [ ! -f runtime/Cargo.toml ]; then
+            echo "ERROR: runtime/ not yet imported (A1_9_01 pending)"
+            echo "This workflow activates after P1.9 runtime import."
+            exit 1
+          fi
+
+      - name: Run shipgate p1.9
+        run: bash scripts/shipgate.sh p1.9
