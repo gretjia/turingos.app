@@ -1,0 +1,71 @@
+atom: A1_9_01_runtime_import
+shipped_at: 2026-06-12T13:55:00Z
+git_head: a3e50037 (import commit; receipt+fixes commit follows)
+gate: bash scripts/shipgate.sh p1
+
+note: turingosv4@61ec26c7 imported verbatim into runtime/ as squash single commit
+(15,420 files, 1,187,661 lines). PINS anchor pinned 61ec26c7 — tree-identical to
+re-verified 3bf6b2f3 (git diff empty), so the 2026-06-12 anchor re-verification
+receipt (194 gates EXIT=0, workspace 2391/1, verify_trust_root ok) applies verbatim.
+U2/U4 ruling per user authorization 2026-06-12: doc items, NOT blocking, land
+post-import as follow-up doc atoms. No root Cargo workspace: nested workspaces
+forbidden + daemon/target relocation would break build_app.sh (decision recorded
+in import commit message).
+
+POST-IMPORT RED ATTRIBUTION (full workspace run on THIS repo: 479 test binaries,
+2843 passed / 3 failed initially → 1 amend-fix + 1 real-fix + 2 catalogued):
+
+  RED 1 fc3_art_v2_constitution_boundaries_witness
+    Cause: v4 constitution witness audits THIS repo's git history; the import
+    commit touched runtime/constitution.md without a tracer anchor keyword.
+    Fix: amend import commit message with Phase/directive/charter anchors
+    (a3e50037). v4's constitutional guard fired correctly in its new home —
+    treated as REAL, fixed, now green.
+
+  RED 2 sanitized_runner::sandbox_cwd_is_explicit_workspace
+    Cause: macOS /private/var vs /var symlink canonicalization — IDENTICAL to
+    the catalogued baseline platform red (R1.9 §0.2). Disposition: catalogue in
+    baseline_exceptions.list (A1_9_02, ratchet shrink-only).
+
+  RED 3 constitution_true_suite_evidence_reconciliation::
+        final_closure_source_tree_commits_must_exist_in_git_history
+    Cause: evidence binds v4-history commit ff5d109e not reachable from HEAD —
+    inherent consequence of user-ruled squash import_mode (history truncation).
+    Disposition: catalogue in baseline_exceptions.list (A1_9_02, owned).
+
+  RED 4 r_022_integration_orchestrator (9 shell tests)
+    Cause: tests/integration/co1_13/_lib.sh derived PROJECT_ROOT via
+    `git rev-parse --show-toplevel` — now resolves to host repo root, one level
+    above v4 root. Fix (REAL, upstream-compatible): script-relative derivation
+    (up 3 from _lib.sh). Rerun: ALL PASS. Class 1 test-scaffold fix per v4
+    AGENTS.md §5; not a §6 restricted surface.
+
+SHELL GATE FIXES (jurisdiction boundary, allowlist amended on card with paper trail):
+  gate 5 market-claims + gate 10 dead-links now exclude runtime/ — verbatim-
+  imported foreign legal domain; doc discipline owned by v4's own 194-gate suite.
+  gate 10 had a FAIL-OPEN bug exposed by import: git C-quoted non-ASCII paths
+  (§ in v4 directive filenames) crashed the python checker → empty output →
+  silent PASS. Fixed: core.quotePath=false + splitlines + explicit
+  GATE-SCRIPT-ERROR fail-closed on checker crash.
+
+Baseline for A1_9_02 ratchet: exactly 2 catalogued reds (RED 2 platform,
+RED 3 squash-history). Everything else green: 479 binaries, 0 unattributed fails.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS

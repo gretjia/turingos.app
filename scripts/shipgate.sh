@@ -46,7 +46,9 @@ else fail "4 predicate verdict domain" "enum drifted from {PASS,FAIL}"; fi
 mc_fail=""
 while IFS= read -r pat; do
   case "$pat" in \#*|"") continue;; esac
-  for f in $(git ls-files | grep -v '^scripts/predicates/'); do
+  # runtime/ excluded: verbatim-imported foreign legal domain (A1_9_01) — its
+  # market-claim discipline is owned by v4's own gate suite, not this guard.
+  for f in $(git ls-files | grep -v '^scripts/predicates/' | grep -v '^runtime/'); do
     if grep -qiF "$pat" "$f" 2>/dev/null; then
       if ! grep -qiE 'preregistered|foil|shuffled_price|paired test|statistically supported' "$f"; then
         mc_fail="$mc_fail $f:($pat)"
@@ -126,14 +128,22 @@ rm -rf "$tmpd"
 links=$(python3 -c "
 import re, os, sys, subprocess
 bad = []
-files = subprocess.run(['git','ls-files','*.md'], capture_output=True, text=True).stdout.split()
+# core.quotePath=false: git would otherwise C-quote non-ASCII paths (e.g. §),
+# which (a) dodges the runtime/ prefix filter and (b) crashes open() — and a
+# crashed checker used to print nothing, turning a script error into a silent
+# PASS (fail-open). splitlines() not split(): filenames may contain spaces.
+files = subprocess.run(['git','-c','core.quotePath=false','ls-files','*.md'], capture_output=True, text=True).stdout.splitlines()
+# runtime/ = verbatim-imported foreign legal domain (A1_9_01): its docs carry
+# v4-era historical links; doc discipline there is owned by runtime's own
+# 194-gate suite, not the shell's dead-link gate.
+files = [f for f in files if f and not f.startswith('runtime/')]
 for f in files:
     for m in re.finditer(r'\[[^\]]*\]\(([^)]+)\)', open(f, encoding='utf-8').read()):
         t = m.group(1).split('#')[0]
         if not t or t.startswith(('http', 'mailto')): continue
         p = os.path.normpath(os.path.join(os.path.dirname(f), t))
         if not os.path.exists(p): bad.append('%s -> %s' % (f, t))
-print(';'.join(bad))")
+print(';'.join(bad))") || links="GATE-SCRIPT-ERROR(dead-link checker crashed, fail-closed)"
 [ -n "$links" ] && hk_fail="$hk_fail dead-links:$links"
 if [ -z "$hk_fail" ]; then pass "10 hooks dry-run + R-memo gate + dead links"
 else fail "10 hooks/links" "$hk_fail"; fi

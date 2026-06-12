@@ -5,7 +5,12 @@
 # and seeds a minimal git repo. This MUST be called before any git command.
 set -euo pipefail
 
-PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+# PROJECT_ROOT derived from this file's own location (tests/integration/co1_13
+# -> up 3 = v4 project root). Was `git rev-parse --show-toplevel`, which broke
+# after the A1_9_01 subtree import: the git toplevel is now the host repo
+# (turingos.app), one level above the v4 root. Script-relative derivation is
+# correct in both layouts (standalone v4 clone AND runtime/ subtree).
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 SCRIPT="$PROJECT_ROOT/scripts/check_trace_matrix.py"
 
 # Hard isolation guard: every git command in tests must run inside a tmp dir,

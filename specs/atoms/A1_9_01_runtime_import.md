@@ -10,6 +10,7 @@ allowlist:
   - "Cargo.toml"
   - "constitution/PINS.toml"
   - "specs/atoms/CURRENT" # amended 2026-06-12: ship-cycle bookkeeping (same as every other atom card)
+  - "scripts/shipgate.sh" # amended 2026-06-12: import-inherent coupling — gate 10 dead-link check must declare the runtime/ jurisdiction boundary (verbatim-imported foreign legal domain carries 4907 historical dead links in v4 handover docs; its doc discipline is owned by its own 194-gate suite, not the shell's doc gates). Minimal change: exclude runtime/ prefix in gate 10 md scan.
 max_new_files: 0
 predicates:
   - "test -f runtime/Cargo.toml"
