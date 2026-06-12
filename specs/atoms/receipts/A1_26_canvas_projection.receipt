@@ -1,0 +1,23 @@
+atom: A1_26_canvas_projection
+utc: 2026-06-12T11:28:44Z
+head: 011277a347cb0719608b90bb3eb133db0214578c
+note: Whitepaper §6.7 Canvas Projection v1 (self-built deterministic canvas - NOT Freeform, which research proved exposes only one Shortcuts action). Delivered: MarkdownAST.swift (block-level parser -> [MarkdownNode] heading/para/list/code/quote/break; fenced code contents not split; HTML/script tags pass through as PLAIN text data never markup - red line 1); CanvasLayout.swift (pure layout(nodes,config) -> CanvasGraph; deterministic node ids, frame arithmetic, heading indent, monotonic-y flow; EVERY node carries non-empty deriveSource tracing to sourceId - §6.7 "canvas is not a second source of truth"); CanvasProjection.swift (canvasDocument uses ONLY existing ViewIR block types - ViewIR.swift git-diff EMPTY; CanvasExportDescriptor = pure description with sha256, NO actual PDF/CGContext/export API; Freeform bridge = TODO comment only, private format never reversed). 152 tests (+13), MIN_TESTS 139->152, verifier 8/8 PASS 0 blockers (no-markup negative: script-tag survives as literal text; determinism x2 byte-equal; zero HTML/JS/export-side-effect surface). shipgate p1 16/16 PASS. With A1_26 the lawful-now implementable surface of WHITEPAPER v0.5 is fully exhausted across THREE goal-hook rounds: remaining = self-deferred-by-v0.5-text (Market settlement §12, auto-MCTS §11 TBD, Tier-2 hardware §9.1, full rendering/export, external integrations M4) + user-gated (turingosv4#342 merge, U2/U4 ruling, then P1.9 import -> A1_19 ceremony recording). The signing CAPABILITY (A1_25), envelope+binding (A1_23), and registry enforcement (A1_21) are all built and waiting for the tape sink alone.
+---
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+----------------------------------------
+SHIPGATE p1: PASS
