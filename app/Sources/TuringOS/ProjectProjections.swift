@@ -227,6 +227,72 @@ public enum ProjectProjections {
             blocks: blocks
         )
     }
+
+    // MARK: - specDraftCard (A1_18)
+
+    /// Deterministic factory: WizardSession → spec_draft ViewIRDocument.
+    ///
+    /// Produces a `spec_draft` block showing the current wizard step prompt/hint,
+    /// plus an `intent_suggestions` block listing the step guidance.
+    ///
+    /// Same WizardSession state → byte-identical output (pure function).
+    public static func specDraftCard(from session: WizardSession) -> ViewIRDocument {
+        let step = session.currentStep
+
+        // spec_draft block: uses spec_ref = projectId + stepIndex for traceability.
+        let specDraftBlock = SpecDraftPayload(
+            specRef: "draft:\(session.projectId)@step\(session.stepIndex)",
+            sections: [
+                SpecSection(ref: "step.\(session.stepIndex)",
+                            title: step?.prompt ?? "审阅")
+            ],
+            signatureNode: 1
+        )
+
+        // intent_suggestions block: guidance for the current step.
+        let hint = step?.hint ?? "确认后将保存草案。"
+        let suggestions = [
+            IntentSuggestion(label: hint,
+                             intentText: step?.field.rawValue ?? "review",
+                             contextTag: "spec_wizard"),
+        ]
+
+        return ViewIRDocument(
+            kind: "spec_draft",
+            deriveSource: ["user_input", "spec_draft:wizard:\(session.projectId)"],
+            blocks: [
+                .specDraft(specDraftBlock),
+                .intentSuggestions(IntentSuggestionsPayload(suggestions: suggestions)),
+            ]
+        )
+    }
+
+    // MARK: - specDraftSummaryCard (A1_18)
+
+    /// Deterministic factory: finished wizard → summary_card confirming draft saved.
+    /// Uses "awaiting kernel ceremony" wording (status=awaitingRatification is the
+    /// Project Ready gate; ratification itself lives in the kernel tape, not here).
+    public static func specDraftSummaryCard(
+        specHash: String,
+        projectId: String
+    ) -> ViewIRDocument {
+        let card = SummaryCardPayload(
+            title: "立项草案已保存",
+            body: """
+            项目：\(projectId)
+            状态：draft · 等待内核仪式（awaiting kernel ceremony）
+            Spec hash：\(specHash)
+
+            下一步：通过内核批准回路完成 Init Spec 批准（签名 #1）。
+            在内核仪式完成前，项目处于 draft 状态，无法派发普通工单。
+            """
+        )
+        return ViewIRDocument(
+            kind: "spec_draft",
+            deriveSource: ["user_input", "spec_draft:finished:\(projectId)"],
+            blocks: [.summaryCard(card)]
+        )
+    }
 }
 
 // MARK: - Array dedup helper (local; mirrors OrbState's private extension)
