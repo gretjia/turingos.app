@@ -1,4 +1,4 @@
-# ADR — 架构裁决记录（001-011）
+# ADR — 架构裁决记录（001-016）
 
 推翻任何一条须新增 ADR 条目并走 RATIFICATION_POLICY 对应层级，不得默改。
 
@@ -72,3 +72,13 @@ Claude Code 的 WorktreeCreate/WorktreeRemove hooks **存在且可用**（2026-0
 - **边界纪律（承 ADR-009，仓界变目录界）**：壳/daemon 代码 **import runtime internals = grep 谓词红线**；消费只经 `turingos` CLI（按 docs/CLI_ABI.md，非合规命令隔离适配）或显式 atom 添加的 lib facade。runtime/ 的 194 门禁 + workspace 测试成为本仓 CI lane（**内核的宪法随内核迁居**）。
 - **v4 原仓命运**：U 项落地 → 钉 rev → 导入基线绿 → PR #283 打 tag `archive/p1-realvalue-20260605` 关闭 → 本地分支清理（已授权）→ archive 只读。唯一真相自此在本仓。
 - **质量裁决存档**：S3=0（无模块需移植即重写）；五项编目债务（fail-open stub / 签名测试洞 / CI 盲区 / CLI 七律 1/29 / transition_ledger S2 + 留痕清单）拴定各自 owning atom，详见 research/R1.9_memo.md §⑤ 与 R1.9_synthesis.md。
+
+## ADR-016 无限缩放 Galaxy 望远镜（用户 2026-06-14 裁定，/goal 授权自主执行）
+依据 R-stage 备忘 `research/R1_infinite_zoom_memo.md`。把 galaxy 从「每项目横轨道 + 分支计数」重做成**无边际画布 + 无限语义缩放望远镜**：项目（深空）→ 项目星系/簇 → 分支/worktree → commit → （P5+）ChainTape 决策节点；每档**只渲已观测的**，跨阈值换表征（聚合 glyph→簇泡→节点卡→全内容）。
+- **推翻 V6 默认宏观视图**：本 ADR 推翻 `design/V6_RECONCILIATION.md` §1 冻结的默认初始视角（centerWorld scale 0.25 压缩态宏观），改为无限缩放望远镜的默认取景。授权来自 ADR-012 停点/共创权（用户 2026-06-14 解锁），按本文件首行纪律走 RATIFICATION_POLICY 新条目立案、**不静默改默认**。**收工配真机截图视觉签字**——视觉忠实度是主观判据，走 RiskFinding + 用户签字，**绝不冒充机械 predicate / 绝不假绿**（M6）。UI 实现期执行 agent 持设计自主权（ADR-012 增补/DESIGN.md），重大转向呈报。
+- **commit 观测层（A1_52，daemon/内核轨）**：daemon 新增 `CommitObserved` 事件让 commit 粒度可观测（今天 daemon 最深只观测到分支顶点，无 per-commit 事件——见 memo §1）。契约**加性演进**（`contracts/README.md` 规则 4：加枚举值 + 同 PR 加 fixtures，向后兼容、不删改既有字段/语义）。事件**有界窗**（每分支仅 merge_base..tip 的 ahead-commit + 默认分支近 N 条）——**只发已观测 commit，绝不无界喷发、绝不伪造**。
+- **渲染 = Metal 实例化 + SwiftUI a11y overlay 混合**：MTKView 实例化画密集视觉层；节点卡 + 可达性镜像层保留 SwiftUI（VISUAL_SEMANTICS rule 3「可达性 0/1 谓词覆盖」+ 现有 `RadarNode.accessibilityLabel` 测试不得退化）。任何 macOS 27-only Metal API 必须 `#available(macOS 27,*)` + 源文件级隔离（ADR-008），CI 26.5 SDK 仍整体编译。
+- **tile-tree / LayerProvider / DeferredRef = 内部 app 结构（非契约）**：照搬 3D Tiles tileset 模型从空间泛化到语义粒度；`LayerProvider{getTile,getChildren}`，`GitProvider` 服务 project/branch/commit，`DeferredRef("chaintape",…)` 对齐 `DeriveSource::Chaintape`，decision 层 **leaf-until-provider** 至 P5+（未注册=叶子、绝不渲合成决策节点）。若 P5+ 需跨进程边界再提 `contracts/*.schema.json`。
+- **诚实律不变**：绿 BY LAW 保留——分支/commit 节点永不上 merged-green，`merged_into_default` 恒 false，`contained_in_default` 仅可达性（中性呈现）；sound merged-green 留 **A1_53**。trust 色只从 `event_stream.schema.json` 的 `trust_state` 枚举映射；项目辨识色=第二通道只上身份表面（VISUAL_SEMANTICS rules 5-7）。
+- **边界（不重开）**：本 ADR **不修改 ADR-012 自身**（用其权、不改其文）；不碰 `runtime/` trust-root（ADR-015）；零跨项目边（ADR-009）；导航留 macOS 菜单不加侧边栏（A1_30）；纯投影消费者零 git 调用（ADR-005）。L3/L4 域动作仍需用户显式批准。
+- **落点**：`research/R1_infinite_zoom_memo.md`（R-stage 备忘）+ `specs/atoms/{A1_52_*, A1_51a_*, A1_51b_*, A1_51c_*, A1_51d_*}.md`（A1_51 拆为 a/b/c/d + A1_52 daemon）。
