@@ -318,6 +318,16 @@ public struct RadarCanvasView: View {
                     .foregroundStyle(accent.opacity(0.85)),
                 at: CGPoint(x: sa.x, y: sa.y - 34 * displayCamera.scale - 22),
                 anchor: .leading)
+            // A1_49: real observed branch count (local git + GitHub) per lane.
+            let branchCount = scene.branchCounts[project.id] ?? 0
+            if branchCount > 0 {
+                context.draw(
+                    Text("\(branchCount) 分支")
+                        .font(Tokens.Typography.mono(13, weight: .medium))
+                        .foregroundStyle(accent.opacity(0.55)),
+                    at: CGPoint(x: sa.x, y: sa.y - 34 * displayCamera.scale - 2),
+                    anchor: .leading)
+            }
         }
     }
 

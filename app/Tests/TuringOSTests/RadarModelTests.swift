@@ -118,6 +118,38 @@ final class RadarModelTests: XCTestCase {
         XCTAssertEqual(dump1, committed, "scene drifted from the committed golden")
     }
 
+    // MARK: A1_49 — BranchObserved fold → per-project branch counts
+
+    func testBranchObservedFoldsToCounts() throws {
+        func branchEvent(_ seq: UInt64, _ pid: String, _ ref: String, isDefault: Bool = false) throws -> EventEnvelope {
+            let json = """
+            {"event_id":"evt_b\(seq)","seq":\(seq),"ts":"2026-06-14T00:00:00Z","schema_version":"tos.app.event.v0","kind":"BranchObserved","source":"github","trust_state":"observed_unsigned","payload":{"project_id":"\(pid)","branch_ref":"\(ref)","head_sha":"deadbeef","is_default":\(isDefault),"merge_status":"unknown","merged_into_default":false,"provenance":"github_api"}}
+            """
+            return try JSONDecoder().decode(EventEnvelope.self, from: Data(json.utf8))
+        }
+        var ledger = WorktreeLedger()
+        ledger.apply(try branchEvent(1, "proj_a", "refs/heads/main", isDefault: true))
+        ledger.apply(try branchEvent(2, "proj_a", "refs/heads/feature/x"))
+        ledger.apply(try branchEvent(3, "proj_b", "refs/heads/main", isDefault: true))
+        XCTAssertEqual(ledger.branches.count, 3)
+
+        let scene = RadarScene.derive(ledger: ledger)
+        XCTAssertEqual(scene.branchCounts["proj_a"], 2)
+        XCTAssertEqual(scene.branchCounts["proj_b"], 1)
+        XCTAssertNil(scene.branchCounts["proj_none"])
+
+        // Re-observing the same ref is idempotent (latest-wins, not double count).
+        ledger.apply(try branchEvent(4, "proj_a", "refs/heads/feature/x"))
+        XCTAssertEqual(RadarScene.derive(ledger: ledger).branchCounts["proj_a"], 2)
+
+        // BranchRemoved decrements.
+        let remove = """
+        {"event_id":"evt_r","seq":5,"ts":"2026-06-14T00:00:00Z","schema_version":"tos.app.event.v0","kind":"BranchRemoved","source":"github","trust_state":"observed_unsigned","payload":{"project_id":"proj_a","branch_ref":"refs/heads/feature/x"}}
+        """
+        ledger.apply(try JSONDecoder().decode(EventEnvelope.self, from: Data(remove.utf8)))
+        XCTAssertEqual(RadarScene.derive(ledger: ledger).branchCounts["proj_a"], 1)
+    }
+
     // MARK: camera math (V6 §7.1)
 
     func testCameraMouseAnchoredZoom() {

@@ -125,6 +125,10 @@ public struct RadarScene: Equatable, Sendable {
     /// LOCAL PREFERENCE (UserDefaults), applied view-side, never here and
     /// never on tape.
     public let positions: [String: CGPoint]
+    /// A1_49: observed branch count per project (local git + GitHub via the
+    /// daemon's BranchObserved stream). The macro view shows this on each lane;
+    /// per-branch nodes + fork edges land in A1_50.
+    public let branchCounts: [String: Int]
 
     public static func derive(ledger: WorktreeLedger) -> RadarScene {
         let facts = ledger.worktrees.values.sorted {
@@ -196,11 +200,18 @@ public struct RadarScene: Equatable, Sendable {
             ($0.kind.rawValue, $0.from, $0.to) < ($1.kind.rawValue, $1.from, $1.to)
         }
 
+        // A1_49: per-project observed branch counts (BranchObserved fold).
+        var branchCounts: [String: Int] = [:]
+        for fact in ledger.branches.values {
+            branchCounts[fact.projectId, default: 0] += 1
+        }
+
         return RadarScene(
             projects: projects,
             nodes: nodes,
             edges: edges,
-            positions: RadarLayout.positions(projects: projects)
+            positions: RadarLayout.positions(projects: projects),
+            branchCounts: branchCounts
         )
     }
 
@@ -225,7 +236,7 @@ public struct RadarScene: Equatable, Sendable {
     public func canonicalDump() -> String {
         var lines: [String] = []
         for p in projects {
-            lines.append("project \(p.id) nodes=\(p.nodeIds.count)")
+            lines.append("project \(p.id) nodes=\(p.nodeIds.count) branches=\(branchCounts[p.id] ?? 0)")
         }
         for n in nodes {
             let pos = positions[n.id] ?? .zero

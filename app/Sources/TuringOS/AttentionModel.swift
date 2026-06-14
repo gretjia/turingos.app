@@ -58,11 +58,43 @@ public struct ProjectFact: Equatable, Sendable {
     public let path: String?
 }
 
+/// A1_49: one observed branch (local git or GitHub, per provenance). The galaxy
+/// folds these into per-project branch counts (and, in A1_50, branch nodes).
+public struct BranchFact: Equatable, Sendable {
+    public let projectId: String
+    public let branchRef: String
+    public let headSha: String?
+    public let isDefault: Bool
+    public let mergedIntoDefault: Bool
+    /// "local_git" | "github_api" | "both" - the honesty field (network-attested
+    /// facts are labelled, never silently equated with locally-verified ones).
+    public let provenance: String
+
+    public init(
+        projectId: String, branchRef: String, headSha: String? = nil,
+        isDefault: Bool = false, mergedIntoDefault: Bool = false, provenance: String = "unknown"
+    ) {
+        self.projectId = projectId
+        self.branchRef = branchRef
+        self.headSha = headSha
+        self.isDefault = isDefault
+        self.mergedIntoDefault = mergedIntoDefault
+        self.provenance = provenance
+    }
+}
+
 public struct WorktreeLedger: Equatable, Sendable {
     public private(set) var worktrees: [String: WorktreeFact] = [:] // worktree_id -> latest
     public private(set) var projects: [String: ProjectFact] = [:] // project_id -> latest
+    /// A1_49: branch facts keyed "project_id\0branch_ref" (NUL: git forbids it
+    /// in refs, so the key can never collide).
+    public private(set) var branches: [String: BranchFact] = [:]
 
     public init() {}
+
+    private static func branchKey(_ projectId: String, _ branchRef: String) -> String {
+        "\(projectId)\u{0}\(branchRef)"
+    }
 
     public mutating func apply(_ event: EventEnvelope) {
         switch event.kind {
@@ -102,6 +134,21 @@ public struct WorktreeLedger: Equatable, Sendable {
             if let id = event.payload["worktree_id"]?.stringValue {
                 worktrees.removeValue(forKey: id)
             }
+        case .branchObserved:
+            guard let pid = event.payload["project_id"]?.stringValue,
+                  let ref = event.payload["branch_ref"]?.stringValue else { return }
+            branches[Self.branchKey(pid, ref)] = BranchFact(
+                projectId: pid,
+                branchRef: ref,
+                headSha: event.payload["head_sha"]?.stringValue,
+                isDefault: event.payload["is_default"]?.boolValue ?? false,
+                mergedIntoDefault: event.payload["merged_into_default"]?.boolValue ?? false,
+                provenance: event.payload["provenance"]?.stringValue ?? "unknown"
+            )
+        case .branchRemoved:
+            guard let pid = event.payload["project_id"]?.stringValue,
+                  let ref = event.payload["branch_ref"]?.stringValue else { return }
+            branches.removeValue(forKey: Self.branchKey(pid, ref))
         default:
             break
         }

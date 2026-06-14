@@ -1,5 +1,5 @@
-project p nodes=6
-project q nodes=1
+project p nodes=6 branches=0
+project q nodes=1 branches=0
 node wt_bad_22222222 project=p form=failed anchor=false branch=- pos=(540.0,176.0)
 node wt_c1_33333333 project=p form=conflict anchor=false branch=feat pos=(800.0,264.0)
 node wt_c2_44444444 project=p form=conflict anchor=false branch=feat pos=(1060.0,176.0)
