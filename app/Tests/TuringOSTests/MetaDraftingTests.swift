@@ -376,4 +376,59 @@ final class MetaDraftingTests: XCTestCase {
         XCTAssertEqual(vm.wizardSession, before,
                        "red line 4 holds on the nil-service path too")
     }
+
+    // MARK: - A1_41: worktree-task proposal lane ("与 Meta AI 沟通")
+
+    @MainActor
+    func testProposeWorktreeTaskGolden() async throws {
+        let transport = FacilitatorCapturingTransport(
+            responseData: successResponseJSON(
+                content: "提议：在 main 上新开 worktree 修复 X；基分支 main；新分支 fix/x"))
+        let meta = try makeMeta(transport: transport)
+        let research = WorktreeResearchContext(
+            currentBranch: "main",
+            branches: ["main", "feat/auth"],
+            recentCommits: ["abc123 wire CI", "def456 init"],
+            dirty: false)
+
+        let doc = await meta.proposeWorktreeTask(
+            research: research, projectId: "turingos_app",
+            userAsk: "建议一个小型可测试的 worktree")
+
+        // Golden wire assertions.
+        XCTAssertEqual(transport.captures.count, 1, "exactly one gateway call")
+        let body = try JSONSerialization.jsonObject(
+            with: XCTUnwrap(transport.captures.first).body) as! [String: Any]
+        XCTAssertEqual(body["model"] as? String, "deepseek-v4-pro")
+        let thinking = body["thinking"] as? [String: Any]
+        XCTAssertEqual(thinking?["type"] as? String, "enabled")
+        let messages = body["messages"] as? [[String: Any]]
+        XCTAssertEqual(messages?[0]["content"] as? String, MetaDrafting.worktreeSystemPrompt)
+        let userContent = try XCTUnwrap(messages?[1]["content"] as? String)
+        XCTAssertTrue(userContent.contains("当前分支：main"), "git research current branch in context")
+        XCTAssertTrue(userContent.contains("feat/auth"), "branches in context")
+        XCTAssertTrue(userContent.contains("wire CI"), "recent commits in context")
+        XCTAssertTrue(userContent.contains("建议一个小型可测试的 worktree"), "user ask carried")
+
+        // Projection (red line 1: model text only in the card body).
+        XCTAssertEqual(doc.kind, "meta_worktree_proposal")
+        XCTAssertEqual(doc.deriveSource,
+                       ["user_input", "git_research:turingos_app", "model_call:meta:deepseek-v4-pro"])
+        guard case .summaryCard(let card) = doc.blocks.first else {
+            XCTFail("proposal must lead with a summary_card"); return
+        }
+        XCTAssertEqual(card.title, "Meta AI worktree 提议（提案，未执行）")
+        XCTAssertTrue(card.body.contains("基分支 main"), "model proposal text in the card body")
+    }
+
+    @MainActor
+    func testProposeWorktreeTaskGatewayErrorFallback() async throws {
+        // No key saved → credentialUnavailable → deterministic fail-visible doc.
+        let transport = FacilitatorCapturingTransport(responseData: successResponseJSON())
+        let meta = try makeMeta(transport: transport, saveKey: false)
+        let research = WorktreeResearchContext(
+            currentBranch: "main", branches: ["main"], recentCommits: [], dirty: false)
+        let doc = await meta.proposeWorktreeTask(research: research, projectId: "p", userAsk: "x")
+        XCTAssertEqual(doc.kind, "meta_unavailable")
+    }
 }
