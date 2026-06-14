@@ -5,6 +5,7 @@
 // colors are a separate identity-surface channel (rules 5-7) and must never
 // reuse semantic values.
 
+import CoreText
 import SwiftUI
 
 public enum Tokens {
@@ -72,11 +73,26 @@ public enum Tokens {
     }
 
     // MARK: - Space / glass material (V6 base materials)
+    // Hand-rolled deep-glass recipe (A1_51d): NO ultraThinMaterial/glassEffect.
+    // Recipe: fill glassBase + strokeBorder glassBorder + shadow outerShadow
+    // + inset top linear gradient insetGlowStart→.clear + cornerRadius glassCornerRadius.
 
     public enum Space {
         public static let background = Color(hex: 0x030305)
+        /// V6 glass fill: Color(.sRGB, 0.059, 0.059, 0.078, opacity: 0.5)
         public static let glassBase = Color(hex: 0x0F0F14).opacity(0.5)
+        /// V6 glass border: white 5% opacity
         public static let glassBorder = Color.white.opacity(0.05)
+        /// V6 glass corner radius (node cards)
+        public static let glassCornerRadius: CGFloat = 16
+        /// V6 outer shadow color: black 50% opacity (radius 30, y 20)
+        public static let outerShadow = Color.black.opacity(0.5)
+        /// V6 outer shadow blur radius
+        public static let outerShadowRadius: CGFloat = 30
+        /// V6 outer shadow Y offset
+        public static let outerShadowY: CGFloat = 20
+        /// V6 inset glow: top-edge linear gradient start color (→ clear)
+        public static let insetGlowStart = Color.white.opacity(0.12)
         public static let glassBlurRadius: CGFloat = 40
         public static let starGridSpacing: CGFloat = 80
     }
@@ -174,4 +190,50 @@ extension Color {
             blue: Double(hex & 0xFF) / 255.0
         )
     }
+}
+
+// MARK: - Font registration (A1_51d: called BEFORE any SwiftUI view)
+
+/// Register all bundled TuringOS fonts (Inter + JetBrains Mono variable TTFs)
+/// for the current process via CTFontManagerRegisterFontsForURL(.process).
+///
+/// Returns true iff every TTF in the bundle was registered without error.
+/// Called from TuringOSApp.init() (before any view) and from TypographyTests
+/// (to validate the real registration path — prevents false-green on machines
+/// that happen to have Inter installed system-wide).
+///
+/// Bundle.module here refers to TuringOS_TuringOS.bundle produced by
+/// Package.swift resources:[.copy("Resources/Fonts")].
+@discardableResult
+public func registerBundledFonts() -> Bool {
+    // Bundle.module for the TuringOS executable target resolves
+    // TuringOS_TuringOS.bundle both in the .app (Contents/Resources/) and
+    // under swift test (.build/debug/TuringOS_TuringOS.bundle).
+    guard let fontsDir = Bundle.module.url(forResource: "Fonts", withExtension: nil) else {
+        return false
+    }
+    guard let contents = try? FileManager.default.contentsOfDirectory(
+        at: fontsDir,
+        includingPropertiesForKeys: nil,
+        options: .skipsHiddenFiles
+    ) else { return false }
+
+    let ttfs = contents.filter { $0.pathExtension.lowercased() == "ttf" }
+    guard !ttfs.isEmpty else { return false }
+
+    var allOK = true
+    for url in ttfs {
+        var err: Unmanaged<CFError>?
+        let registered = CTFontManagerRegisterFontsForURL(url as CFURL, .process, &err)
+        if !registered {
+            // kCTFontManagerErrorAlreadyRegistered (105) means the font was
+            // already registered in this process — treat as success.
+            if let cfErr = err?.takeRetainedValue() {
+                let code = CFErrorGetCode(cfErr)
+                if code == 105 { continue } // kCTFontManagerErrorAlreadyRegistered
+            }
+            allOK = false
+        }
+    }
+    return allOK
 }

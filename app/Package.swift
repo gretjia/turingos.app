@@ -15,7 +15,8 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "TuringOS",
-            path: "Sources/TuringOS"
+            path: "Sources/TuringOS",
+            resources: [.copy("Resources/Fonts")]
         ),
         .testTarget(
             name: "TuringOSTests",

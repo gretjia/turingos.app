@@ -97,7 +97,12 @@ public struct RadarCanvasView: View {
                         .gesture(magnifyGesture)
                         .onTapGesture { selectedNodeId = nil }
 
-                    // Low-middle: project lane / nebula / axis sweep Canvas (SwiftUI,
+                    // Low-middle (static): nebula + ghost labels (A1_51d three-layer
+                    // partition). Zero .blur — soft glow via multi-stop gradients.
+                    GalaxyStaticLayer(scene: scene, camera: dc)
+                        .allowsHitTesting(false)
+
+                    // Low-middle (animated): project lane / axis sweep Canvas (SwiftUI,
                     // O(#projects)). The heavy per-node rendering moved to Metal above.
                     projectLaneCanvas(scene, mood: mood, camera: dc)
                         .allowsHitTesting(false)
@@ -255,9 +260,10 @@ public struct RadarCanvasView: View {
         }
     }
 
-    /// Project lane Canvas: nebula, lane track, axis sweep, far-mode project
-    /// labels. These are O(#projects) elements — NOT instanced in Metal.
-    /// The dense per-node/per-edge rendering has moved to GalaxyRenderer.
+    /// Project lane Canvas: lane track, axis sweep, far-mode project labels,
+    /// and source-color bezier DAG edges. Nebula + ghost label are in the
+    /// separate STATIC GalaxyStaticLayer (A1_51d three-layer partition).
+    /// O(#projects + #edges) — NOT instanced in Metal.
     private func projectLaneCanvas(
         _ scene: RadarScene, mood: RadarMood, camera: RadarCamera
     ) -> some View {
@@ -268,6 +274,10 @@ public struct RadarCanvasView: View {
                 let sweep = timeline.date.timeIntervalSinceReferenceDate
                     .truncatingRemainder(dividingBy: Tokens.Motion.axisSweepPeriod)
                     / Tokens.Motion.axisSweepPeriod
+                // Source-color bezier DAG edges (fork/parent neutral, conflict yellow).
+                for edge in scene.edges {
+                    drawEdge(context, edge: edge, scene: scene)
+                }
                 for (row, project) in scene.projects.enumerated() {
                     drawProjectLane(
                         context, scene: scene, project: project, row: row,
@@ -275,6 +285,19 @@ public struct RadarCanvasView: View {
                         sweepPhase: mood.live ? sweep : -1)
                 }
             }
+            // Star-net radial alpha-fade mask: edges fade to transparent
+            // toward the viewport borders so the galaxy feels infinite.
+            .mask(
+                RadialGradient(
+                    stops: [
+                        .init(color: .white, location: 0),
+                        .init(color: .white, location: 0.55),
+                        .init(color: .white.opacity(0.6), location: 0.75),
+                        .init(color: .clear, location: 1.0),
+                    ],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 1000))
         }
     }
 
@@ -483,8 +506,14 @@ struct RadarNodeCard: View {
             .breathing(active: live && node.form == .active)
     }
 
+    // A1_51d: V6 deep-glass recipe (hand-rolled, no material blur).
+    // All glass constants live in Tokens.Space — grep must find each symbol here:
+    // glassBase, glassBorder, glassCornerRadius, outerShadow, outerShadowRadius,
+    // outerShadowY, insetGlowStart.
     private var card: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let r = Tokens.Space.glassCornerRadius
+        let baseOpacity = node.form == .quiet && !node.isAnchor ? 0.6 : 1.0
+        return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 7) {
                 Image(systemName: node.form.iconName)
                     .font(.system(size: node.isAnchor ? 12 : 10))
@@ -519,20 +548,39 @@ struct RadarNodeCard: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
         .frame(minWidth: selected ? 180 : 0, alignment: .leading)
+        // V6 glass fill (glassBase).
         .background(
-            Tokens.Space.glassBase.opacity(node.form == .quiet && !node.isAnchor ? 0.6 : 1.0),
-            in: RoundedRectangle(cornerRadius: 10))
+            Tokens.Space.glassBase.opacity(baseOpacity),
+            in: RoundedRectangle(cornerRadius: r))
+        // V6 chrome stroke (glassBorder) + source-color dash for orphan.
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: r)
                 .stroke(
-                    chrome.opacity(
+                    Tokens.Space.glassBorder.opacity(
                         node.form == .conflict ? 0.8
                             : node.isAnchor ? 0.5 : 0.3),
                     style: StrokeStyle(
                         lineWidth: node.isAnchor ? 1.5 : 1,
                         dash: node.form == .orphan ? [4, 3] : []))
         )
-        .shadow(color: chrome.opacity(selected ? 0.5 : 0.25), radius: selected ? 10 : 5)
+        // V6 outer shadow (outerShadow / outerShadowRadius / outerShadowY).
+        .shadow(
+            color: Tokens.Space.outerShadow,
+            radius: Tokens.Space.outerShadowRadius,
+            y: Tokens.Space.outerShadowY)
+        // V6 inset top glow: linear gradient insetGlowStart → .clear.
+        .overlay(alignment: .top) {
+            RoundedRectangle(cornerRadius: r)
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Tokens.Space.insetGlowStart, location: 0),
+                            .init(color: .clear, location: 0.35),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom))
+                .frame(height: 24)
+        }
         .opacity(node.form == .orphan ? 0.7 : 1.0)
         .overlay(alignment: .topLeading) {
             if node.form == .conflict {

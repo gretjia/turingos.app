@@ -28,7 +28,7 @@ swift build -c debug
 # Swift-Testing summary - a green receipt indistinguishable from zero
 # executed assertions). Capture everything, demand the XCTest pass line AND
 # a minimum executed-test count so silent runner drift turns the gate red.
-MIN_TESTS=302  # raised 2026-06-14 A1_49: 302 tests now passing (was 301; +1 branch-fold RadarModelTests)
+MIN_TESTS=304  # raised 2026-06-15 A1_51d: 304 tests (+2 TypographyTests: testBundledFontsRegister + testBundledFontFamiliesAvailable)
 TEST_OUT="$(swift test 2>&1)" || { echo "$TEST_OUT" | tail -20; exit 1; }
 echo "$TEST_OUT" | grep -q "Test Suite 'All tests' passed" \
   || { echo "build_app: XCTest pass summary missing"; echo "$TEST_OUT" | tail -20; exit 1; }
@@ -45,6 +45,15 @@ APP="dist/TuringOS.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/TuringOS"
+
+# A1_51d: font bundle guard + copy.
+# Package.swift resources:[.copy("Resources/Fonts")] → TuringOS_TuringOS.bundle.
+# This bundle must exist before the .app is assembled; its absence means either
+# swift build failed silently or the resources: array is missing from Package.swift.
+test -d ".build/debug/TuringOS_TuringOS.bundle" \
+  || { echo "build_app: missing TuringOS_TuringOS.bundle (check Package.swift resources:)"; exit 1; }
+cp -R ".build/debug/TuringOS_TuringOS.bundle" "$APP/Contents/Resources/"
+echo "build_app: font bundle copied to app/Contents/Resources/"
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
