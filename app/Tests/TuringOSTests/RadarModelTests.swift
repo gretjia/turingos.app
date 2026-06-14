@@ -150,37 +150,9 @@ final class RadarModelTests: XCTestCase {
         XCTAssertEqual(RadarScene.derive(ledger: ledger).branchCounts["proj_a"], 1)
     }
 
-    // MARK: camera math (V6 §7.1)
-
-    func testCameraMouseAnchoredZoom() {
-        var camera = RadarCamera(scale: 0.5, offset: CGSize(width: 100, height: 50))
-        let anchor = CGPoint(x: 300, y: 200)
-        let worldBefore = camera.toWorld(anchor)
-        camera.zoom(by: 1.5, anchor: anchor)
-        let worldAfter = camera.toWorld(anchor)
-        XCTAssertEqual(worldBefore.x, worldAfter.x, accuracy: 0.0001,
-                       "the world point under the cursor must not move")
-        XCTAssertEqual(worldBefore.y, worldAfter.y, accuracy: 0.0001)
-        XCTAssertEqual(camera.scale, 0.75, accuracy: 0.0001)
-
-        camera.zoom(by: 1000, anchor: anchor)
-        XCTAssertEqual(camera.scale, 2.0, "clamped at code-micro")
-        camera.zoom(by: 0.00001, anchor: anchor)
-        XCTAssertEqual(camera.scale, 0.1, accuracy: 0.0001, "clamped at galaxy-macro")
-
-        XCTAssertTrue(RadarCamera(scale: 0.59).isFar)
-        XCTAssertFalse(RadarCamera(scale: 0.6).isFar)
-        XCTAssertTrue(RadarCamera().isFar, "default view = compressed macro")
-    }
-
-    func testFocusingCentersWorldPoint() {
-        let world = CGPoint(x: 540, y: 176)
-        let camera = RadarCamera.focusing(
-            on: world, scale: 1.0, viewport: CGSize(width: 800, height: 600))
-        let screen = camera.toScreen(world)
-        XCTAssertEqual(screen.x, 400, accuracy: 0.0001)
-        XCTAssertEqual(screen.y, 300, accuracy: 0.0001)
-    }
+    // MARK: camera math migrated to RadarCameraTests (A1_51a)
+    // testCameraMouseAnchoredZoom and testFocusingCentersWorldPoint moved to
+    // RadarCameraTests.swift with updated clamp bounds [0.01, 256].
 
     // MARK: fly-to resolution (structured target, no id parsing)
 

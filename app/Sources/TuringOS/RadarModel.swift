@@ -280,57 +280,158 @@ public enum RadarLayout {
     }
 }
 
-// MARK: - Camera (mouse-anchored zoom math, V6 §7.1; pure + testable)
+// MARK: - Camera (A1_51a: tldraw-style log-space model; pure + testable)
+//
+// Internal model: {x, y, logZoom} where z = pow(2, logZoom).
+// Value-equivalent read surface {scale, isFar, offset, toScreen, toWorld,
+// zoom(by:anchor:), pan, focusing} keeps RadarViews call sites unchanged and
+// renders identically at every z in the default viewport.
+//
+// All world/transform math is in Double/CGFloat — no raw fp32 in this file.
 
 public struct RadarCamera: Equatable, Sendable {
-    /// screen = world * scale + offset
-    public var scale: CGFloat
-    public var offset: CGSize
+    // MARK: Internal model
+
+    /// Page coordinate at the viewport top-left in world space (tldraw Camera.x/y).
+    public var x: Double
+    public var y: Double
+    /// log2 of zoom factor. z = pow(2, logZoom) ∈ [~0.01, 256].
+    public var logZoom: Double
+
+    // Bounds in log2 space derived once from Tokens.Motion.zoomRange = 0.01...256.
+    private static let logZoomMin: Double = log2(Tokens.Motion.zoomRange.lowerBound)
+    private static let logZoomMax: Double = log2(Tokens.Motion.zoomRange.upperBound)
+
+    /// Linear zoom factor.
+    public var z: Double { pow(2, logZoom) }
 
     /// Default = compressed macro view (V6_RECONCILIATION §1: 压缩态=默认初始视角).
-    public init(scale: CGFloat = 0.25, offset: CGSize = .zero) {
-        self.scale = scale
-        self.offset = offset
+    /// x=0, y=0, logZoom=log2(0.25)=-2  →  z=0.25, isFar=true (value-equivalent to old default).
+    public init(x: Double = 0, y: Double = 0, logZoom: Double = -2) {
+        // Fail-safe clamp: NaN/overflow saturates to logZoomMin.
+        let safeLog = logZoom.isFinite ? logZoom : Self.logZoomMin
+        self.x = x.isFinite ? x : 0
+        self.y = y.isFinite ? y : 0
+        self.logZoom = max(Self.logZoomMin, min(Self.logZoomMax, safeLog))
     }
 
-    public var isFar: Bool { scale < Tokens.Motion.semanticFarThreshold }
+    // MARK: - Value-equivalent read surface (keeps RadarViews call sites unchanged)
+
+    /// Zoom scale as CGFloat (value-equivalent to the old stored `scale` field).
+    public var scale: CGFloat { CGFloat(z) }
+
+    /// True when zoomed out past the semantic far threshold (same gate as before).
+    public var isFar: Bool { z < Tokens.Motion.semanticFarThreshold }
+
+    /// Screen-space offset derived from x, y, z.
+    /// Invariant: screen = world * z + offset  (offset = −cameraPos * z).
+    public var offset: CGSize { CGSize(width: -x * z, height: -y * z) }
+
+    // MARK: - Non-floating-origin transforms (value-equivalent to old toScreen/toWorld)
 
     public func toScreen(_ world: CGPoint) -> CGPoint {
-        CGPoint(x: world.x * scale + offset.width, y: world.y * scale + offset.height)
+        let z = self.z
+        return CGPoint(x: world.x * z - x * z, y: world.y * z - y * z)
     }
 
     public func toWorld(_ screen: CGPoint) -> CGPoint {
-        CGPoint(x: (screen.x - offset.width) / scale, y: (screen.y - offset.height) / scale)
+        let z = self.z
+        return CGPoint(x: screen.x / z + x, y: screen.y / z + y)
     }
 
-    /// Zoom keeping the world point under `anchor` (screen space) fixed -
-    /// V6 §7.1: "以鼠标位置为中心的数学缩放，而不是以画布中心". Clamped to
-    /// Tokens.Motion.zoomRange (0.1 galaxy macro … 2.0 code micro).
+    // MARK: - Floating-origin transforms (A1_51a new API; A1_51c consumes these)
+
+    /// Screen coordinate of a page point with floating-origin subtraction.
+    /// screen = (page − renderOrigin) * z + offset
+    /// At default renderOrigin=.zero this equals toScreen (value-equivalent).
+    public func pageToScreen(_ page: CGPoint, renderOrigin: CGPoint = .zero) -> CGPoint {
+        let z = self.z
+        return CGPoint(
+            x: (page.x - renderOrigin.x) * z - x * z,
+            y: (page.y - renderOrigin.y) * z - y * z
+        )
+    }
+
+    /// Page coordinate of a screen point (inverse of pageToScreen).
+    public func screenToPage(_ screen: CGPoint, renderOrigin: CGPoint = .zero) -> CGPoint {
+        let z = self.z
+        return CGPoint(
+            x: screen.x / z + x + renderOrigin.x,
+            y: screen.y / z + y + renderOrigin.y
+        )
+    }
+
+    // MARK: - Zoom (value-equivalent math, extended range [~0.01, 256])
+
+    /// Zoom by `factor`, keeping the world point under `anchor` (screen coords) fixed.
+    /// tldraw closed form: camera.x += anchor.x * (1/oldZ − 1/newZ).
+    /// Clamped to [logZoomMin, logZoomMax]; saturates on NaN/overflow (fail-safe).
     public mutating func zoom(by factor: CGFloat, anchor: CGPoint) {
-        let range = Tokens.Motion.zoomRange
-        let new = min(max(scale * factor, range.lowerBound), range.upperBound)
-        guard new != scale else { return }
-        let ratio = new / scale
-        offset.width = anchor.x - (anchor.x - offset.width) * ratio
-        offset.height = anchor.y - (anchor.y - offset.height) * ratio
-        scale = new
+        let df = Double(factor)
+        guard df > 0, df.isFinite else { return }
+        let delta = log2(df)
+        guard delta.isFinite else { return }
+        let newLogZoom = max(Self.logZoomMin, min(Self.logZoomMax, logZoom + delta))
+        guard newLogZoom != logZoom else { return }
+        let oldZ = self.z
+        let newZ = pow(2, newLogZoom)
+        // Keep world point under anchor fixed.
+        let dx = Double(anchor.x) * (1.0 / oldZ - 1.0 / newZ)
+        let dy = Double(anchor.y) * (1.0 / oldZ - 1.0 / newZ)
+        x += dx
+        y += dy
+        logZoom = newLogZoom
+    }
+
+    /// Zoom to an absolute z value with the same cursor-anchor invariant.
+    public mutating func zoom(to targetZ: Double, anchor: CGPoint) {
+        guard targetZ > 0, targetZ.isFinite else { return }
+        let factor = targetZ / self.z
+        zoom(by: CGFloat(factor), anchor: anchor)
     }
 
     public mutating func pan(by delta: CGSize) {
-        offset.width += delta.width
-        offset.height += delta.height
+        let z = self.z
+        // offset += delta  ⟺  −x*z += delta.width  ⟺  x −= delta.width/z
+        x -= Double(delta.width) / z
+        y -= Double(delta.height) / z
     }
 
     /// Camera that centers `world` in `viewport` at `scale` (fly-to).
     public static func focusing(
         on world: CGPoint, scale rawScale: CGFloat, viewport: CGSize
     ) -> RadarCamera {
-        let range = Tokens.Motion.zoomRange
-        let scale = min(max(rawScale, range.lowerBound), range.upperBound)
-        return RadarCamera(scale: scale, offset: CGSize(
-            width: viewport.width / 2 - world.x * scale,
-            height: viewport.height / 2 - world.y * scale
-        ))
+        let targetZ = Double(rawScale)
+        let safeTarget = (targetZ > 0 && targetZ.isFinite) ? targetZ : 1.0
+        let clampedLogZoom = max(logZoomMin, min(logZoomMax, log2(safeTarget)))
+        let clampedZ = pow(2, clampedLogZoom)
+        // offset = viewport/2 − world*z  ⟹  x = world.x − viewport.width/(2*z)
+        let cx = Double(world.x) - Double(viewport.width) / (2.0 * clampedZ)
+        let cy = Double(world.y) - Double(viewport.height) / (2.0 * clampedZ)
+        return RadarCamera(x: cx, y: cy, logZoom: clampedLogZoom)
+    }
+
+    // MARK: - Log-space interpolation (pure, no clock/random)
+
+    /// Linear interpolation in log2 space. Deterministic: same inputs → same output.
+    public static func logerp(_ a: Double, _ b: Double, t: Double) -> Double {
+        let la = a > 0 ? log2(a) : logZoomMin
+        let lb = b > 0 ? log2(b) : logZoomMin
+        return pow(2, la + (lb - la) * t)
+    }
+
+    // MARK: - Z-band classification (A1_51a: defined; A1_51c+ consumes)
+
+    public enum Band: Equatable {
+        case galaxy, cluster, node, detail
+    }
+
+    public func currentBand() -> Band {
+        let z = self.z
+        if z < Tokens.Motion.ZBand.clusterThreshold { return .galaxy }
+        if z < Tokens.Motion.ZBand.nodeThreshold { return .cluster }
+        if z < Tokens.Motion.ZBand.detailThreshold { return .node }
+        return .detail
     }
 }
 

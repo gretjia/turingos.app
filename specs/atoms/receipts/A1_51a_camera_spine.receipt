@@ -1,0 +1,46 @@
+---
+atom: A1_51a_camera_spine
+timestamp_utc: 2026-06-14T15:32:00Z
+git_head: a8ed84fe1b112ac803c731faad051f0bd3eee1f8
+implementer: claude-opus-4-8 (Sonnet impl agent + Haiku audit + Opus diff review)
+---
+
+# A1_51a — 望远镜相机骨架（tldraw {x,y,logZoom} + floating-origin，value-equivalent 隔离）
+
+## 交付
+RadarCamera 内核换 {x,y,logZoom}（z=pow(2,logZoom)，clamp [0.01,256]，NaN fail-safe 饱和）；
+新增 pageToScreen/screenToPage（floating-origin，renderOrigin 默认 .zero = value-equivalent）+
+zoom-to-cursor 闭式 + logerp + z-band token。**保留 value-equivalent 旧读面**（scale=CGFloat(z)/
+isFar=z<0.6/offset=-pos*z/toScreen/toWorld/zoom(by:anchor:)/pan/focusing，默认 logZoom=-2→z=0.25）
+→ **RadarViews 零改动**、外观不变（value-equivalence 谓词机械背书：默认 z==0.25 + 跨 z 采样标量等效）。
+2 旧相机测迁入 RadarCameraTests（新 clamp）；新增相机变换 golden（RADAR_GOLDEN_WRITE 首写守卫）。
+Float32 审计零命中（正则 (^|[^A-Za-z0-9_])Float(32)?([^A-Za-z0-9_]|$)，CGFloat-safe，含正向 teeth）。
+
+## 验证
+shipgate p1 16/16 PASS（见下）。app lane 真 swift build+test+bundle+wire-probe。
+swift test 执行计数 302−2+9=309 ≥ MIN_TESTS=302 floor（不动 build_app.sh）。
+scene golden（p1_radar_scene / a1_09_mixed）逐字节不变（相机不动 scene 派生）。
+
+## 过程记录（dirty-tree 红归因）
+Haiku 独立审计初判 REJECT（ADR.md 越 allowlist）——经 git 核实为**误判**：ADR.md 改动是
+R-stage（ADR-016）遗留、先于 atom-open，非 A1_51a 实现所为（impl agent filesChanged 不含 ADR.md）。
+A1_51a 代码仅触 allowlist 内文件。已将 R-stage 文档单独提交（a8ed84fe）清树，per-atom 归因自此干净。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

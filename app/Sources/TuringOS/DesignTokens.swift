@@ -111,13 +111,24 @@ public enum Tokens {
         public static let pulsePeriod: Double = 4.0
         public static let cardHover: Double = 0.3
         public static let popIn: Double = 0.2
-        /// Semantic zoom threshold: below this scale the universe compresses.
+        /// Semantic zoom threshold: below this scale the universe compresses
+        /// (isFar gate for far-mode label/dot/lineWidth — value-equivalent to
+        /// the V6 0.6 threshold across the new [0.01,256] z envelope).
         public static let semanticFarThreshold: Double = 0.6
-        public static let zoomRange: ClosedRange<Double> = 0.1...2.0
+        /// ADR-016: expanded from 0.1–2.0 (V6) to ~0.01–256 (A1_51a).
+        public static let zoomRange: ClosedRange<Double> = 0.01...256.0
         /// Mainline-track sweep period (V6 axisSweep - a slow tide, not a blink).
         public static let axisSweepPeriod: Double = 6.0
         /// Fly-to camera glide.
         public static let flyTo: Double = 0.45
+
+        /// Z-band thresholds (A1_51a: defined here, consumed by A1_51c+).
+        /// galaxy < cluster < node < detail.
+        public enum ZBand {
+            public static let clusterThreshold: Double = 0.08
+            public static let nodeThreshold: Double = 0.5
+            public static let detailThreshold: Double = 2.0
+        }
     }
 }
 
