@@ -4,7 +4,7 @@
 
 | 车道 | 前缀/号段 | 归属 |
 |---|---|---|
-| Claude orchestrator | A1_14 – A1_39 | 本车道（Sprint 0-3 落地队列见 docs/04_ALPHA_EXECUTION_PLAN.md） |
+| Claude orchestrator | A1_14 – A1_49 | 本车道（Sprint 0-3 落地队列见 docs/04_ALPHA_EXECUTION_PLAN.md）；2026-06-14 经 orchestrator 裁决从 A1_39 扩到 A1_49，容纳回路2 执行回路垂直切片（A1_40–A1_45） |
 | Codex 接续会话 | C1_01 起（C 前缀） | Codex 自建 AGENTS/INIT 与接手工作 |
 | 历史 | A0_*、A1_01–A1_13 | 已收口，不再复用 |
 
