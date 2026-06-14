@@ -3,6 +3,7 @@
 //! truth lives in Git-backed ChainTape/CAS upstream; the daemon derives,
 //! projects, and reconciles.
 
+pub mod branch_poller;
 pub mod events;
 pub mod projection;
 pub mod registry;
