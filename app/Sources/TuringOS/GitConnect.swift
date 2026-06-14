@@ -15,7 +15,20 @@ public protocol ProcessRunner: Sendable {
 }
 
 public struct SystemProcessRunner: ProcessRunner {
+    /// Wall-clock ceiling: a hung `gh` must never pin the caller (and thus
+    /// the onboarding "接入" button) forever (MANIFESTO fail-visible).
+    public static let timeoutSeconds = 15
+
     public init() {}
+
+    /// Thread-safe one-shot box for a pipe's drained bytes (two concurrent
+    /// drains write, the caller reads after the DispatchGroup barrier).
+    private final class DataBox: @unchecked Sendable {
+        private let lock = NSLock()
+        private var data = Data()
+        func set(_ d: Data) { lock.lock(); data = d; lock.unlock() }
+        func get() -> Data { lock.lock(); defer { lock.unlock() }; return data }
+    }
 
     public func run(_ executable: String, _ arguments: [String]) throws -> (Int32, Data, Data) {
         let p = Process()
@@ -25,11 +38,38 @@ public struct SystemProcessRunner: ProcessRunner {
         let err = Pipe()
         p.standardOutput = out
         p.standardError = err
+
+        // Drain BOTH pipes concurrently: reading stdout to EOF while the
+        // child blocks writing a full (64KB) stderr pipe is a classic
+        // deadlock. A concurrent queue + group removes the ordering hazard.
+        let outBox = DataBox()
+        let errBox = DataBox()
+        let group = DispatchGroup()
+        let ioQueue = DispatchQueue(label: "app.turingos.gitconnect.io", attributes: .concurrent)
+
+        // terminationHandler + semaphore (don't mix with waitUntilExit).
+        let done = DispatchSemaphore(value: 0)
+        p.terminationHandler = { _ in done.signal() }
+
         try p.run()
-        let stdout = out.fileHandleForReading.readDataToEndOfFile()
-        let stderr = err.fileHandleForReading.readDataToEndOfFile()
-        p.waitUntilExit()
-        return (p.terminationStatus, stdout, stderr)
+
+        group.enter()
+        ioQueue.async { outBox.set(out.fileHandleForReading.readDataToEndOfFile()); group.leave() }
+        group.enter()
+        ioQueue.async { errBox.set(err.fileHandleForReading.readDataToEndOfFile()); group.leave() }
+
+        let deadline = DispatchTime.now() + .seconds(Self.timeoutSeconds)
+        if done.wait(timeout: deadline) == .timedOut {
+            p.terminate()   // SIGTERM; closes the child's write ends -> drains return
+            // Escalate if the child ignores SIGTERM, so the wall-clock ceiling
+            // is a real bound, not a hope (adversarial-review hardening, A1_38).
+            if done.wait(timeout: .now() + .seconds(2)) == .timedOut {
+                kill(p.processIdentifier, SIGKILL)
+                done.wait()
+            }
+        }
+        group.wait()        // both pipes fully drained
+        return (p.terminationStatus, outBox.get(), errBox.get())
     }
 }
 
