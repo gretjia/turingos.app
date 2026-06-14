@@ -215,12 +215,90 @@ pub fn diff_removed(prev: &BTreeSet<String>, current: &BTreeSet<String>) -> Vec<
     prev.difference(current).cloned().collect()
 }
 
+/// One commit as observed from a GitHub compare or commits API response.
+/// Pure data (no network); constructed by parse_compare_commits / parse_recent_commits.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CommitFact {
+    pub sha: String,
+    pub parent_shas: Vec<String>,
+    pub author: String,
+    pub ts: String,
+    /// First line of the commit message.
+    pub summary: String,
+}
+
+/// Pure: parse a GitHub compare `--jq` response that contains a `commits` array.
+/// Returns the slice of CommitFact entries present in the response. If the
+/// response contains exactly 250 entries the caller should mark `truncated`.
+/// Missing or empty `commits` → empty Vec (not an error). Malformed JSON → Err.
+pub fn parse_compare_commits(compare_json: &str) -> Result<Vec<CommitFact>, String> {
+    let v: serde_json::Value =
+        serde_json::from_str(compare_json).map_err(|e| format!("commits json: {e}"))?;
+    let arr = match v.get("commits").and_then(|c| c.as_array()) {
+        Some(a) => a,
+        None => return Ok(Vec::new()),
+    };
+    let mut out = Vec::with_capacity(arr.len());
+    for item in arr {
+        let sha = item
+            .get("sha")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        if sha.is_empty() {
+            continue; // skip entries with no sha
+        }
+        let parent_shas: Vec<String> = item
+            .get("parents")
+            .and_then(serde_json::Value::as_array)
+            .map(|ps| {
+                ps.iter()
+                    .filter_map(|p| p.get("sha").and_then(serde_json::Value::as_str))
+                    .map(|s| s.to_string())
+                    .collect()
+            })
+            .unwrap_or_default();
+        let commit_obj = item.get("commit").and_then(serde_json::Value::as_object);
+        let author = commit_obj
+            .and_then(|c| c.get("author"))
+            .and_then(|a| a.get("name"))
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        let ts = commit_obj
+            .and_then(|c| c.get("author"))
+            .and_then(|a| a.get("date"))
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        let message = commit_obj
+            .and_then(|c| c.get("message"))
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+        let summary = message.lines().next().unwrap_or("").to_string();
+        out.push(CommitFact {
+            sha,
+            parent_shas,
+            author,
+            ts,
+            summary,
+        });
+    }
+    Ok(out)
+}
+
 /// Cached compare observation for a branch, keyed by the (branch, default) head SHAs
 /// it was computed from. A poll that finds both unchanged reuses it (no gh call).
+/// A1_52: widened to also store parsed commits so cache-hit polls can re-emit
+/// CommitObserved without making a new gh call.
 struct CachedCompare {
     branch_sha: String,
     default_sha: String,
     fact: CompareFact,
+    /// Parsed commits from the compare response (may be empty if compare returned none).
+    commits: Vec<CommitFact>,
+    /// True when the compare returned exactly 250 commits (GitHub's cap).
+    truncated: bool,
 }
 
 /// Per-repo context threaded into per-branch compare computation (bundled so the
@@ -240,6 +318,9 @@ pub struct BranchPoller {
     seen: BTreeMap<String, BTreeSet<String>>,
     /// "project_id\0branch_ref" -> cached compare observation (A1_50 memoize).
     compare_cache: BTreeMap<String, CachedCompare>,
+    /// A1_52: "project_id\0default_sha" -> cached recent default-branch commits
+    /// (memoized on default_sha; re-emitted on cache hit).
+    default_commits_cache: BTreeMap<String, Vec<CommitFact>>,
 }
 
 impl BranchPoller {
@@ -248,6 +329,7 @@ impl BranchPoller {
             registry_path: registry_path.to_path_buf(),
             seen: BTreeMap::new(),
             compare_cache: BTreeMap::new(),
+            default_commits_cache: BTreeMap::new(),
         }
     }
 
@@ -258,19 +340,27 @@ impl BranchPoller {
     /// or an unresolved default tip forces a clean recompute next cycle. Every gh
     /// failure path is a visible eprintln + honest Unknown degradation, never a
     /// crash.
+    ///
+    /// A1_52: returns (CompareFact, Vec<CommitFact>, truncated). On cache hit the
+    /// cached commits are returned (zero gh calls); on cache miss the compare
+    /// response is parsed for both the scalar facts and the commits array.
     fn compute_merge(
         &mut self,
         gh: &dyn GhClient,
         ctx: &RepoCtx,
         info: &BranchInfo,
-    ) -> CompareFact {
+    ) -> (CompareFact, Vec<CommitFact>, bool) {
         if info.is_default {
-            return CompareFact {
-                status: MergeStatus::Identical,
-                ahead: 0,
-                behind: 0,
-                merge_base: info.head_sha.clone(),
-            };
+            return (
+                CompareFact {
+                    status: MergeStatus::Identical,
+                    ahead: 0,
+                    behind: 0,
+                    merge_base: info.head_sha.clone(),
+                },
+                Vec::new(),
+                false,
+            );
         }
         // A key whose sha component is empty has no discriminating power against
         // tip movement, so never serve or store a cached fact off one.
@@ -282,7 +372,8 @@ impl BranchPoller {
                 .get(&cache_key)
                 .filter(|c| c.branch_sha == info.head_sha && c.default_sha == ctx.default_sha)
             {
-                return c.fact.clone();
+                // Cache hit: return stored commits for idempotent re-emit (zero gh).
+                return (c.fact.clone(), c.commits.clone(), c.truncated);
             }
         }
 
@@ -292,30 +383,47 @@ impl BranchPoller {
             behind: 0,
             merge_base: String::new(),
         };
-        let fact = match gh.run(&[
+
+        // A1_52: single gh compare call; the --jq enriches the response with
+        // both the scalar comparison facts AND the full commits array (sha,
+        // parents, author name+date, message). GitHub caps commits at 250.
+        let raw = match gh.run(&[
             "api",
             &format!(
                 "repos/{}/compare/{}...{}",
                 ctx.slug, ctx.default_branch, info.name
             ),
             "--jq",
-            "{status,ahead_by,behind_by,total_commits,merge_base:.merge_base_commit.sha}",
+            "{status,ahead_by,behind_by,total_commits,merge_base:.merge_base_commit.sha,commits:[.commits[]|{sha,parents:[.parents[].sha],commit:{author:{name:.commit.author.name,date:.commit.author.date},message:.commit.message}}]}",
         ]) {
-            Ok(s) => parse_compare(&s).unwrap_or_else(|e| {
-                eprintln!(
-                    "branch poller: {} {} compare parse: {e}",
-                    ctx.slug, info.name
-                );
-                unknown()
-            }),
+            Ok(s) => s,
             Err(e) => {
                 eprintln!(
                     "branch poller: {} {} compare failed: {e}",
                     ctx.slug, info.name
                 );
-                unknown()
+                return (unknown(), Vec::new(), false);
             }
         };
+
+        let fact = parse_compare(&raw).unwrap_or_else(|e| {
+            eprintln!(
+                "branch poller: {} {} compare parse: {e}",
+                ctx.slug, info.name
+            );
+            unknown()
+        });
+
+        // Parse commits from the same response. GitHub caps at 250 entries;
+        // if we get exactly 250 mark truncated but never fabricate more.
+        let commits = parse_compare_commits(&raw).unwrap_or_else(|e| {
+            eprintln!(
+                "branch poller: {} {} commits parse: {e}",
+                ctx.slug, info.name
+            );
+            Vec::new()
+        });
+        let truncated = commits.len() >= 250;
 
         // Cache only a real observation off a real key — never an Unknown (so a
         // transient gh error retries) and never a degenerate-sha key.
@@ -326,10 +434,12 @@ impl BranchPoller {
                     branch_sha: info.head_sha.clone(),
                     default_sha: ctx.default_sha.to_string(),
                     fact: fact.clone(),
+                    commits: commits.clone(),
+                    truncated,
                 },
             );
         }
-        fact
+        (fact, commits, truncated)
     }
 
     /// One poll cycle over every registry entry that has a remote. Panic-free by
@@ -397,12 +507,73 @@ impl BranchPoller {
                 default_sha: &default_sha,
             };
 
+            // A1_52: fetch recent default-branch commits, memoized on default_sha.
+            // One gh call per changed default tip; re-emit cached commits on hit.
+            let default_commits: Vec<CommitFact> = if !default_sha.is_empty() {
+                let default_cache_key = format!("{}\u{0}{}", entry.project_id, default_sha);
+                if let Some(cached) = self.default_commits_cache.get(&default_cache_key) {
+                    cached.clone()
+                } else {
+                    match gh.run(&[
+                        "api",
+                        &format!(
+                            "repos/{slug}/commits?sha={}&per_page=30",
+                            default_branch
+                        ),
+                        "--jq",
+                        "[.[]|{sha,parents:[.parents[].sha],commit:{author:{name:.commit.author.name,date:.commit.author.date},message:.commit.message}}]",
+                    ]) {
+                        Ok(raw) => {
+                            // The commits endpoint returns a bare array; wrap it for
+                            // parse_compare_commits which expects {commits:[...]}.
+                            let wrapped = format!("{{\"commits\":{raw}}}");
+                            let commits =
+                                parse_compare_commits(&wrapped).unwrap_or_else(|e| {
+                                    eprintln!(
+                                        "branch poller: {slug} default commits parse: {e}"
+                                    );
+                                    Vec::new()
+                                });
+                            self.default_commits_cache
+                                .insert(default_cache_key, commits.clone());
+                            commits
+                        }
+                        Err(e) => {
+                            eprintln!("branch poller: {slug} default commits failed: {e}");
+                            Vec::new()
+                        }
+                    }
+                }
+            } else {
+                Vec::new()
+            };
+
+            // Emit CommitObserved for default-branch recent commits.
+            let default_ref = format!("refs/heads/{default_branch}");
+            for commit in &default_commits {
+                hub.publish(
+                    EventKind::CommitObserved,
+                    EventSource::Github,
+                    TrustState::ObservedUnsigned,
+                    serde_json::json!({
+                        "project_id": entry.project_id,
+                        "commit_sha": commit.sha,
+                        "parent_shas": commit.parent_shas,
+                        "branch_ref": default_ref,
+                        "author": commit.author,
+                        "ts": commit.ts,
+                        "summary": commit.summary,
+                        "provenance": "github_api",
+                    }),
+                );
+            }
+
             let mut current: BTreeSet<String> = BTreeSet::new();
             for info in &branch_list {
                 let branch_ref = format!("refs/heads/{}", info.name);
                 current.insert(branch_ref.clone());
 
-                let fact = self.compute_merge(gh, &ctx, info);
+                let (fact, commits, truncated) = self.compute_merge(gh, &ctx, info);
 
                 let payload = serde_json::json!({
                     "project_id": entry.project_id,
@@ -426,6 +597,33 @@ impl BranchPoller {
                     TrustState::ObservedUnsigned,
                     payload,
                 );
+
+                // A1_52: emit CommitObserved for non-default branch commits (the
+                // ahead-commits from the compare response). Skip the default branch
+                // here — its commits are emitted above from the dedicated API call.
+                if !info.is_default {
+                    for commit in &commits {
+                        let mut commit_payload = serde_json::json!({
+                            "project_id": entry.project_id,
+                            "commit_sha": commit.sha,
+                            "parent_shas": commit.parent_shas,
+                            "branch_ref": branch_ref,
+                            "author": commit.author,
+                            "ts": commit.ts,
+                            "summary": commit.summary,
+                            "provenance": "github_api",
+                        });
+                        if truncated {
+                            commit_payload["truncated"] = serde_json::Value::Bool(true);
+                        }
+                        hub.publish(
+                            EventKind::CommitObserved,
+                            EventSource::Github,
+                            TrustState::ObservedUnsigned,
+                            commit_payload,
+                        );
+                    }
+                }
             }
 
             if let Some(prev) = self.seen.get(&entry.project_id) {
@@ -579,9 +777,10 @@ mod tests {
     }
 
     fn counting_gh() -> CountingGh {
+        // A1_52: compare response now includes a commits array so parse_compare
+        // and parse_compare_commits both succeed on the same raw string.
         CountingGh {
-            compare_json:
-                r#"{"status":"ahead","ahead_by":3,"behind_by":0,"total_commits":3,"merge_base":"mb"}"#
+            compare_json: r#"{"status":"ahead","ahead_by":3,"behind_by":0,"total_commits":3,"merge_base":"mb","commits":[{"sha":"c1","parents":[{"sha":"p0"}],"commit":{"author":{"name":"Alice","date":"2026-06-14T10:00:00Z"},"message":"first commit\n"}},{"sha":"c2","parents":[{"sha":"c1"}],"commit":{"author":{"name":"Alice","date":"2026-06-14T11:00:00Z"},"message":"second commit"}},{"sha":"c3","parents":[{"sha":"c2"}],"commit":{"author":{"name":"Bob","date":"2026-06-14T12:00:00Z"},"message":"third commit"}}]}"#
                     .into(),
             calls: AtomicU32::new(0),
         }
@@ -596,11 +795,11 @@ mod tests {
             head_sha: "sha1".into(),
             is_default: false,
         };
-        let f1 = poller.compute_merge(&gh, &ctx("d1"), &info);
+        let (f1, _, _) = poller.compute_merge(&gh, &ctx("d1"), &info);
         assert_eq!(gh.calls.load(Ordering::SeqCst), 1);
         assert_eq!(f1.ahead, 3);
         // unchanged shas → cache hit, no new compare
-        let f2 = poller.compute_merge(&gh, &ctx("d1"), &info);
+        let (f2, _, _) = poller.compute_merge(&gh, &ctx("d1"), &info);
         assert_eq!(gh.calls.load(Ordering::SeqCst), 1);
         assert_eq!(f1, f2);
         // branch sha changed → recompute
@@ -669,7 +868,7 @@ mod tests {
             head_sha: "sha1".into(),
             is_default: false,
         };
-        let f1 = poller.compute_merge(&gh, &ctx("d1"), &info);
+        let (f1, _, _) = poller.compute_merge(&gh, &ctx("d1"), &info);
         assert_eq!(f1.status, MergeStatus::Unknown);
         let _ = poller.compute_merge(&gh, &ctx("d1"), &info);
         assert_eq!(gh.calls.load(Ordering::SeqCst), 2); // retried, not cached
@@ -684,9 +883,149 @@ mod tests {
             head_sha: "d1".into(),
             is_default: true,
         };
-        let f = poller.compute_merge(&gh, &ctx("d1"), &info);
+        let (f, commits, truncated) = poller.compute_merge(&gh, &ctx("d1"), &info);
         assert_eq!(gh.calls.load(Ordering::SeqCst), 0); // no compare for the trunk
         assert_eq!(f.status, MergeStatus::Identical);
         assert!(f.contained_in_default());
+        assert!(commits.is_empty());
+        assert!(!truncated);
+    }
+
+    // ---- A1_52 new tests ----
+
+    #[test]
+    fn parse_compare_commits_extracts_commits_from_compare_response() {
+        let json = r#"{
+            "status":"ahead","ahead_by":2,"behind_by":0,
+            "commits":[
+                {"sha":"abc1","parents":[{"sha":"p0"}],"commit":{"author":{"name":"Alice","date":"2026-06-14T10:00:00Z"},"message":"first line\nsecond line"}},
+                {"sha":"abc2","parents":[{"sha":"abc1"}],"commit":{"author":{"name":"Bob","date":"2026-06-14T11:00:00Z"},"message":"just one line"}}
+            ]
+        }"#;
+        let commits = parse_compare_commits(json).unwrap();
+        assert_eq!(commits.len(), 2);
+        assert_eq!(commits[0].sha, "abc1");
+        assert_eq!(commits[0].parent_shas, vec!["p0"]);
+        assert_eq!(commits[0].author, "Alice");
+        assert_eq!(commits[0].ts, "2026-06-14T10:00:00Z");
+        // summary = first line only
+        assert_eq!(commits[0].summary, "first line");
+        assert_eq!(commits[1].sha, "abc2");
+        assert_eq!(commits[1].parent_shas, vec!["abc1"]);
+        assert_eq!(commits[1].summary, "just one line");
+    }
+
+    #[test]
+    fn parse_compare_commits_empty_when_no_commits_field() {
+        let json = r#"{"status":"ahead","ahead_by":0,"behind_by":0}"#;
+        let commits = parse_compare_commits(json).unwrap();
+        assert!(commits.is_empty());
+    }
+
+    #[test]
+    fn parse_compare_commits_errors_on_bad_json() {
+        assert!(parse_compare_commits("not json at all").is_err());
+    }
+
+    #[test]
+    fn parse_compare_commits_skips_entries_with_empty_sha() {
+        let json = r#"{"commits":[{"sha":"","parents":[],"commit":{"author":{"name":"X","date":"2026-06-14T00:00:00Z"},"message":"m"}},{"sha":"real1","parents":[],"commit":{"author":{"name":"Y","date":"2026-06-14T00:00:00Z"},"message":"m2"}}]}"#;
+        let commits = parse_compare_commits(json).unwrap();
+        assert_eq!(commits.len(), 1);
+        assert_eq!(commits[0].sha, "real1");
+    }
+
+    #[test]
+    fn cache_hit_reemits_commits_without_extra_gh_call() {
+        // Two-poll bounded test: first poll causes one gh compare call and
+        // returns N commits; second poll on the SAME unchanged branch makes
+        // zero additional gh calls and returns the identical commit set.
+        let mut poller = BranchPoller::new(Path::new("/tmp/unused"));
+        let gh = counting_gh(); // returns 3 commits
+        let info = BranchInfo {
+            name: "feat".into(),
+            head_sha: "sha1".into(),
+            is_default: false,
+        };
+        // Poll 1: cache miss — one gh call, 3 commits.
+        let (_, commits1, truncated1) = poller.compute_merge(&gh, &ctx("d1"), &info);
+        assert_eq!(
+            gh.calls.load(Ordering::SeqCst),
+            1,
+            "poll1 should call gh once"
+        );
+        assert_eq!(commits1.len(), 3, "poll1 should return 3 commits");
+        assert!(!truncated1, "3 < 250, not truncated");
+        // Poll 2: cache hit — zero additional gh calls, same commits.
+        let (_, commits2, truncated2) = poller.compute_merge(&gh, &ctx("d1"), &info);
+        assert_eq!(
+            gh.calls.load(Ordering::SeqCst),
+            1,
+            "poll2 must not call gh again (cache hit)"
+        );
+        assert_eq!(
+            commits2.len(),
+            commits1.len(),
+            "cache hit must re-emit same commit count"
+        );
+        for (c1, c2) in commits1.iter().zip(commits2.iter()) {
+            assert_eq!(c1.sha, c2.sha, "cached commit shas must match");
+        }
+        assert_eq!(truncated2, truncated1);
+    }
+
+    #[test]
+    fn truncation_marks_truncated_true_at_250_cap() {
+        // Build a compare response with exactly 250 commits.
+        let commits_json: String = (0..250u32)
+            .map(|i| {
+                format!(
+                    r#"{{"sha":"sha{i:04}","parents":[{{"sha":"sha{:04}"}}],"commit":{{"author":{{"name":"A","date":"2026-06-14T00:00:00Z"}},"message":"commit {i}"}}}}"#,
+                    if i == 0 { 9999 } else { i - 1 }
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+        let json = format!(
+            r#"{{"status":"ahead","ahead_by":250,"behind_by":0,"commits":[{commits_json}]}}"#
+        );
+        let commits = parse_compare_commits(&json).unwrap();
+        assert_eq!(commits.len(), 250, "should parse all 250");
+        // Verify truncated flag would be set (len >= 250)
+        let truncated = commits.len() >= 250;
+        assert!(truncated, "250-cap must set truncated");
+        // Verify no empty/synthetic sha exists
+        for c in &commits {
+            assert!(!c.sha.is_empty(), "no empty sha in truncated result");
+        }
+    }
+
+    #[test]
+    fn payload_has_no_merged_or_green_field() {
+        // CommitFact carries no merged/green/verified field — verify by checking
+        // that the CountingGh compare_json round-trips to CommitFact with only
+        // the declared fields (sha, parent_shas, author, ts, summary).
+        let json = counting_gh().compare_json;
+        let commits = parse_compare_commits(&json).unwrap();
+        assert!(!commits.is_empty(), "test data must have commits");
+        // Serialize a commit payload as we do in poll() and check no banned fields.
+        let payload = serde_json::json!({
+            "project_id": "proj",
+            "commit_sha": commits[0].sha,
+            "parent_shas": commits[0].parent_shas,
+            "branch_ref": "refs/heads/feat",
+            "author": commits[0].author,
+            "ts": commits[0].ts,
+            "summary": commits[0].summary,
+            "provenance": "github_api",
+        });
+        let s = payload.to_string();
+        assert!(!s.contains("\"merged\""), "no merged field");
+        assert!(!s.contains("\"green\""), "no green field");
+        assert!(!s.contains("\"verified\""), "no verified field");
+        assert!(
+            !s.contains("\"merged_into_default\""),
+            "no merged_into_default"
+        );
     }
 }

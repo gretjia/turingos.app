@@ -60,6 +60,7 @@ public enum EventKind: String, Codable, Sendable, CaseIterable {
     case reconciliationCompleted = "ReconciliationCompleted"
     case branchObserved = "BranchObserved"
     case branchRemoved = "BranchRemoved"
+    case commitObserved = "CommitObserved"
 }
 
 public enum EventSource: String, Codable, Sendable {

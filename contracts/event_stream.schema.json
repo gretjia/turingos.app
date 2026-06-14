@@ -35,7 +35,8 @@
         "MarketTxObserved",
         "ReconciliationCompleted",
         "BranchObserved",
-        "BranchRemoved"
+        "BranchRemoved",
+        "CommitObserved"
       ]
     },
     "source": {

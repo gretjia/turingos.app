@@ -90,6 +90,7 @@ pub enum EventKind {
     ReconciliationCompleted,
     BranchObserved,
     BranchRemoved,
+    CommitObserved,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
