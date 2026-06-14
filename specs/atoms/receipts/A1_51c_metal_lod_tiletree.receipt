@@ -1,0 +1,45 @@
+---
+atom: A1_51c_metal_lod_tiletree
+timestamp_utc: 2026-06-14T16:43:31Z
+git_head: 7f00ad9f9853a4c01e478a09d988c5b67fd36938
+implementer: claude-opus-4-8 (Sonnet impl agent + Haiku audit 16/16 + Opus 主环 ground-truth + diff review)
+---
+
+# A1_51c — Metal 实例化 + LOD + tile-tree + DeferredRef
+
+## 交付
+- TileTree.swift（纯结构+派生）：TileLevel{project,branch,commit,decision}；Tile{level,bounds,summary,detailThreshold,children:ChildRef}；
+  LayerProvider + GitProvider(from RadarScene)；DeferredRef("chaintape",sha) **leaf-until-provider**——
+  ChainTapeRegistry.resolve 未注册返 []（TileTree.swift:130-132,152「UNREGISTERED MUST return [] never synthesise」），
+  **绝不渲合成决策节点**（P1 无 ChainTape 事实）；cull(独立 brute-force oracle 测,N=10k 远景集 ≤簇数<<节点数)；
+  band(z)+滞回；visibleA11yElements 纯函数(可见集 1:1,含远景光点档)。
+- GalaxyRenderer.swift（MTKViewRepresentable）：inline MSL via device.makeLibrary(source:)（无 .metal 资源/不动 Package/build_app）；
+  **fail-safe**：MTLCreateSystemDefaultDevice()==nil → makeNSView 返 GalaxyFallbackView、draw guard return（不崩不假,GalaxyRenderer.swift:101/246/318）。
+- GalaxyRenderer27.swift：27-only 哨兵 @available(macOS 27,*) 源文件级隔离（grep 测:符号仅此文件 + 正向 teeth 注入）。
+- RadarViews.swift：RadarCanvasView body=ZStack(Metal 底 + SwiftUI 节点卡 + a11yMirrorLayer)；公开 init 不变、ContentView 未碰(diff-clean)。
+- p1_tiletree.golden.txt(RADAR_GOLDEN_WRITE 首写守卫)。
+
+## 验证
+**主环 ground-truth shipgate p1 16/16 PASS（cargo on PATH、EXIT=0，见下）。** Haiku 审计本轮 16/16 全绿
+（cargo-on-PATH brief 修复了 A1_51b 的审计-env 偏差，无 rationalization）+ 全部实质 teeth：DeferredRef leaf/无合成、
+cull 独立 oracle、a11y 1:1 含远景、Metal device-nil fail-safe、27 隔离+正向 teeth、golden 守卫、ContentView diff-clean。
+Opus diff 复核诚实律（DeferredRef 不合成 / fail-safe 不假）通过。注：Metal 真渲染（GPU 真机）待 Computer Use 真机驱动核实。
+
+## shipgate p1 输出（主环 ground-truth）
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

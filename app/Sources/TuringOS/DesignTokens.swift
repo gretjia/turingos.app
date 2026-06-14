@@ -130,6 +130,38 @@ public enum Tokens {
             public static let detailThreshold: Double = 2.0
         }
     }
+
+    // MARK: - LOD / Instancing constants (A1_51c: Metal instanced rendering)
+
+    public enum LOD {
+        /// Maximum cluster count rendered per project at galaxy band.
+        /// At galaxy band we replace O(#nodes) with O(#clusters) renders.
+        public static let maxClusterCount: Int = 32
+
+        /// Instancing batch size: max instance count per drawIndexedPrimitive call.
+        /// Chosen to fit comfortably within a 256KB per-frame instance buffer.
+        public static let instanceBatchSize: Int = 10_000
+
+        /// Hysteresis margin in log2 space around band transitions.
+        /// Prevents rapid flickering when z hovers near a threshold.
+        /// E.g. entering .node from .cluster requires z >= nodeThreshold + hysteresis,
+        /// returning to .cluster requires z < nodeThreshold - hysteresis.
+        public static let bandHysteresisLog2: Double = 0.15
+
+        /// Visible-node count above which far-band renders cluster dots
+        /// instead of individual node dots. Keeps render-set bounded.
+        public static let farDotClusterThreshold: Int = 200
+
+        /// Margin (in world units) added around a tile's node positions
+        /// when computing its semantic bounds. Ensures adjacent tiles
+        /// have slight overlap and hit-testing is generous.
+        public static let projectBoundsMargin: CGFloat = 500
+        public static let branchBoundsMargin: CGFloat = 200
+        public static let commitBoundsMargin: CGFloat = 50
+
+        /// Cross-fade duration in seconds when transitioning between LOD bands.
+        public static let crossFadeDuration: Double = 0.25
+    }
 }
 
 extension Color {

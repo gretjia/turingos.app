@@ -86,15 +86,29 @@ public struct RadarCanvasView: View {
         let scene = store.radarScene
         let mood = RadarMood.derive(connection: store.connection)
         GeometryReader { geo in
+            let dc = displayCamera
             ZStack(alignment: .bottomTrailing) {
                 Group {
-                    universe(scene, mood: mood)
+                    // Bottom: Metal instanced visual layer (stars, node dots, edges).
+                    // Fail-safe: headless → GalaxyFallbackView (no crash, exit 0).
+                    GalaxyRenderer(scene: scene, camera: dc, mood: mood)
                         .contentShape(Rectangle())
                         .gesture(panGesture)
                         .gesture(magnifyGesture)
                         .onTapGesture { selectedNodeId = nil }
 
+                    // Low-middle: project lane / nebula / axis sweep Canvas (SwiftUI,
+                    // O(#projects)). The heavy per-node rendering moved to Metal above.
+                    projectLaneCanvas(scene, mood: mood, camera: dc)
+                        .allowsHitTesting(false)
+
+                    // Middle: SwiftUI node card overlay (near/selected, from A1_51b).
                     nodeOverlay(scene, mood: mood)
+
+                    // Top: a11y mirror layer (transparent SwiftUI elements, VoiceOver).
+                    // 1:1 with visibleA11yElements output (including far-dot band).
+                    a11yMirrorLayer(scene: scene, camera: dc, viewport: geo.size)
+                        .allowsHitTesting(false)
                 }
                 // 未对账 ⇒ the whole galaxy visibly drains of color: stale
                 // facts stay readable but stop pretending to be current.
@@ -221,39 +235,46 @@ public struct RadarCanvasView: View {
 
     // MARK: drawing
 
-    private func universe(_ scene: RadarScene, mood: RadarMood) -> some View {
+    /// A11y mirror layer: transparent SwiftUI accessibility elements 1:1 with
+    /// every visible node (including far-dot band). VoiceOver reads each label.
+    /// Pure function source: visibleA11yElements(scene:camera:viewport:).
+    private func a11yMirrorLayer(
+        scene: RadarScene, camera: RadarCamera, viewport: CGSize
+    ) -> some View {
+        let mirrors = visibleA11yElements(scene: scene, camera: camera, viewport: viewport)
+        return ZStack {
+            ForEach(mirrors, id: \.nodeId) { mirror in
+                Color.clear
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+                    .position(mirror.screenPoint)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(mirror.label)
+                    .accessibilityAddTraits(.isButton)
+            }
+        }
+    }
+
+    /// Project lane Canvas: nebula, lane track, axis sweep, far-mode project
+    /// labels. These are O(#projects) elements — NOT instanced in Metal.
+    /// The dense per-node/per-edge rendering has moved to GalaxyRenderer.
+    private func projectLaneCanvas(
+        _ scene: RadarScene, mood: RadarMood, camera: RadarCamera
+    ) -> some View {
         // The sweep tide pauses on a dead stream - motion is an activity
         // claim (and an all-quiet battery courtesy at 30fps).
         TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !mood.live)) { timeline in
             Canvas { context, size in
-                drawStarGrid(context, size: size)
                 let sweep = timeline.date.timeIntervalSinceReferenceDate
                     .truncatingRemainder(dividingBy: Tokens.Motion.axisSweepPeriod)
                     / Tokens.Motion.axisSweepPeriod
                 for (row, project) in scene.projects.enumerated() {
                     drawProjectLane(
                         context, scene: scene, project: project, row: row,
+                        camera: camera,
                         sweepPhase: mood.live ? sweep : -1)
                 }
-                for edge in scene.edges {
-                    drawEdge(context, edge: edge, scene: scene)
-                }
             }
-        }
-    }
-
-    private func drawStarGrid(_ context: GraphicsContext, size: CGSize) {
-        let spacing = Tokens.Space.starGridSpacing
-        var x: CGFloat = spacing / 2
-        while x < size.width {
-            var y: CGFloat = spacing / 2
-            while y < size.height {
-                context.fill(
-                    Path(ellipseIn: CGRect(x: x, y: y, width: 1.2, height: 1.2)),
-                    with: .color(.white.opacity(0.07)))
-                y += spacing
-            }
-            x += spacing
         }
     }
 
@@ -267,16 +288,16 @@ public struct RadarCanvasView: View {
 
     private func drawProjectLane(
         _ context: GraphicsContext, scene: RadarScene, project: RadarProject,
-        row: Int, sweepPhase: Double
+        row: Int, camera: RadarCamera, sweepPhase: Double
     ) {
         let accent = Tokens.Accent.color(forProjectId: project.id)
         let (a, b) = laneSpan(project, scene: scene, row: row)
-        let sa = displayCamera.toScreen(a)
-        let sb = displayCamera.toScreen(b)
+        let sa = camera.toScreen(a)
+        let sb = camera.toScreen(b)
 
         // Nebula: identity surface (VISUAL_SEMANTICS rule 5) - accent only.
         let center = CGPoint(x: (sa.x + sb.x) / 2, y: sa.y)
-        let radius = max(120 * displayCamera.scale, 40)
+        let radius = max(120 * camera.scale, 40)
         context.fill(
             Path(ellipseIn: CGRect(
                 x: center.x - radius * 2.4, y: center.y - radius,
@@ -291,7 +312,7 @@ public struct RadarCanvasView: View {
         track.addLine(to: sb)
         context.stroke(
             track, with: .color(.white.opacity(0.12)),
-            lineWidth: displayCamera.isFar ? 4 : 2)
+            lineWidth: camera.isFar ? 4 : 2)
 
         // Axis sweep: one slow light tide (suppressed when not live).
         if sweepPhase >= 0 {
@@ -307,16 +328,16 @@ public struct RadarCanvasView: View {
                     Gradient(colors: [.clear, .white.opacity(0.35), .clear]),
                     startPoint: CGPoint(x: sweepX - sweepLen / 2, y: sa.y),
                     endPoint: CGPoint(x: sweepX + sweepLen / 2, y: sa.y)),
-                lineWidth: displayCamera.isFar ? 4 : 2)
+                lineWidth: camera.isFar ? 4 : 2)
         }
 
         // Far mode: the giant project label rises (V6 §7.2 Show).
-        if displayCamera.isFar {
+        if camera.isFar {
             context.draw(
                 Text(project.id)
                     .font(Tokens.Typography.ui(28, weight: .bold))
                     .foregroundStyle(accent.opacity(0.85)),
-                at: CGPoint(x: sa.x, y: sa.y - 34 * displayCamera.scale - 22),
+                at: CGPoint(x: sa.x, y: sa.y - 34 * camera.scale - 22),
                 anchor: .leading)
             // A1_51b: branch node count per lane (derived from scene nodes,
             // not a separate branchCounts map; branch/commit nodes are galaxy
@@ -329,47 +350,40 @@ public struct RadarCanvasView: View {
                     Text("\(branchNodeCount) 分支")
                         .font(Tokens.Typography.mono(13, weight: .medium))
                         .foregroundStyle(accent.opacity(0.55)),
-                    at: CGPoint(x: sa.x, y: sa.y - 34 * displayCamera.scale - 2),
+                    at: CGPoint(x: sa.x, y: sa.y - 34 * camera.scale - 2),
                     anchor: .leading)
             }
         }
     }
 
+    // drawEdge retained for reference; edge rendering moved to GalaxyRenderer
+    // for the dense instanced path. A thin SwiftUI overlay would duplicate them.
+    // Kept private to avoid "unused" warnings while preserving structure for A1_51d.
+    @inline(__always)
     private func drawEdge(_ context: GraphicsContext, edge: RadarEdge, scene: RadarScene) {
-        // Edges follow live node positions, including an in-flight drag
-        // (V6 §7.3: updateEdges every frame of a node drag).
         let fromScreen = screenPosition(edge.from, in: scene)
         let toScreen = screenPosition(edge.to, in: scene)
+        let camera = displayCamera
         var path = Path()
         path.move(to: fromScreen)
-        let cpOff = max(abs(toScreen.x - fromScreen.x) * 0.4, 30 * displayCamera.scale)
+        let cpOff = max(abs(toScreen.x - fromScreen.x) * 0.4, 30 * camera.scale)
         path.addCurve(
             to: toScreen,
             control1: CGPoint(x: fromScreen.x + cpOff, y: fromScreen.y),
             control2: CGPoint(x: toScreen.x - cpOff, y: toScreen.y))
         switch edge.kind {
         case .membership:
-            // Structural coupling, not a status claim: neutral faint line.
-            context.stroke(
-                path, with: .color(.white.opacity(0.18)),
-                lineWidth: displayCamera.isFar ? 8 : 1.5)
+            context.stroke(path, with: .color(.white.opacity(0.18)),
+                lineWidth: camera.isFar ? 8 : 1.5)
         case .conflictTension:
-            // The fact "N worktrees hold one branch" wears attention-yellow
-            // and extra width (V6 §6.1 conflict path).
-            context.stroke(
-                path, with: .color(Tokens.Semantic.yellow.color.opacity(0.7)),
-                lineWidth: displayCamera.isFar ? 8 : 4)
+            context.stroke(path, with: .color(Tokens.Semantic.yellow.color.opacity(0.7)),
+                lineWidth: camera.isFar ? 8 : 4)
         case .fork:
-            // A1_51b: branch diverges from its merge-base anchor; neutral
-            // dim line (position encodes the relationship, not chrome).
-            context.stroke(
-                path, with: .color(.white.opacity(0.12)),
-                lineWidth: displayCamera.isFar ? 4 : 1)
+            context.stroke(path, with: .color(.white.opacity(0.12)),
+                lineWidth: camera.isFar ? 4 : 1)
         case .parent:
-            // A1_51b: commit parent edge (DAG structure); very faint.
-            context.stroke(
-                path, with: .color(.white.opacity(0.08)),
-                lineWidth: displayCamera.isFar ? 3 : 0.8)
+            context.stroke(path, with: .color(.white.opacity(0.08)),
+                lineWidth: camera.isFar ? 3 : 0.8)
         }
     }
 
