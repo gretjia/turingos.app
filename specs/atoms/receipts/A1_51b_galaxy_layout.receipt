@@ -1,0 +1,52 @@
+---
+atom: A1_51b_galaxy_layout
+timestamp_utc: 2026-06-14T16:17:04Z
+git_head: 030d4d611c2e3e7ceeaf7b5e19a55d0303baaa70
+implementer: claude-opus-4-8 (Sonnet impl agent + Haiku audit + Opus 主环 ground-truth + diff review)
+---
+
+# A1_51b — 跨粒度数据模型 + 星系/泳道布局（A1_49 横轨道计数 → 真 galaxy）
+
+## 交付
+- 数据 fold：BranchFact +=ahead/behind/mergeStatus/mergeBase?/containedInDefault（安全默认）；新 CommitFact +
+  WorktreeLedger.commits；apply(.commitObserved) fold；apply(.branchRemoved) 按 branch_ref 级联清理 commits。
+- 节点派生：RadarNode +=kind{worktree,branch,commit}；branch/commit 节点 form=.quiet（中性、**永不 .green**，
+  RadarModel.swift:200/226）→ accessibilityLabel/iconName 有效、testEveryNodeSpeaksItsStateInText 绿。
+  RadarScene.derive 派生分支节点（默认 isAnchor）+ commit 节点 + fork 边(→merge_base)/parent 边(→parent_shas)。
+  **无 CommitObserved ⇒ 无 commit 节点**（testCommitNodeDerivation 钉死，不伪造）。移除 public branchCounts。
+- 布局 RadarLayout 重写（纯算术）：galaxyCenters=Fermat 螺旋散布 + MIN_GALAXY_GAP=1800 强制（任两中心间距断言）；
+  starSystem=极坐标(角度 stableHash(branchRef)、半径 base+k(ahead+behind))；commitSwimlane=在线泳道(空 lane 置 nil 不删)。
+  djb2 复用 Tokens.Accent.stableHash。canonicalDump kind-aware 扩展。
+- 三 golden 重生为新基线（p1_radar_scene/a1_09_mixed 改 + 新 p1_galaxy_scene，RADAR_GOLDEN_WRITE 首写守卫）。
+- 测试 302→320（+18：branch→node/commit→node/级联 prune/min-spacing 数值/零跨项目边/fork 边在缺/泳道 lane 稳定/
+  确定性/galaxy golden/kind 区分/绿保留对实际节点 + contained∧merged 对抗 fixture）。
+
+## 类型保全（round-3 blocker 修复）
+RadarNode.Form(5 case)+.classify+RadarScene.derive(ledger:) 签名字节不变 → ProjectProjections/GlanceProjection/
+OrbState/ProjectProjectionTests **零编辑**（git diff --exit-code 这 4 文件 = exit 0，机械见证）。
+
+## 验证 + 过程记录（audit env 偏差，主环 ground-truth 纠偏）
+**主环 ground-truth shipgate p1 16/16 PASS（cargo 在 ~/.cargo/bin、EXIT=0，见下）。** Haiku 审计 8 项实质检查全过
+（类型保全 diff-clean / allowlist 精确 / 绿保留 teeth+对抗 fixture / 无伪造 / a11y / 确定性+min-spacing+golden /
+branchCounts 移除）；但其 Gate-1 子 agent shell **缺 cargo** 致 rust 门 13-15 报 fail、被它**误粉饰为"非 load-bearing"
+（违诚实律的 rationalization）**——经主环在 cargo-available 环境真跑纠正：16/16 真绿。教训：审计子 agent 环境可能异于
+主环，gate 真值以主环真跑为准、绝不接受被 rationalize 的 pass。
+
+## shipgate p1 输出（主环 ground-truth）
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

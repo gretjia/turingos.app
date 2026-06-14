@@ -318,11 +318,15 @@ public struct RadarCanvasView: View {
                     .foregroundStyle(accent.opacity(0.85)),
                 at: CGPoint(x: sa.x, y: sa.y - 34 * displayCamera.scale - 22),
                 anchor: .leading)
-            // A1_49: real observed branch count (local git + GitHub) per lane.
-            let branchCount = scene.branchCounts[project.id] ?? 0
-            if branchCount > 0 {
+            // A1_51b: branch node count per lane (derived from scene nodes,
+            // not a separate branchCounts map; branch/commit nodes are galaxy
+            // children, not counters).
+            let branchNodeCount = scene.nodes.filter {
+                $0.projectId == project.id && $0.kind == .branch
+            }.count
+            if branchNodeCount > 0 {
                 context.draw(
-                    Text("\(branchCount) 分支")
+                    Text("\(branchNodeCount) 分支")
                         .font(Tokens.Typography.mono(13, weight: .medium))
                         .foregroundStyle(accent.opacity(0.55)),
                     at: CGPoint(x: sa.x, y: sa.y - 34 * displayCamera.scale - 2),
@@ -355,6 +359,17 @@ public struct RadarCanvasView: View {
             context.stroke(
                 path, with: .color(Tokens.Semantic.yellow.color.opacity(0.7)),
                 lineWidth: displayCamera.isFar ? 8 : 4)
+        case .fork:
+            // A1_51b: branch diverges from its merge-base anchor; neutral
+            // dim line (position encodes the relationship, not chrome).
+            context.stroke(
+                path, with: .color(.white.opacity(0.12)),
+                lineWidth: displayCamera.isFar ? 4 : 1)
+        case .parent:
+            // A1_51b: commit parent edge (DAG structure); very faint.
+            context.stroke(
+                path, with: .color(.white.opacity(0.08)),
+                lineWidth: displayCamera.isFar ? 3 : 0.8)
         }
     }
 
@@ -413,9 +428,13 @@ struct RadarNodeCard: View {
     let onEvidence: () -> Void
 
     private var chrome: Color {
+        // A1_51b: branch/commit nodes use kind-based NEUTRAL chrome (never
+        // a semantic claim; position encodes relationship, not color).
+        guard node.kind == .worktree else {
+            return node.isAnchor ? .white : Tokens.Text.tertiary
+        }
         if let semantic = node.form.semantic { return semantic.color }
-        // Neutral material: anchors wear the white truth weight, quiet
-        // nodes stay dim - neither is a semantic claim.
+        // Worktree neutral material: anchors wear the white truth weight.
         return node.isAnchor ? .white : Tokens.Text.tertiary
     }
 

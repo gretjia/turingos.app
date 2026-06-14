@@ -1,3 +1,3 @@
 project proj_demo nodes=2 branches=0
-node wt_feature_x project=proj_demo form=quiet anchor=false branch=feature/x pos=(280.0,220.0)
-node wt_main project=proj_demo form=quiet anchor=false branch=main pos=(540.0,176.0)
+node wt_feature_x project=proj_demo form=quiet anchor=false branch=feature/x pos=(580.7,-10369.2)
+node wt_main project=proj_demo form=quiet anchor=false branch=main pos=(840.7,-10413.2)

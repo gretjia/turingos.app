@@ -1,12 +1,12 @@
 project p nodes=6 branches=0
 project q nodes=1 branches=0
-node wt_bad_22222222 project=p form=failed anchor=false branch=- pos=(540.0,176.0)
-node wt_c1_33333333 project=p form=conflict anchor=false branch=feat pos=(800.0,264.0)
-node wt_c2_44444444 project=p form=conflict anchor=false branch=feat pos=(1060.0,176.0)
-node wt_old_55555555 project=p form=orphan anchor=false branch=- pos=(1320.0,264.0)
-node wt_root_11111111 project=p form=quiet anchor=true branch=main pos=(280.0,220.0)
-node wt_w_66666666 project=p form=active anchor=false branch=work pos=(1580.0,176.0)
-node wt_q_77777777 project=q form=quiet anchor=false branch=main pos=(280.0,540.0)
+node wt_bad_22222222 project=p form=failed anchor=false branch=- pos=(2882.3,-9433.3)
+node wt_c1_33333333 project=p form=conflict anchor=false branch=feat pos=(3142.3,-9345.3)
+node wt_c2_44444444 project=p form=conflict anchor=false branch=feat pos=(3402.3,-9433.3)
+node wt_old_55555555 project=p form=orphan anchor=false branch=- pos=(3662.3,-9345.3)
+node wt_root_11111111 project=p form=quiet anchor=true branch=main pos=(2622.3,-9389.3)
+node wt_w_66666666 project=p form=active anchor=false branch=work pos=(3922.3,-9433.3)
+node wt_q_77777777 project=q form=quiet anchor=false branch=main pos=(4431.7,8740.0)
 edge conflictTension wt_c1_33333333->wt_c2_44444444
 edge membership wt_bad_22222222->wt_root_11111111
 edge membership wt_c1_33333333->wt_root_11111111
