@@ -58,10 +58,12 @@ public enum EventKind: String, Codable, Sendable, CaseIterable {
     case ratificationTagCreated = "RatificationTagCreated"
     case marketTxObserved = "MarketTxObserved"
     case reconciliationCompleted = "ReconciliationCompleted"
+    case branchObserved = "BranchObserved"
+    case branchRemoved = "BranchRemoved"
 }
 
 public enum EventSource: String, Codable, Sendable {
-    case git, fsevents, human, daemon, fixture
+    case git, fsevents, human, daemon, fixture, github
     case claudeHook = "claude_hook"
     case codexAppserver = "codex_appserver"
 }
