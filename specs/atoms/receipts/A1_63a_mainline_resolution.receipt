@@ -1,0 +1,58 @@
+---
+atom: A1_63a_mainline_resolution
+timestamp_utc: 2026-06-15T13:35:00Z
+git_head_base: 3cd90a093e61150c34a9ff2f1ca35d370b3e6190 (origin/main: #50/#51/#52 merged)
+implementer: claude-opus-4-8 (ADR-018 约定 RATIFIED → daemon-only 实现 → 模型路由对抗复核[Sonnet 健全性/回归 + Opus 诚实律 + Haiku 机械审计 + Opus 综合] → FIX-THEN-SHIP 修守恒测 → shipgate 16/16)
+---
+
+# A1_63a — 主线真相 + 诚实锚(daemon-only mainline resolution,ADR-018)
+
+## 交付
+用户重申主线纪律 + 要求用行业共识约定。约定 RATIFIED(ADR-018 + research/R1_mainline_convention.md)。本原子=
+**daemon-only** 实现:让 galaxy 锚在 designation 选出的真主线、诚实分清主次。
+
+**根因(HEAD live bug)**:branch_poller.rs:289 `is_default = name == raw gh default_branch` →
+turingos.app 锚在陈旧 `claude/brave-knuth-5uo3ce`(0-ahead/90-behind 于真 main)。
+
+**洞察(为何 daemon-only 足够)**:app 经 BranchObserved `is_default` 通道驱动 isAnchor。只要 daemon 把
+`is_default` 设成**仅 confirmed primary 为 true**(provisional/ambiguous/unobserved 时全 false → 无锚 → app
+不画 confident 脊柱),即零 app 改动让 turingos.app 锚 main 且 ambiguous 诚实留白 —— no-false-green 由保守
+is_default 守住。richer chrome(provenance tier/显式 fail-visible 标签/co-trunk 类)→ 后继 A1_63a2(app-only)。
+
+**实现**:
+- **两遍 whole-repo reduction**:PASS A `gather_mainline_candidates`(配置默认 + 常规名 main/master/trunk/develop
+  存在分支 + 对它们的 pairwise gh compare 取 strict-ancestry,候选集 ≤5 故每库少量 compare);PASS B 纯函数
+  `resolve_mainline`(① ancestry 消去丢严格祖先 ② 名称优先级破僵 ③ 无常规名→Provisional 单存/Ambiguous 多分叉/Unobserved 空)。
+- **`is_default` = `derive_is_default(tier, mainline_ref, name)` = tier==Confirmed && name==mainline_ref**(共享纯规则,
+  poll 与守恒测同一函数,Art.0 可重建);DERIVED at emit,非 parse_branch_list:289 早 stamp。
+- `mainline_ref` 作 compare base(每分支 ahead/behind 对真主线)+ recent-commit sha + default_ref(base-correction)。
+- 扩展 RefReconciliation:additive `resolved_primary` + `mainline_tier` + `default_vs_primary`(供 A1_63a2);merged_into_default 恒 false。
+- `PinObserved` EventKind 桩 + schema kind 枚举(rung0 前向兼容,无 emit)。
+- **depth/recency/高入度 永不做选择器**:MainlineCandidate 不带这些字段,sort 仅 (precedence, name)——ADR-018 红线结构性强制。
+
+## 验证
+- **shipgate p1 16/16 PASS**(a163a_shipgate2.log;**gate 12 golden 逐字节不变** + **gate 16 app lane 绿且 app 零改** → 确认 daemon-only)。
+- **rust 55 lib + 全 integration 测**;fmt + clippy(-D warnings)绿。
+- **纯 reduce 机械测 7 例**:turingos.app fold / 名称优先级非活跃度 / 严格祖先丢弃 / ambiguous / provisional / unobserved / 常规默认 confirmed。
+- **Art.0 derive_from_tape 守恒测**(mainline_resolution_is_conservation_of_tape):emitted (resolved_primary,tier)+per-branch is_default = resolve_mainline 输出的确定性重建;Confirmed + 三非 Confirmed 态全覆盖,非 Confirmed 一律不 designate。
+- **daemon socket live 证(环境无关,直接验修)**:重启带 resolution 的 daemon → 只读订阅实测 turingos_app:
+  **main.is_default=true、claude/brave-knuth-5uo3ce.is_default=false**(修前相反);RefReconciliation
+  resolved_primary="main"、tier="confirmed"、default_vs_primary="default_behind_named"、remote_default 仍诚实记 brave-knuth。
+- **模型路由对抗复核(workflow wf_4ab9a763,4 lens)**:Sonnet 健全性 SHIP / Opus 诚实律 CONCERN / Sonnet 回归 SHIP /
+  Haiku 机械审计 SHIP → Opus 综合 **FIX-THEN-SHIP**。唯一 major = ratified Art.0 守恒测缺失(ADR-018-F/卡 line 30 列为交付却
+  未写、未进 predicates)——**已修**(加 derive_is_default 共享纯规则 + 守恒测 + 注册 predicate)。核心 no-false-green 不变量
+  复核确认独立证成(gate + predicate + 7 测 + live socket)。
+
+## 诚实交代(报忧 / 残留,复核登记,非 blocking)
+- **常规名候选集封闭**(release/* 不入 primary 候选,故纯 release/1.x 库判 Provisional 非 Confirmed)——故意、保守(欠designate 胜过误crown)、
+  ADR-018-G 已记;release/* 是 co-trunk 类走 A1_63a2;特异名真主线(production/mainline-v2)需 pin/可配置名单(后续 atom)。
+- **gather 每库 ≤C(5,2)=10 次未缓存 compare**(绕过 compute_merge memoize)——用户已接受 honest-blank>confident-stale(R1 §4/ADR-018-H);
+  叠加冷启动串行慢(task #29,正交)。未来 atom 可按候选 SHA memoize pairwise。
+- **commit popover 之外的真机像素截屏未拿(承前)**:app 窗口 Space 漂移 + SCContentFilter 环境墙([[reference_locked_mac_live_verify]]),
+  非代码。本原子 daemon-only、app 渲染路径未改(与已目视证实的 A1_70 dist 同),且 is_default 通道经 socket live 证 →
+  galaxy 必锚 main;用户在自己交互 session zoom in turingos.app 即可亲见中心 = main。
+- `default_vs_primary="default_behind_named"` 当前仅 Confirmed 可达(gather 不收非常规非默认分支),"named" 今不会误标;
+  注释已留,未来若加非常规候选需 derive from tier(复核 nit,非 blocking)。
+
+## shipgate p1 输出
+[PASS] 1-16 全绿(见 a163a_shipgate2.log);SHIPGATE p1: PASS。golden 不变;app lane 绿(app 零改)。

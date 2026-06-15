@@ -94,8 +94,16 @@ pub enum EventKind {
     /// A1_62: per-project canonical-main reconciliation — remote default vs local
     /// trunk as two independent observed facts + their relation (honest cascade;
     /// never silently elects a winner). Payload carries both candidates (or null
-    /// when unobserved) + relation + per-candidate source/observed_at.
+    /// when unobserved) + relation + per-candidate source/observed_at. A1_63a
+    /// extends the payload with the resolved primary `mainline_ref` + `tier`
+    /// (the designation-class resolution per ADR-018) — additive.
     RefReconciliation,
+    /// A1_63a: human "Pin to Left" override of a repo's primary mainline (rung-0
+    /// of the ADR-018 cascade). STUB — no emit path yet; defined so the tape
+    /// schema is forward-compatible with the pin UI (a later atom) without a
+    /// migration (Art.0 tape-canonical). Payload (when emitted): project_id +
+    /// pinned git_ref + who/when.
+    PinObserved,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

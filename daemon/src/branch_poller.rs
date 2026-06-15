@@ -176,6 +176,206 @@ pub fn relate(remote: Option<&str>, local: Option<&str>) -> Relation {
     }
 }
 
+/// A1_63a: name-precedence for conventional PRIMARY-mainline candidates (ADR-018).
+/// Lower = higher priority. None = NOT a conventional primary name (release/*,
+/// *-stable, feature/exploration branches) — those are never a PRIMARY by name
+/// (release lines are the co-trunk category, handled app-side in A1_63a2).
+pub fn mainline_name_precedence(name: &str) -> Option<u8> {
+    match name {
+        "main" => Some(0),
+        "master" => Some(1),
+        "trunk" => Some(2),
+        "develop" => Some(3),
+        _ => None,
+    }
+}
+
+/// A1_63a: confidence tier of a resolved primary mainline (ADR-018 cascade).
+/// The daemon sets `is_default=true` ONLY for `Confirmed` — every other tier
+/// leaves all branches undesignated, so the app draws no confident spine
+/// (no-false-green holds without app changes).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MainlineTier {
+    /// A conventional-name candidate is the sole surviving designation (rung 0-2).
+    Confirmed,
+    /// A single non-conventional survivor — best-observed but UNCONFIRMED (rung 3-4).
+    Provisional,
+    /// >1 divergent survivor, no conventional winner — no honest single primary (rung 5).
+    Ambiguous,
+    /// No candidate resolvable (empty repo / nothing observed) (rung 5).
+    Unobserved,
+}
+
+pub fn mainline_tier_str(t: MainlineTier) -> &'static str {
+    match t {
+        MainlineTier::Confirmed => "confirmed",
+        MainlineTier::Provisional => "provisional",
+        MainlineTier::Ambiguous => "ambiguous",
+        MainlineTier::Unobserved => "unobserved",
+    }
+}
+
+/// A1_63a: one PRIMARY-mainline candidate for the whole-repo reduction.
+/// `precedence` = Some(rank) for a conventional integration name (see
+/// `mainline_name_precedence`), None otherwise. Commit depth and recency are
+/// NEVER fields here — the reduction refuses to consult them (ADR-018 red line).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MainlineCandidate {
+    pub name: String,
+    pub precedence: Option<u8>,
+    pub is_declared_default: bool,
+}
+
+/// A1_63a: PASS B of the two-pass resolution — a PURE reduction over the gathered
+/// candidates plus their pairwise strict-ancestry (`anc[i][j]` == candidate i is
+/// a STRICT ancestor of candidate j, i.e. j strictly contains i; PROVEN by an
+/// observed compare, never inferred). Returns the resolved primary ref (None when
+/// not confidently designatable) + tier.
+///
+/// Designation only: (1) drop any candidate proven a strict ancestor of another
+/// (superseded — this is what folds a stale declared default into a conventional
+/// name, the turingos.app case); (2) among survivors, a conventional name wins by
+/// name-precedence (depth/recency NEVER consulted); (3) no conventional survivor
+/// → never crown a non-conventional name: one survivor is Provisional, several
+/// divergent survivors are Ambiguous, empty is Unobserved.
+pub fn resolve_mainline(
+    cands: &[MainlineCandidate],
+    anc: &[Vec<bool>],
+) -> (Option<String>, MainlineTier) {
+    if cands.is_empty() {
+        return (None, MainlineTier::Unobserved);
+    }
+    // (1) Ancestry-elimination: drop any candidate that is a strict ancestor of
+    // another observed candidate (provably superseded).
+    let survivors: Vec<usize> = (0..cands.len())
+        .filter(|&i| !(0..cands.len()).any(|j| j != i && anc[i][j]))
+        .collect();
+    if survivors.is_empty() {
+        // Unreachable for a true strict-ancestry DAG (no cycles); honest fallback.
+        return (None, MainlineTier::Unobserved);
+    }
+    // (2) Conventional names are the only PRIMARY candidates; highest precedence wins.
+    let mut conv: Vec<usize> = survivors
+        .iter()
+        .copied()
+        .filter(|&i| cands[i].precedence.is_some())
+        .collect();
+    if !conv.is_empty() {
+        // Name-precedence (lowest rank), name as deterministic tie-break. Depth and
+        // recency are deliberately NOT inputs.
+        conv.sort_by(|&a, &b| {
+            cands[a]
+                .precedence
+                .cmp(&cands[b].precedence)
+                .then_with(|| cands[a].name.cmp(&cands[b].name))
+        });
+        return (Some(cands[conv[0]].name.clone()), MainlineTier::Confirmed);
+    }
+    // (3) No conventional survivor — never confirm a non-conventional name.
+    if survivors.len() == 1 {
+        (
+            Some(cands[survivors[0]].name.clone()),
+            MainlineTier::Provisional,
+        )
+    } else {
+        (None, MainlineTier::Ambiguous)
+    }
+}
+
+/// A1_63a: the CONSERVATIVE anchor rule (the no-false-green guard), as a pure
+/// function so it is reproducible from the tape (Art.0 derive_from_tape) and
+/// shared verbatim by `poll()`'s BranchObserved emit. A branch is the designated
+/// primary iff the resolution is Confirmed AND the branch IS the resolved ref —
+/// so Provisional/Ambiguous/Unobserved designate nothing and the app draws no
+/// confident spine. Depth/recency are not arguments; designation is everything.
+pub fn derive_is_default(
+    tier: MainlineTier,
+    mainline_ref: Option<&str>,
+    branch_name: &str,
+) -> bool {
+    matches!(tier, MainlineTier::Confirmed) && mainline_ref == Some(branch_name)
+}
+
+/// A1_63a: PASS A — gather the PRIMARY-mainline candidates (the declared default
+/// plus any existing conventional-name branch) and their pairwise STRICT ancestry,
+/// probed via `gh compare` (the same observation `compute_merge` uses). The
+/// candidate set is small (≤5 names), so this is a handful of extra compares per
+/// poll. `anc[i][j]` == candidate i is a strict ancestor of candidate j (proven
+/// by an observed compare; an unobservable pair stays false = no fold, the
+/// conservative honest default).
+fn gather_mainline_candidates(
+    gh: &dyn GhClient,
+    slug: &str,
+    branch_list: &[BranchInfo],
+    default_branch: &str,
+) -> (Vec<MainlineCandidate>, Vec<Vec<bool>>) {
+    // Candidate names: declared default first, then existing conventional primary
+    // names (main/master/trunk/develop). Deduped; only names present in the listing.
+    let mut picked: Vec<(String, String)> = Vec::new(); // (name, head_sha)
+    let candidate_names = std::iter::once(default_branch.to_string()).chain(
+        branch_list
+            .iter()
+            .filter(|b| mainline_name_precedence(&b.name).is_some())
+            .map(|b| b.name.clone()),
+    );
+    for name in candidate_names {
+        if picked.iter().any(|(n, _)| *n == name) {
+            continue;
+        }
+        if let Some(b) = branch_list.iter().find(|b| b.name == name) {
+            picked.push((name, b.head_sha.clone()));
+        }
+    }
+    let cands: Vec<MainlineCandidate> = picked
+        .iter()
+        .map(|(n, _)| MainlineCandidate {
+            name: n.clone(),
+            precedence: mainline_name_precedence(n),
+            is_declared_default: *n == default_branch,
+        })
+        .collect();
+    let k = picked.len();
+    let mut anc = vec![vec![false; k]; k];
+    for i in 0..k {
+        for j in (i + 1)..k {
+            // One compare yields BOTH directions: base=i, head=j → ahead=commits in
+            // j not in i, behind=commits in i not in j.
+            if let Some((ahead, behind)) =
+                compare_ahead_behind(gh, slug, &picked[i].0, &picked[j].0)
+            {
+                if behind == 0 && ahead > 0 {
+                    anc[i][j] = true; // i strictly contained in j → i ancestor of j
+                }
+                if ahead == 0 && behind > 0 {
+                    anc[j][i] = true; // j strictly contained in i → j ancestor of i
+                }
+            }
+        }
+    }
+    (cands, anc)
+}
+
+/// A1_63a: ahead/behind of `base...head` via gh compare — (ahead, behind) where
+/// ahead = commits in head not in base, behind = commits in base not in head.
+/// None on gh/parse failure (ancestry unproven → caller folds nothing).
+fn compare_ahead_behind(
+    gh: &dyn GhClient,
+    slug: &str,
+    base: &str,
+    head: &str,
+) -> Option<(u32, u32)> {
+    let raw = gh
+        .run(&[
+            "api",
+            &format!("repos/{slug}/compare/{base}...{head}"),
+            "--jq",
+            "{status,ahead_by,behind_by,total_commits,merge_base:.merge_base_commit.sha}",
+        ])
+        .ok()?;
+    let fact = parse_compare(&raw).ok()?;
+    Some((fact.ahead, fact.behind))
+}
+
 /// Pure: parse `git symbolic-ref --short refs/remotes/origin/HEAD` output
 /// (e.g. "origin/main\n") -> "main". None for empty/unexpected.
 pub fn parse_symbolic_ref(output: &str) -> Option<String> {
@@ -663,10 +863,59 @@ impl BranchPoller {
                 .path
                 .as_deref()
                 .and_then(|p| observe_local_trunk(git, p));
+
+            // ?per_page=100 returns a single JSON array (no --paginate
+            // concatenation); 100 covers every repo here (max=72).
+            let branches_json =
+                match gh.run(&["api", &format!("repos/{slug}/branches?per_page=100")]) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        eprintln!("branch poller: {slug} branches failed: {e}");
+                        continue;
+                    }
+                };
+            let mut branch_list = match parse_branch_list(&branches_json, &default_branch) {
+                Ok(b) => b,
+                Err(e) => {
+                    eprintln!("branch poller: {slug} parse failed: {e}");
+                    continue;
+                }
+            };
+
+            // A1_63a: two-pass whole-repo mainline resolution (ADR-018). PASS A
+            // gathers the PRIMARY candidates + their pairwise ancestry; PASS B
+            // reduces by DESIGNATION (ancestry-elimination + name-precedence) — never
+            // by depth/recency. A stale declared default folds when a conventional
+            // name supersedes it (the turingos.app trap: brave-knuth -> main).
+            let (cands, anc) = gather_mainline_candidates(gh, &slug, &branch_list, &default_branch);
+            let (mainline_ref, mainline_tier) = resolve_mainline(&cands, &anc);
+
+            // The COMPARE BASE is the resolved primary when we have one (so every
+            // branch's ahead/behind is measured against the REAL trunk, not the stale
+            // default — the load-bearing base-correction), else the declared default
+            // as an honest best-effort base. The emitted is_default stays conservative.
+            let base_ref = mainline_ref
+                .clone()
+                .unwrap_or_else(|| default_branch.clone());
+            // Re-stamp is_default = "is the compare base" so compute_merge skips the
+            // base's self-compare. The EMITTED anchor flag is computed separately and
+            // conservatively (Confirmed only) in the per-branch loop below.
+            for b in &mut branch_list {
+                b.is_default = b.name == base_ref;
+            }
+
+            // A1_62 + A1_63a: reconcile remote-default vs local-trunk (two independent
+            // owner/clone facts) AND publish the RESOLVED primary + tier. No merge
+            // claim is made here; merged_into_default stays false-always downstream.
             let relation = relate(
                 Some(default_branch.as_str()),
                 local_trunk.as_ref().map(|t| t.git_ref.as_str()),
             );
+            let default_vs_primary = match mainline_ref.as_deref() {
+                Some(p) if p == default_branch => "default_is_primary",
+                Some(_) => "default_behind_named",
+                None => "no_confident_primary",
+            };
             hub.publish(
                 EventKind::RefReconciliation,
                 EventSource::Daemon,
@@ -686,30 +935,18 @@ impl BranchPoller {
                         "observed_at": observed_at,
                     })),
                     "relation": relation_str(relation),
+                    // A1_63a: the designation-class resolution (ADR-018). resolved_primary
+                    // is null unless a primary is confidently designatable; tier carries
+                    // the confidence so the app never draws a confident spine on a
+                    // provisional/ambiguous result. additive — A1_62 consumers ignore it.
+                    "resolved_primary": mainline_ref.clone(),
+                    "mainline_tier": mainline_tier_str(mainline_tier),
+                    "default_vs_primary": default_vs_primary,
                 }),
             );
 
-            // ?per_page=100 returns a single JSON array (no --paginate
-            // concatenation); 100 covers every repo here (max=72).
-            let branches_json =
-                match gh.run(&["api", &format!("repos/{slug}/branches?per_page=100")]) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        eprintln!("branch poller: {slug} branches failed: {e}");
-                        continue;
-                    }
-                };
-            let branch_list = match parse_branch_list(&branches_json, &default_branch) {
-                Ok(b) => b,
-                Err(e) => {
-                    eprintln!("branch poller: {slug} parse failed: {e}");
-                    continue;
-                }
-            };
-
-            // The live default head — half the memoize key (so a moved default tip
-            // forces every branch to recompute). Empty if default is absent from the
-            // listing; compute_merge treats an empty sha as non-cacheable.
+            // The compare base's live head — half the memoize key (so a moved base
+            // tip forces recompute). Empty if the base ref is absent from the listing.
             let default_sha = branch_list
                 .iter()
                 .find(|b| b.is_default)
@@ -719,7 +956,7 @@ impl BranchPoller {
             let ctx = RepoCtx {
                 slug: &slug,
                 project_id: &entry.project_id,
-                default_branch: &default_branch,
+                default_branch: &base_ref,
                 default_sha: &default_sha,
             };
 
@@ -734,7 +971,7 @@ impl BranchPoller {
                         "api",
                         &format!(
                             "repos/{slug}/commits?sha={}&per_page=30",
-                            default_branch
+                            base_ref
                         ),
                         "--jq",
                         "[.[]|{sha,parents:[.parents[].sha],commit:{author:{name:.commit.author.name,date:.commit.author.date},message:.commit.message}}]",
@@ -765,7 +1002,9 @@ impl BranchPoller {
             };
 
             // Emit CommitObserved for default-branch recent commits.
-            let default_ref = format!("refs/heads/{default_branch}");
+            // A1_63a: the trunk commits are tagged with the RESOLVED primary's ref
+            // (the real trunk, e.g. main), not the stale declared default.
+            let default_ref = format!("refs/heads/{base_ref}");
             for commit in &default_commits {
                 hub.publish(
                     EventKind::CommitObserved,
@@ -796,7 +1035,12 @@ impl BranchPoller {
                     "project_id": entry.project_id,
                     "branch_ref": branch_ref,
                     "head_sha": info.head_sha,
-                    "is_default": info.is_default,
+                    // A1_63a: the anchor flag is CONSERVATIVE — true only for a
+                    // CONFIRMED designated primary (rung 0-2), via the shared pure rule
+                    // (derive_is_default) so it is reproducible from the tape (Art.0).
+                    // When the mainline is provisional/ambiguous/unobserved NO branch is
+                    // designated, so the app draws no confident spine (no-false-green).
+                    "is_default": derive_is_default(mainline_tier, mainline_ref.as_deref(), &info.name),
                     "provenance": "github_api",
                     "merge_status": fact.status.as_str(),
                     "ahead": fact.ahead,
@@ -1150,6 +1394,158 @@ mod tests {
     #[test]
     fn parse_compare_commits_errors_on_bad_json() {
         assert!(parse_compare_commits("not json at all").is_err());
+    }
+
+    // ---- A1_63a: mainline resolution (PASS B) — ADR-018 designation cascade ----
+
+    /// Build a candidate from a name (precedence derived) + is_declared_default.
+    fn mc(name: &str, is_default: bool) -> MainlineCandidate {
+        MainlineCandidate {
+            name: name.to_string(),
+            precedence: mainline_name_precedence(name),
+            is_declared_default: is_default,
+        }
+    }
+    /// Build an NxN strict-ancestry matrix from (ancestor_idx, descendant_idx) pairs.
+    fn anc_matrix(n: usize, edges: &[(usize, usize)]) -> Vec<Vec<bool>> {
+        let mut m = vec![vec![false; n]; n];
+        for &(i, j) in edges {
+            m[i][j] = true;
+        }
+        m
+    }
+
+    #[test]
+    fn resolve_mainline_turingos_app_stale_default_folds_into_main() {
+        // The real turingos.app trap: declared default is a non-conventional stale
+        // branch that is a STRICT ANCESTOR of main (0-ahead/90-behind). It must fold;
+        // main wins. (verified live 2026-06-15.)
+        let cands = vec![mc("claude/brave-knuth-5uo3ce", true), mc("main", false)];
+        let anc = anc_matrix(2, &[(0, 1)]); // brave-knuth is a strict ancestor of main
+        let (primary, tier) = resolve_mainline(&cands, &anc);
+        assert_eq!(primary.as_deref(), Some("main"));
+        assert_eq!(tier, MainlineTier::Confirmed);
+    }
+
+    #[test]
+    fn resolve_mainline_name_precedence_not_activity() {
+        // GitFlow forest: main and develop DIVERGED (neither an ancestor). The
+        // primary is main by NAME PRECEDENCE — never by which is deeper/more recent.
+        let cands = vec![mc("main", true), mc("develop", false)];
+        let anc = anc_matrix(2, &[]); // divergent: no ancestry either way
+        let (primary, tier) = resolve_mainline(&cands, &anc);
+        assert_eq!(primary.as_deref(), Some("main"));
+        assert_eq!(tier, MainlineTier::Confirmed);
+        // precedence holds regardless of candidate order.
+        let rev = vec![mc("develop", false), mc("main", true)];
+        assert_eq!(
+            resolve_mainline(&rev, &anc_matrix(2, &[])).0.as_deref(),
+            Some("main")
+        );
+    }
+
+    #[test]
+    fn resolve_mainline_strict_ancestor_conventional_is_dropped() {
+        // main is purely behind develop (main ⊆ develop, strict ancestor). main is
+        // dropped by ancestry-elimination; develop survives and is confirmed.
+        let cands = vec![mc("main", true), mc("develop", false)];
+        let anc = anc_matrix(2, &[(0, 1)]); // main is a strict ancestor of develop
+        let (primary, tier) = resolve_mainline(&cands, &anc);
+        assert_eq!(primary.as_deref(), Some("develop"));
+        assert_eq!(tier, MainlineTier::Confirmed);
+    }
+
+    #[test]
+    fn resolve_mainline_ambiguous_when_divergent_nonconventional() {
+        // Two divergent non-conventional long-lived lines, no conventional name:
+        // never crown by activity — fail-visible ambiguous.
+        let cands = vec![mc("codex/explore-a", true), mc("claude/explore-b", false)];
+        let anc = anc_matrix(2, &[]); // divergent
+        let (primary, tier) = resolve_mainline(&cands, &anc);
+        assert_eq!(primary, None);
+        assert_eq!(tier, MainlineTier::Ambiguous);
+    }
+
+    #[test]
+    fn resolve_mainline_provisional_single_nonconventional() {
+        // A single non-conventional candidate: best-observed but never CONFIRMED
+        // (so the daemon sets no is_default → no confident spine).
+        let cands = vec![mc("production", true)];
+        let (primary, tier) = resolve_mainline(&cands, &anc_matrix(1, &[]));
+        assert_eq!(primary.as_deref(), Some("production"));
+        assert_eq!(tier, MainlineTier::Provisional);
+    }
+
+    #[test]
+    fn resolve_mainline_unobserved_when_empty() {
+        // Empty repo (mindsync: 0 branches) — no candidate, honest unobserved,
+        // never a fabricated spine on the owner-declared default string.
+        let (primary, tier) = resolve_mainline(&[], &[]);
+        assert_eq!(primary, None);
+        assert_eq!(tier, MainlineTier::Unobserved);
+    }
+
+    #[test]
+    fn resolve_mainline_conventional_default_confirmed_directly() {
+        // Healthy repo: declared default IS a conventional name, nothing supersedes it.
+        let cands = vec![mc("main", true)];
+        let (primary, tier) = resolve_mainline(&cands, &anc_matrix(1, &[]));
+        assert_eq!(primary.as_deref(), Some("main"));
+        assert_eq!(tier, MainlineTier::Confirmed);
+    }
+
+    /// A1_63a: Art.0 derive_from_tape conservation (ADR-018-F). The projection the
+    /// daemon emits — (resolved_primary, mainline_tier) on RefReconciliation and the
+    /// per-branch is_default flag on BranchObserved — must be a DETERMINISTIC
+    /// reconstruction of resolve_mainline's output over the observed candidate set
+    /// (view == derive_from_tape). No hidden state, no depth/recency leakage.
+    #[test]
+    fn mainline_resolution_is_conservation_of_tape() {
+        // CONFIRMED case (turingos.app trap): the emitted fields reconstruct exactly.
+        let cands = vec![mc("claude/brave-knuth-5uo3ce", true), mc("main", false)];
+        let anc = anc_matrix(2, &[(0, 1)]); // brave-knuth strict ancestor of main
+        let (primary, tier) = resolve_mainline(&cands, &anc);
+        // determinism: identical inputs reproduce the identical resolution.
+        assert_eq!((primary.clone(), tier), resolve_mainline(&cands, &anc));
+        // the emitted RefReconciliation fields ARE this resolution (by construction).
+        assert_eq!(primary.as_deref(), Some("main"));
+        assert_eq!(mainline_tier_str(tier), "confirmed");
+        // every branch's emitted is_default is reconstructible from (tier, primary, name)
+        // via the SAME pure rule poll() uses — and only the resolved primary is true.
+        assert!(derive_is_default(tier, primary.as_deref(), "main"));
+        assert!(!derive_is_default(
+            tier,
+            primary.as_deref(),
+            "claude/brave-knuth-5uo3ce"
+        ));
+
+        // NON-CONFIRMED cases: NO branch is ever designated (no confident spine).
+        let (p_amb, t_amb) = resolve_mainline(
+            &[mc("codex/explore-a", true), mc("claude/explore-b", false)],
+            &anc_matrix(2, &[]),
+        );
+        assert_eq!(p_amb, None);
+        assert_eq!(mainline_tier_str(t_amb), "ambiguous");
+        assert!(!derive_is_default(
+            t_amb,
+            p_amb.as_deref(),
+            "codex/explore-a"
+        ));
+        assert!(!derive_is_default(
+            t_amb,
+            p_amb.as_deref(),
+            "claude/explore-b"
+        ));
+
+        let (p_prov, t_prov) = resolve_mainline(&[mc("production", true)], &anc_matrix(1, &[]));
+        assert_eq!(mainline_tier_str(t_prov), "provisional");
+        // Provisional names a best-observed ref but still designates NOTHING.
+        assert!(!derive_is_default(t_prov, p_prov.as_deref(), "production"));
+
+        let (p_unobs, t_unobs) = resolve_mainline(&[], &[]);
+        assert_eq!(p_unobs, None);
+        assert_eq!(mainline_tier_str(t_unobs), "unobserved");
+        assert!(!derive_is_default(t_unobs, p_unobs.as_deref(), "anything"));
     }
 
     #[test]
