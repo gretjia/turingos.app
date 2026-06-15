@@ -47,7 +47,11 @@ vertex VertexOut galaxy_vertex(
     uint                   instanceId [[instance_id]]
 ) {
     InstanceData inst = instances[instanceId];
-    float2 pos = inst.center + in.localPos * inst.size;
+    // Defensive clamp: a correct instance size is <= ~0.5 NDC. This bounds the
+    // blast radius of any future Swift/MSL layout drift (the A1_68 bug rendered
+    // screen-filling quads when inst.size was misread from a neighbor's center).
+    float s = clamp(inst.size, 0.0, 0.6);
+    float2 pos = inst.center + in.localPos * s;
     VertexOut out;
     out.position = float4(pos, 0.0, 1.0);
     out.color    = inst.color;
@@ -64,13 +68,17 @@ fragment float4 galaxy_fragment(VertexOut in [[stage_in]]) {
 // Note: Float is required here for the GPU buffer layout (Metal uses float32).
 // This file is intentionally excluded from the Float/Float32 audit applied to
 // RadarModel.swift and RadarViews.swift by the Float32 test.
-private struct GalaxyInstanceData {
-    var centerX: Float
-    var centerY: Float
-    var colorR: Float
-    var colorG: Float
-    var colorB: Float
-    var colorA: Float
+// A1_68: layout MUST match the MSL `InstanceData` struct byte-for-byte. MSL
+// aligns `float4 color` to 16 bytes → center@0, color@16, size@32, kind@36,
+// stride 48. The previous tight-packed scalar layout (stride 32) desynced the
+// instance buffer: the shader read `inst.size` from a NEIGHBOR's centerX,
+// producing screen-filling quads (the blue/magenta color blocks). SIMD2/SIMD4
+// carry the same alignment as MSL float2/float4, so the layouts agree.
+// Pinned by RadarLODTests.testGalaxyInstanceDataMatchesMSLLayout. `internal`
+// (not `private`) so the layout test can see it (@testable doesn't expose private).
+struct GalaxyInstanceData {
+    var center: SIMD2<Float>
+    var color: SIMD4<Float>
     var size: Float
     var kind: UInt32
 }
@@ -173,9 +181,8 @@ extension GalaxyRenderer {
                     let ndcX = Float(sx / viewW * 2.0 - 1.0)
                     let ndcY = Float(1.0 - sy / viewH * 2.0)
                     out.append(GalaxyInstanceData(
-                        centerX: ndcX, centerY: ndcY,
-                        colorR: 0.9 * grayMul, colorG: 0.9 * grayMul,
-                        colorB: 0.95 * grayMul, colorA: 0.07,
+                        center: SIMD2<Float>(ndcX, ndcY),
+                        color: SIMD4<Float>(0.9 * grayMul, 0.9 * grayMul, 0.95 * grayMul, 0.07),
                         size: 0.0015, kind: 0))
                 }
             }
@@ -208,8 +215,8 @@ extension GalaxyRenderer {
                     let g = Float((accentHex >>  8) & 0xFF) / 255.0 * grayMul
                     let b = Float( accentHex         & 0xFF) / 255.0 * grayMul
                     out.append(GalaxyInstanceData(
-                        centerX: ndcX, centerY: ndcY,
-                        colorR: r, colorG: g, colorB: b, colorA: 0.85,
+                        center: SIMD2<Float>(ndcX, ndcY),
+                        color: SIMD4<Float>(r, g, b, 0.85),
                         size: size, kind: 1))
                 }
 
@@ -235,8 +242,8 @@ extension GalaxyRenderer {
                     let dotPx: Double = node.isAnchor ? 14.0 : 9.0
                     let size = Float(dotPx / viewW * camera.z.clamped(1.0, 4.0))
                     out.append(GalaxyInstanceData(
-                        centerX: ndcX, centerY: ndcY,
-                        colorR: r, colorG: g, colorB: b, colorA: a,
+                        center: SIMD2<Float>(ndcX, ndcY),
+                        color: SIMD4<Float>(r, g, b, a),
                         size: size, kind: 1))
                 }
 
@@ -257,9 +264,9 @@ extension GalaxyRenderer {
                     case .parent: edgeA = 0.08
                     }
                     out.append(GalaxyInstanceData(
-                        centerX: mx, centerY: my,
-                        colorR: grayMul, colorG: grayMul, colorB: grayMul,
-                        colorA: edgeA, size: lenNDC * 0.5, kind: 2))
+                        center: SIMD2<Float>(mx, my),
+                        color: SIMD4<Float>(grayMul, grayMul, grayMul, edgeA),
+                        size: lenNDC * 0.5, kind: 2))
                 }
             }
 

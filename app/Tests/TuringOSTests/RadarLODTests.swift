@@ -15,6 +15,25 @@ import XCTest
 
 final class RadarLODTests: XCTestCase {
 
+    // MARK: - 0. A1_68: GalaxyInstanceData ↔ MSL InstanceData layout contract
+
+    /// The Swift instance struct MUST match the MSL `InstanceData` byte layout
+    /// (float2 center @0, float4 color @16 [16-byte aligned], float size @32,
+    /// uint kind @36, stride 48). A mismatch desyncs the instance buffer so the
+    /// shader reads `inst.size` from a neighbor's bytes → screen-filling quads
+    /// (the blue/magenta color-block bug). This pins the contract mechanically.
+    func testGalaxyInstanceDataMatchesMSLLayout() {
+        XCTAssertEqual(
+            MemoryLayout<GalaxyInstanceData>.stride, 48,
+            "stride must equal the MSL InstanceData stride (float4 forces 16-byte alignment)")
+        XCTAssertEqual(MemoryLayout<GalaxyInstanceData>.offset(of: \.center), 0)
+        XCTAssertEqual(
+            MemoryLayout<GalaxyInstanceData>.offset(of: \.color), 16,
+            "float4 color must be 16-byte aligned to match MSL (the A1_68 desync was here)")
+        XCTAssertEqual(MemoryLayout<GalaxyInstanceData>.offset(of: \.size), 32)
+        XCTAssertEqual(MemoryLayout<GalaxyInstanceData>.offset(of: \.kind), 36)
+    }
+
     // MARK: - 1. Metal fail-safe: Coordinator with nil device is safe
 
     func testMetalFailSafeCoordinatorNilDevice() {
