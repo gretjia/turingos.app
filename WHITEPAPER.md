@@ -1,8 +1,9 @@
-# Turing Agentic OS 白皮书 v0.5
+# Turing Agentic OS 白皮书 v0.6 — Two-Scale Sovereign Kernel Correction
 
 **Apple-native × protocol-native 个人 Agentic OS：让 AI 在你的法律下自治**
+**Internal ChainTape is the sovereign micro-ledger; GitHub is the macro execution substrate.**
 
-版本 v0.5 · 2026-06-12 · 状态：在 v0.4 基础上完成定位升级（依用户 8 条评审与对谈，[原文存档](research/REVIEW_v04_user_gpt_dialogue.md)）——新增 Agentic 协议层、Model Gateway、Capability Registry、Skill Library、Live Software 3.0 回路、Hostile Host 安全模型、Canvas Projection 与外部 Agent Adapter Contract。本版取代 v0.1 / v0.3 / v0.4。
+版本 v0.6 · 2026-06-15 · 状态：在 v0.5 基础上完成「两尺度主权内核纠偏」（依用户 2026-06-15 终裁指令 + Veto-AI 全票核准，[审计规范存档](research/R_v06_directive.md)）——把 TuringOS 内部微观 ChainTape（主权微观账本）与用户项目 GitHub PR/CI/merge（宏观执行场）彻底分层，修正 §4.1 / §4.3 / §7.3 / §8 / §13.4 / §14.4 / §18 的同源尺度错配，新增 §7.0.1 图间连接契约（Flowchart Interface Contract）与 Approval Integrity Law。本版取代 v0.1 / v0.3 / v0.4 / v0.5。
 
 > 配套文档：[FEASIBILITY.md](FEASIBILITY.md)（外部论断核验状态与来源，含 v0.5 调研附录 Part IV）· [research/R_agentic_os_sources.md](research/R_agentic_os_sources.md)（A1_11 论断库）· [research/R_v05_protocol_live_sources.md](research/R_v05_protocol_live_sources.md)（v0.5 论断库，41 条）。本版凡引外部事实，仅限两库内已核条目，措辞强度不超过其核验状态。
 
@@ -10,7 +11,7 @@
 
 ## 0. 一句话
 
-**Turing Agentic OS 是一个 Apple-native、protocol-native 的个人 Agentic OS。它以 Facilitator AI 的动态气泡作为入口，以 Meta AI 编译用户意图，以 TuringOS Kernel 管理 Spec、预算、谓词、工作树、回执与人类签名，把外部模型、工具、技能与 Agent 全部变成受法律约束、有回执背书、可由人类签名的状态迁移。**
+**Turing Agentic OS 是一个 Apple-native、protocol-native 的个人 Agentic OS。它以 Facilitator AI 的动态气泡作为入口，以 Meta AI 编译用户意图，以 TuringOS Kernel 管理 Spec、预算、谓词、工作树、回执，并编排签名请求、验签与签名回执（私钥永不进入 daemon，§9），把外部模型、工具、技能与 Agent 全部变成受法律约束、有回执背书、可由人类签名的状态迁移。**
 
 它不是另一个传统 macOS 应用，也不是另一个聊天机器人。它是一个把「人类意图 → 可执行法律 → Agent 行动 → 机器验证 → 人类签名 → 可回放状态变更」连成闭环的操作层。
 
@@ -19,6 +20,12 @@
 > TuringOS is an Apple-native, protocol-native personal Agentic OS that turns external models, tools, skills, and agents into law-bound, receipt-backed, human-signable state transitions.
 
 三权分明：**Apple-native 是产品体验与本地可信能力；protocol-native 是生态扩展能力；ChainTape、Predicate Gate、人类签名与 provenance 是 TuringOS 自己不可让渡的主权。**
+
+> **两尺度主权（v0.6 核心定理，全篇之骨）**
+>
+> **Internal ChainTape is the sovereign micro-ledger. GitHub is the external macro execution substrate. A GitHub commit/PR/merge is not a ChainTape node; it is a macro artifact crystallized from many micro nodes and then anchored back into ChainTape as provenance.**
+>
+> 内部 ChainTape 是反奥利奥内核自己的主权**微观**账本（一次内核 tick / 一次 agent 提案 / 一次谓词判定 = 一个内部 tape node，失败也入带）；用户项目 Git / GitHub / PR / CI / merge 是外部**宏观**执行场与交付晶体。一次 GitHub commit/PR/merge **不是** ChainTape 节点，而是由许多微观节点晶出、再作为 provenance 锚回 ChainTape 的宏观产物。这不是降级 GitHub——是让 GitHub 回到它最擅长的位置（PR/CI/branch protection/merge），同时让 TuringOS 守住自己的主权（法律、谓词、签名、审计、失败记忆、预算、provenance、状态迁移）。
 
 ---
 
@@ -41,6 +48,17 @@ v0.5 依用户 8 条评审完成**定位升级：Apple-native → Apple-native �
 1. **生态接口系统化。** MCP / A2A / MCP Apps / A2UI / AG-UI / SKILL.md / 模型 API 不再是零散集成点，而是一个有铁律的协议层（§13.6）+ Model Gateway（§13.7）+ View IR（§6.6）。原则一句话：**外部协议负责互操作；TuringOS 负责法律、谓词、签名、审计、状态迁移。**
 2. **能力面底层白盒化。** 不做传统插件市场，做 **Capability Registry**（§13.8）：每个工具/技能/连接器都是带 manifest、权限、动作类、eval 与回执的可审计对象——Install ≠ trust。Skill Library（§13.9）与 Live Software 3.0 回路（§13.10）让系统在使用中演化白盒脚手架。术语纪律：反奥利奥架构是**顶层白盒（谓词与管理）/ 中间黑盒（agent）/ 底层白盒（工具）**三层——本文凡称"白盒工具/白盒能力"，一律指**底层白盒**，与顶层白盒严格分层、不得混称。
 3. **安全模型升维。** Touch ID + SE 是 v0.x 的本地批准层；面对"宿主 OS 被完全攻破"的 AGI 威胁模型，v0.5 写入 **Hostile Host 公理**与两层安全架构（§9.1），不夸大 Secure Enclave 的能力边界。
+
+v0.6 完成一次**主权内核纠偏**：v0.5 在把宪法 Art. 0 映射到产品层时，把 TuringOS 内部微观 ChainTape 与用户项目 GitHub PR/CI/merge 链路混成了一层，导致 `HEAD_t` / `wtool` / `∏p` / `tape_t` 全篇抓向外部项目仓库。v0.6 确立**两尺度模型**（§0 核心定理）并据此修正：
+
+1. **尺度剥离。** `HEAD_t` 回归为内部 accepted-world 指针，不再等同 GitHub merge SHA；`wtool = internal bus.append()`，不再等同 git commit/merge（§4.1 / §4.3 / §8）。
+2. **解开 Rubber 死锁。** 引入 `tape_tip` / `accepted_head` 双游标：append log 无条件前进（失败也入带，落实 Art. 0.2），accepted world head 仅 ∏p=1 时前进（落实 Art. 0.1）——不改宪法一字（§4.2）。
+3. **图变协议。** 新增 §7.0.1 Flowchart Interface Contract：所有 flow chart 只能经类型化 ChainTape event 过缝，消除实现 agent 在图间接缝处的撕裂。
+4. **批准完整性。** 写入 Approval Integrity Law：签名绑定的字节必须逐字节等于下游谓词门消费的 canonical 对象（§9）。
+5. **用户意图入带。** 任何会影响状态迁移的用户意图，必须先以 `IntentCaptured` / `UserInstruction` 节点进入 ChainTape；未入带的 UI 对话只能是临时交互，不得作为后续放行依据（与 Tape Canonical 公理一致）。
+6. **路线图纠时序。** Minimal Sovereign Kernel（内部 ChainTape append + Failure/Approval/Budget/Predicate 节点 + 基本 replay）前移到 M1——没有最小账本与谓词门，就没有 lawful execution loop，只有"会动手的 agent shell"（§18）。
+
+> Phase 纪律：v0.6 是**白皮书层**纠偏（Phase A），只改顶层设计文档；契约 schema（Phase B）与实现重排（Phase C）各自走 Veto + compatibility + 签名/ratification，不夹在散文里（[审计规范](research/R_v06_directive.md)）。
 
 ---
 
@@ -89,8 +107,8 @@ TuringOS 宪法把系统定义为一台真正的通用机器：paper 是 `tape_t
 | Turing 1948 | 宪法对应 | 产品对应 |
 |---|---|---|
 | **Paper** | `tape_t` | **ChainTape**：append-only 的本地事实账本（动作、提案、批准、失败、回执全部入带） |
-| **Pencil** | wtool append-only 写入 | 内核唯一写入口：tape 追加 + git commit/merge；仅 ∏p=1 时世界状态前进 |
-| **Rubber** | 失败提案不上升为新状态 | ∏p=0 时 Q 不前进，失败以 `verified=false` + `reject_class` 入带；draft-by-default 即 rubber 在对外动作上的形态 |
+| **Pencil** | wtool append-only 写入 | 内核唯一写入口 `wtool = internal bus.append()`：**无条件**把每个 micro tick（一次动作 / 一次 agent 提案 / 一次谓词判定）追加为内部 ChainTape 节点。macro git commit/PR/merge 是更高一层、由许多 micro node 晶出的宏观动作（§8 Macro Boundary），**不是 wtool**，不在此口写入 |
+| **Rubber** | 失败提案不上升为新状态 | ∏p=0 时 **accepted world state 不前进**（`accepted_head` 不动）——但失败**必须**作为 failure node 被 append（`verified=false` + `reject_class`）。即 append 无条件、accepted-world advance 有条件（§4.2 双游标）；draft-by-default 即 rubber 在对外动作上的形态 |
 | **Strict discipline** | 谓词 + Veto-AI + 宪法 | Turing Predicate Gate + Veto-AI {PASS,VETO} + 三级法律层级（§4.4） |
 
 ### 4.2 Tape Canonical（Art. 0.2 / ADR-003）
@@ -105,19 +123,29 @@ TuringOS 宪法把系统定义为一台真正的通用机器：paper 是 `tape_t
 - cost / provenance / 预算消耗 / 市场观测 / 批准记录都不能只是 UI 状态或旁路账本——frozen tape 上必有充分信息可推导。
 - ChainTape 节点带哈希链（Art. 0.3 的预留语义槽位）：每条目携带自身内容与前序哈希，启动时验链，篡改可检测。批准卡哈希（操守第 3 条）是这条链上的一类节点，不是孤立机制。
 
+**双游标（v0.6 关键澄清）**：内部 ChainTape 上有两个互不等同的游标，消解"失败必须入 tape，但 ∏p=0 时 Q_t 不前进"的易误读点——
+
+- **`tape_tip` / `log_tip`**：最新被 append 的内部 ChainTape 节点。**每个 micro tick 都推进它，失败也推进**（失败节点携 `verified=false` + `reject_class`）。
+- **`accepted_head`（即 Q_t 的 `HEAD_t`）**：最后一个通过 predicate product 并被接受为当前世界状态的节点。**仅当相关 ∏p=1 时才推进**（宏观交付边界另有签名/自治契约放行，§8 Macro Boundary）。
+
+也就是：**append log 无条件前进，accepted world head 有条件前进**。这不需要改宪法（Art. 0.1「失败不上升为新状态」与 Art. 0.2「失败也是状态、必须入带」各自成立、互不冲突），只需把产品语义讲清楚。GitHub 的 branch/commit/PR/merge 都**不是**这两个游标上的节点——它们是宏观产物，只能被某个 ChainTape 节点以 provenance 形式引用（§4.3 / §8）。
+
 ### 4.3 Q_t 三元组的产品映射（Art. 0.4）
 
-宪法规定 Q_t = ⟨q_t, HEAD_t, tape_t⟩ 是 version-controlled 三元组，并指出"真 git substrate"是满分实现路径。产品层的落位：
+宪法规定 Q_t = ⟨q_t, HEAD_t, tape_t⟩ 是 version-controlled 三元组，并指出"真 git substrate"（路径 B）是满分实现路径。**v0.6 关键澄清**：宪法路径 B 的物理底座是「**每 cell run 用 runtime 临时/内部 git repo；Node = commit object；bus.append = git commit；HEAD_t = git HEAD ref**」——这是 TuringOS **内部微观 ChainTape** 的实现底物，**不是**用户项目仓库、不是 GitHub PR、不是 merge commit。产品层据此落位：
 
-| 宪法元素 | 产品落位 |
+| 宪法元素 | v0.6 产品落位 |
 |---|---|
-| `q_t` | 内核会话状态（项目的 WorkGraph 进度、挂起批准、止损计数）——从 tape 可重建的派生量，崩溃后据此恢复 |
-| `HEAD_t` | git HEAD / merge commit SHA 锚点（每项目一条锚链；GitHub merge 后由内核观察并记录为 HEAD_{t+1}） |
-| `tape_t` | Git-backed ChainTape/CAS（本地 canonical）+ git 对象库；GitHub 是执行场与远端副本，不是账本的替身 |
-| `rtool` | 状态装配：git 读取 + tape 相关切片 + GitHub PR/CI 观测 → 组装为最小充分上下文（Art. III.2） |
-| `wtool` | tape 追加 + git commit/merge，仅 ∏p=1 放行 |
+| `q_t` | 内核会话/搜索状态：WorkGraph cursor、pending approvals、stop-loss counters、routing state；必须可从 ChainTape 重建，崩溃后据此恢复 |
+| `tape_t` | **Internal Micro ChainTape / CAS**：TuringOS 自己的 append-only canonical ledger（其满分实现可以是 runtime 内部 git repo） |
+| `HEAD_t` | **internal accepted-world pointer**：指向内部 ChainTape 上最后一个通过 predicate product 并被接受为当前世界状态的节点。**不得等同于 GitHub merge SHA** |
+| `tape_tip` / `log_tip` | 内部 ChainTape 最新 append 节点；失败节点也推进此游标，但**不**推进 accepted-world `HEAD_t`（§4.2 双游标） |
+| `project_git_head` | 用户项目工作树 / 分支 / PR / merge SHA，属于 **macro execution substrate**；只能作为 provenance 或 macro artifact anchor 入 tape，**不是** Q_t 的 `HEAD_t` |
+| `rtool` | 从 internal ChainTape + accepted head + project git observations + CI evidence 装配最小充分上下文（Art. III.2） |
+| `wtool` | `bus.append()`：**只写 internal ChainTape**；不能直接等同 GitHub commit/merge |
+| `macro_commit / PR / merge` | 由多个 micro node 晶出的外部交付产物；其 SHA 写入某个 ChainTape 节点的 `kind_payload` / provenance（§8 Macro Boundary） |
 
-**一句话说清这层对齐**：用户 v0.3 选择"GitHub 继续做 PR/CI/merge，TuringOS 做治理场"——这正是宪法 Art. 0.4 路径 B（真 git substrate）在产品层的实现：版本机制不自研，git 久经验证的 hash chain、不可变对象与 reflog 直接成为 Q_t 的物理底座；ChainTape 作为 canonical 账本叠于其上，记录 git 本身不记录的事实（批准、拒绝、预算、provenance）。
+**一句话说清这层对齐**：用户 v0.3 选择"GitHub 继续做 PR/CI/merge，TuringOS 做治理场"是对的产品定位，但它落在**宏观尺度**——GitHub 是外部执行场与交付晶体，TuringOS 观察 `project_git_head`（PR/SHA/diff）、把 CI 当外部谓词、生成 Merge Dossier、决定是否让 Spec 下的世界状态前进。这与宪法 Art. 0.4 路径 B 是**两件事**：路径 B 讲的是内部微观 ChainTape 的 git 实现底物（runtime 内部 repo），**不是**把用户项目仓库当成 Q_t 的 substrate。ChainTape 作为主权微观账本记录 git 本身不记录的事实（批准、拒绝、预算、provenance），并把宏观 GitHub 产物以 anchor 形式收编为证据。
 
 ### 4.4 三级法律层级（Art. V.1.1 的产品化）
 
@@ -151,7 +179,7 @@ TuringOS 宪法把系统定义为一台真正的通用机器：paper 是 `tape_t
 
 用户的操作协助员：首启引导、能力检测与解释、配置 Meta AI / Worker / GitHub / 权限 / 预算、解释当前状态、帮助理解 Spec 与失败、实时生成界面投影、作为自然语言入口。
 
-推荐 runtime：本地 Apple Foundation Models 优先；设备不支持或用户选择云端时用 API-backed runtime。**它不是主规划器**：涉及 Git、ChainTape、项目理解、Init/Spec、任务分解与策略判断时，必须尽早交给 Meta AI。
+推荐 runtime：本地 Apple Foundation Models 优先；设备不支持或用户选择云端时用 API-backed runtime。**它不是主规划器、也不拥有顶层白盒权威**：Facilitator 只做解释、引导与投影生成，放行裁决永远在 Kernel / 谓词手里。涉及 Git、ChainTape、项目理解、Init/Spec、任务分解与策略判断时，必须尽早交给 Meta AI。
 
 ### 5.2 Meta AI
 
@@ -159,9 +187,19 @@ TuringOS 宪法把系统定义为一台真正的通用机器：paper 是 `tape_t
 
 Meta AI 不替代谓词。它可以解释和建议，但世界状态是否前进，取决于 Kernel 的 predicate product、Veto-AI、预算、权限和人类签名。
 
+**宪法角色映射（v0.6）**：宪法 Boot 的本质是把人类 spec 编译成机器 predicates 并写入信任根，宪法里这个角色叫 **InitAI**。产品层不另造角色——**Meta AI is the product-facing embodiment of InitAI when it compiles law; it is only a black-box planner when it proposes actions.** 即：在 Boot / 立法阶段编译 Spec→Predicate Pack 时，Meta AI 行使 InitAI 的**顶层白盒**权能；在执行阶段提候选动作时，它退化为**中层黑盒** planner。权能随 mode 改变，且一切权能都由 Kernel 谓词中介。配套定位：Facilitator AI 无顶层权威；Worker AI / 外部 agent 是中层黑盒、只生成候选、不拥有放行权；Kernel / Predicate Gate / Veto-AI 是顶层白盒裁决系统。
+
 ### 5.3 ArchitectAI
 
-宪法允许的架构改进提出者与实现者：新工具、新谓词、新 schema、新 tape 结构、新投影模板。按宪法 Art. V.1.2，**不触及宪法的变更经 Veto-AI PASS 后可直接落盘**（manifest 更新 + 修订入 tape）；自治契约可以要求其中某些类别仍走签名#7。默认可复用 Meta AI endpoint，但保持逻辑角色独立。**园丁职责挂在此角色下**（Art. III.1）：定期清扫陈旧规则与死分支。
+宪法允许的架构改进提出者与实现者：新工具、新谓词、新 schema、新 tape 结构、新投影模板。按宪法 Art. V.1.2，ArchitectAI 有很高的演化权能，但 v0.6 把**落盘权限按变更类型分三层**（详见 §7.4），不得读成"任何新 schema / 新 tape 结构都可轻量上线"：
+
+| 变更类型 | 例子 | 路由 |
+|---|---|---|
+| ordinary whitebox artifact | 新 skill、新 prompt wrapper、新投影模板 | Veto-AI PASS + eval，可按自治契约自动激活 |
+| protocol-contract change | 新 node kind、新 schema、新 approval route、新 provenance enum | Veto-AI PASS + compatibility test + 签名 #7 / ratification |
+| constitutional / substrate change | ChainTape substrate、Q_t 语义、Art. 0 路径选择 | 人类 sudo / 签名 #8 / 修订日志 |
+
+默认可复用 Meta AI endpoint，但保持逻辑角色独立。**园丁职责挂在此角色下**（Art. III.1）：定期清扫陈旧规则与死分支。
 
 ### 5.4 Veto-AI
 
@@ -220,7 +258,7 @@ TuringOS 不应该像传统 macOS 应用那样，左侧一个导航栏，中间�
 约束（来自 §4.2，不是风格建议）：
 
 - **模型可以生成呈现层，但不能生成放行逻辑。** 放行只来自谓词、契约与签名。
-- **每一个生成式投影都是 tape 的派生视图**：声明 `derive_source`，可重建，可与 tape 对账。界面上的每个数字、每句结论都能下钻到产生它的事实。
+- **每一个生成式投影都是 tape 的派生视图**：声明 `derive_source` **与 source event hashes（它由哪些 ChainTape 节点哈希派生）**，可重建，可与 tape 对账。界面上的每个数字、每句结论都能下钻到产生它的事实节点——投影不只声明"来自 tape"，而声明"来自这些具体节点"。
 - 生成失败或模型不可用时，优雅降级为确定性模板投影——呈现可以降级，事实不会丢失。
 
 ### 6.4 注意通道：安静即成功
@@ -237,12 +275,14 @@ Software 3.0 的另一半不是"问什么答什么"，而是"什么时候打扰�
 
 人类不是菜单操作员。人类是：意图提供者、Spec 批准者、预算批准者、不可逆动作批准者、高风险 merge 批准者、宪法维护者、异常与例外的裁决者。所有日常微操作都应由系统在已批准法律下自动推进。
 
+**意图入带（v0.6，M8）**：人类作为意图提供者，凡会影响状态迁移的意图必须先以 `IntentCaptured` / `UserInstruction` 节点入 ChainTape——未入带的 UI 对话只是临时交互，**不得作为后续放行依据**（与 Tape Canonical 公理一致，§4.2）。这保证 §6.3 的"实时生成投影"不会让非 tape 源偷偷成为事实源。
+
 ### 6.6 Turing View IR：生成式界面的统一中间表示
 
 生态正在收敛到"工具/agent 返回界面"：MCP Apps 已成为首个 official MCP extension（2026-01；与 OpenAI 联合制定，Apps SDK 即建于 MCP 之上）；Google 的 A2UI（v0.8，官方自述 early-stage）与 CopilotKit 的 AG-UI 是另两条路线。TuringOS 的姿态：
 
 - 所有外来 UI 描述（MCP Apps 组件 / A2UI / AG-UI / 未来格式）先翻译为 **Turing View IR**，再由第一方渲染器投影——适配在边缘，渲染权在内核。MCP Apps 为优先适配目标；A2UI/AG-UI 只做 adapter，不深度锁定。
-- View IR 投影与一切投影同律（§4.2）：声明 `derive_source`，可重建，可与 tape 对账。
+- View IR 投影与一切投影同律（§4.2）：声明 `derive_source` 与 source event hashes，可重建，可与 tape 对账。
 - **第三方生成的 UI 是不可信内容**——它可以呈现信息，但有两条铁律：① **批准卡永远由第一方渲染器绘制，任何第三方 view 组件不得承载批准仪式**（否则"批准时所见"的哈希就建立在对手可控的像素上）；② 第三方 view 发起的动作请求与其它通道的动作请求同等过门——分类、谓词、签名一个不少。
 
 ### 6.7 Canvas Projection：无边界呈现的诚实路径
@@ -272,6 +312,52 @@ flowchart LR
     L3 -.->|"修宪需 sudo"| ATT
     ATT -.->|"签名 / 裁决"| L2 & L3
 ```
+
+### 7.0.1 Flowchart Interface Contract（图间连接契约）
+
+§7 把流程拆成 Boot / 立法 / 执行 / Meta / 注意通道五张图。每张图只说明本图内部流程，**跨图边界必须是类型化对象**，否则不同实现 agent 会各自脑补接缝、在交叉地带撕裂。本节不讲愿景，只讲硬接口。所有 flow chart 都是同一台 canonical machine 的投影：
+
+```text
+All flow charts in this white paper are views over one canonical machine:
+Q_t = ⟨q_t, accepted_head_t, tape_t⟩.
+No flow chart owns private state that cannot be reconstructed from ChainTape.
+No flow chart may pass control to another flow chart except by appending a typed ChainTape event.
+There are two distinct cursors:
+- tape_tip: the latest appended ChainTape node; advances on every micro tick, including failure.
+- accepted_head: the latest verified world-state node; advances only when the relevant predicate product and approval route pass.
+GitHub branch / commit / PR / merge are macro artifacts.
+They may be referenced by ChainTape nodes but are not themselves ChainTape nodes.
+Every cross-loop arrow MUST specify:
+- event_type
+- canonical schema
+- hash binding
+- required signature, if any
+- replay / derive rule
+```
+
+两条硬约束：
+
+- **过缝只能经 ChainTape event。** 禁止通过 UI local state、agent memory、parallel cache、GitHub side effect 直接过缝。
+- **每条跨图箭头必须声明**：`source_loop` / `target_loop` / `event_type` / `canonical_payload_schema` / `required_hashes` / `approval_binding` / `replay_command`（或 `derive_rule`）。
+
+最少 12 类过缝事件（v0.6 锚定；schema 落地属 Phase B，走 ratification）：
+
+| 接缝 | 事件类型 | 必要字段 |
+|---|---|---|
+| Boot → 项目组合 | `SystemConstitutionAccepted` | constitution_hash, user_consent_hash, runtime_capability_digest |
+| Boot → 立法 | `ProjectDiscovered` | repo_locator, observed_git_head, project_fingerprint |
+| 立法 → 执行 | `ProjectReady` | init_spec_hash, budget_contract_hash, credential_scope_hashes, predicate_pack_hash |
+| 立法修订 → 执行 | `ProjectLawAmended` | previous_law_hash, new_law_hash, signature_id |
+| 执行 → 注意通道 | `SignatureRequested` | action_kind, approval_card_hash, expiry, route |
+| 注意通道 → 执行 | `SignedDecision` | request_hash, decision, signature, signer_key_id |
+| 执行 → Meta | `ArchitectureGapObserved` | reject_class_cluster_hash, missing_tool/predicate/schema |
+| Meta → 执行 | `WhiteboxArtifactActivated` | artifact_hash, veto_result, eval_result, signature_if_required |
+| 执行 → 立法 | `ScopeChangeRequested` | diff_from_spec, reason, suggested_amendment |
+| 执行 → 立法 | `BudgetExhausted` | budget_line, consumed, forecast, stop_loss_certificate |
+| 执行 → 宏观 Git | `MacroArtifactProposed` | micro_trace_hash, diff_hash, PR_url/SHA, provenance_level |
+| 宏观 Git → 执行 | `MacroObservationImported` | CI_status, logs_digest, merge_sha, branch_protection_state |
+
+这把"图"变成了"协议"：任何实现 agent 看到 flow chart，都知道过缝时必须读写哪个类型化对象、绑定哪些哈希、是否需要签名——而不是自由脑补。末两行 `MacroArtifactProposed` / `MacroObservationImported` 正是内部微观尺度与外部宏观 GitHub 之间唯一的合法过缝：micro trace 晶出宏观产物、宏观观测（CI / merge SHA）被收编回带，两侧都带哈希，绝不让 GitHub side effect 直接改内部状态。
 
 ### 7.1 回路 0 · Boot（每安装一次）+ 崩溃恢复
 
@@ -318,6 +404,7 @@ flowchart TD
 - **没有 Init Spec 的项目不能执行普通任务，只能运行 readiness task。**
 - 凭证从不入带、从不入 prompt：执行面派发时由 Keychain/SE 注入运行环境，tape 记录的是凭证范围哈希（用了哪个 scope），不是凭证本身。
 - 立法不是一次性的：回路 2 的止损与范围检查会把项目送回这里**修订再入**——签的是法律，法律可以修，但修法本身要签名。
+- **Project Ready 不是一个图节点，而是一个 typed event**：`ProjectReady{init_spec_hash, budget_contract_hash, credential_scope_hashes, predicate_pack_hash}`（§7.0.1）。它是立法回路向执行回路过缝的唯一合法对象——执行回路读到的"这个项目可以跑了"必须能从这四个哈希重建，而不是某个 UI 标志位；范围/预算修订经 `ProjectLawAmended{previous_law_hash, new_law_hash, signature_id}` 再过缝。
 
 ### 7.3 回路 2 · 执行（内核主回路）
 
@@ -365,7 +452,7 @@ flowchart TD
     H5 -->|"批准"| R
     H5 -->|"用户不在"| WAITQ["挂起入批准队列<br>不阻塞其他 worktree"]
     WAITQ -.->|"用户回来裁决"| H5
-    R --> S["26 Q_t+1：merge SHA 锚定 HEAD<br>回执入 tape，预算结算"]
+    R --> S["26 macro merge 完成：project merge SHA 作为 macro artifact anchor<br>锚回 ChainTape provenance；回执入 tape，预算结算"]
     S --> GC["27 worktree GC<br>清理临时分支/影子副本；清扫入回执"]
     GC --> T["28 策略回路：Stumps / 组合搜索 / 市场观测"]
     T -->|"WorkGraph 未竟"| J
@@ -384,7 +471,8 @@ flowchart TD
 - **20 止损护栏**：CI 修复回路（18→19→11）与谓词失败回路（22→20→11）共用同一护栏——尝试次数、CI 预算、token 预算任一触线即 HALT-止损，失败证书入 tape，人类在注意通道裁决：修法（回路 1）、换路（策略回路）、或关闭。**没有无界重试。**
 - **21 谓词门**：CI 绿只是外部谓词之一。门内是 predicate product：任何一项 FAIL 则 ∏p=0，Q 不前进。partial provenance 的候选**不允许纯谓词放行**——强制升格为人工确认（24 路由至签名 #5）。
 - **23 Merge Dossier**：由 Meta AI 生成、由 Kernel 约束结构。RiskFinding 清单（PCP 域的主观发现）附于其上供人类裁决——主观判断有通道，但不冒充谓词。
-- **26–27 收尾**：merge SHA 锚定 HEAD_{t+1}；回执与预算结算入 tape；GC 清理并留痕。
+- **21→25 是 Macro Boundary（§8）**：CI 绿后的谓词门产出 `Πp_macro`；但放行是 `macro_merge_allowed = Πp_macro ∧ budget/provenance gates ∧ approval_route_valid`，其中 `approval_route_valid = autonomy_contract_allows ∨ human_signature(#5)`。`Πp_macro = 1` 是 macro merge 的**必要不充分**条件——这条形式化把图中 21→24→25 的隐含层级写死，杜绝"CI 绿即可合"的误读。
+- **26–27 收尾**：macro merge 完成后，project merge SHA 作为 **macro artifact anchor** 锚回某 ChainTape 节点的 provenance（经 `MacroObservationImported` 过缝，§7.0.1）——**它不是 `HEAD_t`**，`accepted_head` 仍是内部 ChainTape 节点；回执与预算结算入 tape；GC 清理并留痕。
 
 ### 7.4 回路 3 · Meta（架构演化，事件驱动）
 
@@ -404,6 +492,8 @@ flowchart TD
 ```
 
 这是 v0.3 流程图完全缺失的回路：系统的自我进化不混在任务流里，而是独立的三权分立回路——ArchitectAI 提案（突变）、Veto-AI 审查（选择）、宪法与签名（机制）。修复规则库由此回路维护，回路 2 只消费。**Live Software 3.0（§13.10）不是新回路，而是本回路的数据飞轮扩展**：tape 上的失败与使用数据经本地小模型聚类后，成为 ArchitectAI 提案的输入——入口不变、闸门不变。
+
+**三层落盘纪律（v0.6，承 §5.3）**：图中"不动宪法且契约允许 → 落盘"必须按变更类型细分，不能让协议级变更搭便车——① **ordinary whitebox artifact**（新 skill / prompt wrapper / 投影模板）→ Veto-AI PASS + eval，可按自治契约自动激活；② **protocol-contract change**（新 node kind / 新 schema / 新 approval route / 新 provenance enum）→ Veto-AI PASS + compatibility test + **签名 #7 / ratification**，绝不自动落盘；③ **constitutional / substrate change**（ChainTape substrate、Q_t 语义、Art. 0 路径选择）→ 人类 sudo / 签名 #8 / 修订日志。这既尊重宪法给 ArchitectAI 的演化空间，又堵死"任何新 schema / 新 tape 结构都可轻量上线"的误读。
 
 ### 7.5 注意通道与 Morning Ritual
 
@@ -426,24 +516,57 @@ flowchart TD
 
 ## 8. TuringOS Kernel
 
-Kernel 是整个 operating flow 的中心，不是 UI 的后端附属物。
+Kernel 是整个 operating flow 的中心，不是 UI 的后端附属物。它在**两个互不等同的尺度**上运转（§0 核心定理）：内部微观 ChainTape 的 **Micro Tick**，与用户项目 GitHub 的 **Macro Boundary**。两尺度共用同一前段（装配 → 黑盒提议 → 顶层白盒裁决）：
 
 ```text
-Q_t = ⟨q_t, HEAD_t, tape_t⟩
+Q_t = ⟨q_t, accepted_head_t, tape_t⟩         # tape_t = internal Micro ChainTape / CAS
         ↓ rtool
-input = 当前状态 + 相关 tape 切片 + spec + git + PR + CI 证据（最小充分上下文）
+input = accepted_head + 相关 tape 切片 + spec + project_git 观测 + CI 证据（最小充分上下文）
         ↓
 Middle Blackbox = Meta AI / Worker AI / 外部 agents
         ↓
-output = 候选动作 / 分支 / PR / 工具提案 / 策略提案
+output = 候选动作 / 分支 / 工具提案 / 策略提案
         ↓
-Top Whitebox = 谓词 ∏p + Veto-AI + 预算 + provenance 阈值 + 屏蔽
-        ↓
-if ∏p = 1: wtool 提交 Q_{t+1}（tape 追加 + HEAD 前移）
-if ∏p = 0: Q_t 不变，失败以 verified=false 入 tape
+Top Whitebox = 谓词 ∏p + Veto-AI + 预算/止损 + provenance 阈值 + 屏蔽
 ```
 
-> 与 v0.3 的一处显式修正：v0.3 此图把 market signal 列在 Top Whitebox 的放行行里。依宪法 Art. I.2 / II.2 与 v0.3 自己的 §10（"Market signal ≠ predicate truth"），市场信号是统计/广播信号，永不进入 ∏p——v0.4 将其移出放行行，替以 provenance 阈值。市场信号的位置在 §12。
+**Micro Tick（内部微观尺度——每一次内核 tick / 提案 / 谓词判定）**：
+
+```text
+Micro Tick:
+    node = bus.append(output, Πp_micro, verified, reject_class, provenance, cost, parent_hashes)
+    # append 无条件：tape_tip 永远前进，失败也入带（Art. 0.2）
+    if Πp_micro = 1:
+        node.verified = true
+        accepted_head advances to node           # 仅此时 accepted-world 前进
+    else:
+        node.verified = false
+        node.reject_class is mandatory            # 失败是状态，下一轮搜索的资产（§8.4）
+        accepted_head does NOT advance            # Rubber（Art. 0.1）：世界状态不前进，但已记录在带
+```
+
+**Macro Boundary（外部宏观尺度——交付晶体的放行）**：
+
+```text
+Macro Boundary:
+    macro_candidate = crystallize(micro_trace → commit / PR / MergeDossier)
+    macro_merge_allowed iff:
+        Πp_macro = 1                                          # CI 等外部谓词 + 内核验收门
+        AND budget / stop-loss / provenance gates pass
+        AND (autonomy_contract_allows OR human_signature_valid)   # 签名 #5 或自治契约放行
+    # merge 成功后：project merge SHA 作为 macro artifact anchor 写回某 ChainTape 节点的 provenance
+    # —— 它不是 accepted_head；accepted_head 永远是内部 ChainTape 节点
+```
+
+三点一次说死：
+
+1. **append 无条件 / accepted-world advance 有条件 / macro merge 是更高一层 macro action**——三者不是同一个动作。`wtool = bus.append()` 只写内部 ChainTape；GitHub commit/PR/merge 不是 wtool 写入，而是由许多 micro node 晶出的宏观产物。
+2. **`Πp_micro = 1` 让 `accepted_head` 前进；`macro_merge_allowed` 在 `Πp_macro` 之上还要 budget/provenance 门与（自治契约 OR 人类签名）**——`∏p=1` 在宏观 merge 层只是必要条件，不是充分条件（§7.3 批准路由）。
+3. **GitHub merge SHA 永不是 `HEAD_t`**——它作为 macro artifact anchor 锚回某个 ChainTape 节点的 provenance；内部 accepted-world 仍由内部 ChainTape 节点定义。
+
+> 与 v0.3 的一处显式修正（保留）：v0.3 此图把 market signal 列在 Top Whitebox 的放行行里。依宪法 Art. I.2 / II.2 与 v0.3 自己的 §10（"Market signal ≠ predicate truth"），市场信号是统计/广播信号，永不进入 ∏p——v0.4 将其移出放行行，替以 provenance 阈值。市场信号的位置在 §12。
+>
+> 与 v0.5 的尺度修正（v0.6）：v0.5 此图写 `if ∏p = 1: wtool 提交 Q_{t+1}（tape 追加 + HEAD 前移）` / `if ∏p = 0: Q_t 不变，失败以 verified=false 入 tape`——既把"tape 追加"放进 `∏p=1` 分支（颠倒 Rubber，让实现者误以为失败不 append），又把 `HEAD_t` 与 GitHub merge 链路混为一谈。v0.6 拆成 Micro Tick 与 Macro Boundary 两条方程，一次修掉尺度混淆、Rubber 颠倒、签名漏门三个问题。
 
 ### 8.1 Bottom Whitebox
 
@@ -460,6 +583,8 @@ if ∏p = 0: Q_t 不变，失败以 verified=false 入 tape
 ### 8.4 Failure Node
 
 失败不是垃圾。失败必须入 tape：`reject_class`、最近失败谓词、尝试摘要、预算消耗、修复建议、provenance。它是下一轮搜索的资产，也是回路 3 的统计输入。
+
+**这不是一个独立机制，而是 §8 Micro Tick 的无条件结果**：`bus.append()` 对每个 tick 都建节点，失败 tick 产出的就是 `verified=false` + `reject_class` 的 failure node；它推进 `tape_tip` 但不推进 `accepted_head`。"失败也是状态"在物理上由 append 的无条件性保证，不靠任何额外的"记得写日志"约定。
 
 ---
 
@@ -478,12 +603,26 @@ if ∏p = 0: Q_t 不变，失败以 verified=false 入 tape
 | 7 | 批准工具 / 谓词 / 策略升级（契约要求时） | 回路 3（H7） |
 | 8 | 修宪 / sudo 仪式 | 回路 3（H8），修订日志留痕 |
 
+每个签名节点都是一个 typed 过缝事件（§7.0.1），绑定 canonical 对象哈希，状态如实分版本：
+
+| # | 过缝事件 / 绑定对象 | action_kind | 状态 |
+|---|---|---|---|
+| 1 | `SignedDecision` 绑 `InitSpecPackage` hash | approve_init_spec | beta（应用内批准过渡形态） |
+| 2 | `SignedDecision` 绑 `BudgetAutonomyContract` hash | approve_budget | beta |
+| 3 | `SignedDecision` 绑 `CredentialScopeDeclaration` hash | approve_credential_scope | beta |
+| 4 | `SignedDecision` 绑 `ApprovalCard` hash | approve_irreversible_action | M1（draft-by-default 即生效；SE 签名按路线图升级） |
+| 5 | `SignedDecision` 绑 `MergeDossier` + `MacroArtifactAnchor` hash | approve_macro_merge | M1（路由）/ M2（SE 签名） |
+| 6 | `SignedDecision` 绑 stop_loss_certificate hash | approve_budget_extension | M1 |
+| 7 | `SignedDecision` 绑 protocol-contract diff hash | approve_protocol_change | M3（Live 回路）/ ratification |
+| 8 | `SignedDecision` 绑 constitution 修订 hash | sudo_amend_constitution | 远期（Tier 2 / Hostile Host） |
+
 > 注：v0.3 流程图只画了 3 个签名节点，且把"批准 merge"标为 Touch ID #3——而 v0.3 自己的 §8 清单已把 #3 定为凭证域、#5 定为保护写入。v0.4 依清单统一编号（merge 归 #5），并把 #3/#4/#6/#7/#8 全部画进对应回路，消除图与清单的不一致。
 
 密码学形态与诚实边界（细节与来源见 [FEASIBILITY.md](FEASIBILITY.md)）：
 
 - Secure Enclave 驻留 P-256 签名私钥，访问控制 `.privateKeyUsage + .biometryCurrentSet`：每次签名要求一次新鲜 Touch ID 手势（重用时长 0），私钥永不离开 SE；指纹重录自动作废钥匙——换了手指，就该重新建立信任。
 - **SE 签的是字节，不能证明你看到了什么。** 所以批准卡内容（agent 名、动作、目标、参数摘要、风险类别、可逆性）的规范化哈希由应用计算并**纳入被签名的负载**——签名绑定的是"这张卡"，回放时验的也是"这张卡"。
+- **Approval Integrity Law（v0.6 铁律，贯穿所有过缝对象）**：any signed approval must bind exactly the canonical bytes consumed by the downstream predicate gate. No summary, projection, view, or model-generated explanation may substitute for the canonical object hash. 即——用户签名时看到的对象，必须**逐字节等于** Predicate Gate / Kernel 后续校验的对象；绝不允许"签的是 UI 摘要、校验的是另一个 JSON"。这把 §6.6"批准卡永远第一方渲染"从像素层提升到哈希层：Init Spec、预算、自主契约、凭证范围、Merge Dossier 的**签名哈希 ≡ 下游谓词消费哈希**（落地 schema `InitSpecPackage` / `BudgetAutonomyContract` / `CredentialScopeDeclaration` / `ApprovalCard` / `SignedDecision` / `MergeDossier` / `MacroArtifactAnchor` 属 Phase B）。
 - 批准仪式发生在 GUI 应用里，不在后台 daemon 里——daemon 只验签、永不持有人类根私钥（ADR-005）。
 - macOS 27 起 App Attest 登陆 Mac 并在 attestation 证书携带 SE 访问控制条件，为未来第三方审计方确认"这把钥匙确为生物识别门控"提供升级路径。
 - **过渡说明**：v0.x 早期版本以应用内明确批准门控（非生物识别），draft-by-default 自第一版即生效；Touch ID + SE 签名按路线图（§18）升级——能力边界如实分版本陈述。
@@ -523,6 +662,8 @@ Tier 2 不是空想，是成熟模式在 agent 时代的重述：硬件钱包的
 
 批准卡上永远写明动作属于哪一类、能否撤销。我们不用模糊的"安全/不安全"，而用"可逆/不可逆"这种可被检验的语言。撤销的实现诚实：还原点由影子工作区自身的版本化提供，不依赖、不承诺系统级快照还原（理由见 §13.3）。
 
+**分类结果本身是一个 typed node**：动作被判为哪一类、依据哪条工具签名，作为 ChainTape 节点入带（不是 UI 临时标签）——它是 §8 Micro Tick 的一类输出，可回放、可审计。模型产出的摘要与标签只用于呈现，永不进入分类与放行路径（§7.3 节点 16）。
+
 ---
 
 ## 11. Project Strategy Loop：项目树桩与 MCTS-lite（TBD）
@@ -533,9 +674,12 @@ v0.4 维持 v0.3 的裁决：先采用 **portfolio search + 可见策略树**，
 
 - Node = Project Stump / Worktree / PR candidate；
 - Edge = WorkTx / agent attempt；
-- Reward = predicate pass + CI signal + user approval + value claim − cost − risk；
+- **Hard gates（准入闸门，不是 reward；任一不过则候选根本不进入排序）**：`predicate_pass`、`CI_pass`、`budget_compliance`、`required_approval_valid`、`provenance_threshold`；
+- **Ranking / portfolio signal（过闸之后才参与排序）**：`expected_user_value`、`uncertainty_reduction`、`cost`、`risk`、`diversity_bonus`、`strategic_option_value`；
 - Exploration / Exploitation 平衡受 Art. II.2.1 约束：价格信号引导注意力但不得抹杀群体异质性；
 - Market signal = 资源与注意力权重，不是真理。
+
+> **v0.6 纠偏（防 Goodhart，Art. III.4）**：v0.5 此处把 `predicate pass`、`CI signal`、`user approval`、`value claim` 一起塞进一个连续 reward 算子（再减 cost、risk），等于把谓词与人类批准当成可优化的奖励项——度量一旦成为目标就不再是好度量，黑盒会演化出专骗高分、专骗点击的讨巧路线。v0.6 把 `predicate_pass` 与 `user_approval` 从 reward 中移出、升格为 **hard gates**；CI 可作 hard gate，通过后也可作 evidence quality，但 Worker **看不到**任何可优化的内部权重——它只通过 error message 感受撞墙的边界。
 
 **待决问题**（标注 TBD，留待专题裁决）：哪些 stump 可自动生成、哪些必须用户批准；reward 若成为优化目标如何防 Goodhart（宪法 Art. III.4 的答案方向：reward 细节对生成方屏蔽，只广播排序后的注意力信号）；CI cycles / API cost / 人类注意力 / merge risk 如何计价；Market 取 auction / credits / UCB / 混合中的哪种机制。
 
@@ -550,6 +694,8 @@ v0.4 维持 v0.3 的裁决：先采用 **portfolio search + 可见策略树**，
 - 完整 token 经济（CTF 守恒的内部市场）是否进入产品，依实验证据另行裁决——宪法提供了语义，产品不提前承诺。
 
 边界恒成立：**Market signal ≠ predicate truth。** 任何写入仍必须通过 Spec、CI、谓词、Veto-AI、预算和人类批准。
+
+**铸币守恒是 hard predicate，不只是经济学说明**：`1 Coin = 1 YES + 1 NO` 守恒与"on_init 是唯一合法铸币点"作为 {PASS,FAIL} 谓词强制——任何在 on_init 之外的铸币、或破坏 YES/NO 守恒的记账，谓词门 FAIL、写入不放行。经济学语义说明"为什么"，谓词门保证"做不到才是真的做不到"。
 
 ---
 
@@ -580,7 +726,7 @@ Facilitator AI 默认优先使用 Apple Foundation Models：端侧、离线、�
 
 ### 13.4 GitHub
 
-GitHub 继续负责 PR、CI、branch protection、merge commit——TuringOS 不复制 GitHub 的执行功能。TuringOS 是 Meta Governor：观察 PR/SHA/diff、导入 CI 状态与日志摘要、失败时生成修复任务、通过时把 CI 作为外部谓词送入 Predicate Gate、生成 Merge Dossier、merge 后锚定 HEAD_{t+1}。GitHub 说"CI green"；TuringOS 判断"这个 green 是否足以让当前 Spec 下的世界状态前进"。
+GitHub 继续负责 PR、CI、branch protection、merge commit——TuringOS 不复制 GitHub 的执行功能。这是**宏观执行底物**（macro execution substrate），不是内部主权账本。TuringOS 是 Meta Governor：观察 `project_git_head`（PR/SHA/diff）、导入 CI 状态与日志摘要、失败时生成修复任务、通过时把 CI 作为外部谓词送入 Predicate Gate、生成 Merge Dossier、merge 后把 project merge SHA 作为 **macro artifact anchor** 锚回 ChainTape provenance（它是 `project_git_head` / macro head，**不是** Q_t 的 `HEAD_t`，§4.3 / §8）。GitHub 说"CI green"；TuringOS 判断"这个 green 是否足以让当前 Spec 下的世界状态前进"。
 
 ### 13.5 分发
 
@@ -599,7 +745,7 @@ Apple Developer Program → Developer ID 证书 → Hardened Runtime → notaryt
 | **技能格式** | SKILL.md 兼容（§13.9） | 已是开放标准，2026-03 已 32 个工具支持 |
 | **模型协议** | 三面 Gateway（§13.7） | OpenAI Chat Completions / OpenAI Responses / Anthropic Messages |
 
-**协议层铁律**：任何外部协议都不得绕过 ChainTape、Predicate Gate、动作分类、provenance 标注与人类签名路由。外部协议负责互操作；TuringOS 负责法律、谓词、签名、审计、状态迁移。
+**协议层铁律**：任何外部协议都不得绕过 ChainTape、Predicate Gate、**预算/止损门**、动作分类、provenance 标注、批准路由与人类签名。预算和止损是法律的一部分，不是调度优化项（§7.3 节点 12/20 的预算与止损来自签名 #2 的自治契约，不是内核拍脑袋）。外部协议负责互操作；TuringOS 负责法律、谓词、签名、审计、状态迁移。
 
 ### 13.7 Model Gateway
 
@@ -611,7 +757,7 @@ Apple Developer Program → Developer ID 证书 → Hardened Runtime → notaryt
 恒定规则：
 
 - 凭证存 Keychain / SE 保护项；tape 只记 `credential_scope_hash`；prompt 不得含凭证。
-- 每次模型调用写 ModelCall 节点入带：provider、model、cost、latency、policy，**默认含输入输出全文**（tape 在用户自己的机器上，全文才支撑可回放）；用户可启用脱敏档改记内容哈希——**脱敏即如实标注该段回放降级**，不假装仍可全量重建。
+- 每次模型调用写 ModelCall 节点入带：provider、model、cost、latency、policy、**`replay_fidelity ∈ {full, redacted, hash-only}`**，**默认 `full`**（含输入输出全文——tape 在用户自己的机器上，全文才支撑可回放）；用户可启用脱敏档改记内容哈希（`redacted` / `hash-only`）——**脱敏即如实标注该段回放降级**，不假装仍可全量重建。
 - 模型路由遵循 §5.6 判据清晰度律；Gateway 是**底层白盒**管道（工具层），不做任何放行裁决——放行裁决属顶层白盒。
 
 ### 13.8 Capability Registry：底层白盒能力注册表
@@ -642,7 +788,7 @@ evals: { install: tests/install.yaml, replay: tests/replay.yaml }
 2. 权限与动作类未向用户呈现 → 不可启用；
 3. **未声明或无法核验动作类 → fail-closed，按三类处置或拒绝**（§7.3 节点 16）；
 4. 凭证 scope 与 prompt 上下文隔离；
-5. 安装、升级、移除全部入带（ToolInstall / ToolUpdate / ToolRemove 节点），可回放、可回滚；
+5. 安装、升级、移除全部入带为 typed 过缝事件（`ToolInstall` / `ToolUpdate` / `ToolRemove`，各有 canonical schema），可回放、可回滚；触及 protocol-contract 的能力（新 node kind / 新 approval route / 新 provenance enum）按 §7.4 三层落盘走 **签名 #7 / ratification**，不自动激活；
 6. 回执不可回放的能力必须显式标注 partial——谓词门按 provenance 阈值对待。
 
 ### 13.9 Skill Library
@@ -657,7 +803,7 @@ Skills 是一等**底层白盒**能力包，不是 prompt 模板。格式上**�
 
 ### 13.10 Live Software 3.0 回路
 
-让系统在使用中变活——但**自我迭代的对象是白盒脚手架（底层白盒工具、顶层白盒谓词与投影模板），永远不是中间黑盒的任意自我变异**。这不是新机制，是回路 3（§7.4）的数据飞轮扩展：
+让系统在使用中变活——但**自我迭代的对象是白盒脚手架（底层白盒工具、顶层白盒谓词与投影模板），永远不是中间黑盒的任意自我变异**。候选工件只是**提案**，必须过 Veto + 留出 eval 才激活；凡触及 protocol-contract（新 schema / 新 node kind / 新 approval route / 新 provenance enum）**另走 §7.4 的签名 #7 / ratification，绝不随 Live 回路自动上线**。这不是新机制，是回路 3（§7.4）的数据飞轮扩展：
 
 ```text
 tape 产生原料：FailureNode / 拒绝记录 / 工具回执 / CI 修复史 / 用户纠正 / 重复 WorkGraph 模式
@@ -698,8 +844,19 @@ MCP 已是多厂商开放标准（LF Projects 治理）。最关键的一句话�
 
 ### 14.3 Provenance 分级与逐 agent 边界卡
 
-- 凡经由 TuringOS 工具通道的动作 → **动作级回执（provenance=full）**。
-- 发生在外部 App 内、未经通道的动作 → 只能生成 **repo 级 / PR 级回执（provenance=partial）**，谓词门对其强制人工确认（§7.3 节点 21）。
+provenance 分**四级**（v0.6，从 full/partial 二分细化）——粒度不够会让"通道外但后来被观察到"被危险地误称为 partial governance：
+
+```text
+FULL_ACTION        经 TuringOS 工具通道，动作级回执可回放
+REPO_LEVEL         未经动作通道，但产物以 repo/branch/PR/diff 形式可观察
+PARTIAL            有产物/日志/用户粘贴证据，但无法完整 replay
+OUTSIDE_GOVERNANCE 通道外行为，只能作为外部事实，不得被表述为 TuringOS 治理过
+```
+
+- 凡经由 TuringOS 工具通道的动作 → **`FULL_ACTION`**（动作级回执可回放）。
+- 外部 agent 经 Git/PR 交付、未经动作通道 → **`REPO_LEVEL`**（产物可观察，谓词门对其强制人工确认，§7.3 节点 21）。
+- 有产物/日志/用户粘贴证据但无法完整 replay → **`PARTIAL`**（同样不得纯谓词放行）。
+- 通道外行为 → **`OUTSIDE_GOVERNANCE`**：只能作为外部事实导入为证据，**不得被表述为 TuringOS 治理过**——outside governance can be imported as evidence, not governed retroactively。
 
 每个集成发布时附带一页**边界卡**：经由通道的动作面 / 通道之外的动作面 / 如何收窄 / 对应 agent 版本与核验日期。各 agent 周更级演进，边界卡随版本重核。截至 2026-06 的硬事实（来源见 [FEASIBILITY.md](FEASIBILITY.md)）：
 
@@ -717,11 +874,11 @@ ExternalAgentAdapter
   ├── input:      WorkOrderPackage（任务、范围 allowlist、验收谓词、预算、边界声明）
   ├── handoff:    Git branch / PR · MCP task · CLI 受监督会话 · prompt 包 ·（可用时）A2A
   ├── output:     观测到的 diff / PR / 回执 / 日志摘要（再入观测触发，§7.3 节点 15B'）
-  ├── provenance: full | partial（partial 不得纯谓词放行）
+  ├── provenance: FULL_ACTION | REPO_LEVEL | PARTIAL | OUTSIDE_GOVERNANCE（非 FULL 不得纯谓词放行，§14.3）
   └── boundary_card: 通道内动作面 + 绕过面 + 收窄方法 + 版本与核验日期（§14.3）
 ```
 
-**Git 是首选公共底座**——宪法本就要求 Q_t 是 version-controlled 状态：外部 agent 只要交付 branch / commit / diff / PR / CI result，就能进入谓词门，零定制成本。深度定制仅当四条件同时成立：真实用户规模、能给动作级回执、维护成本不损内核抽象、边界卡能保持最新。开放性原则不变：作为 OS 原则上支持运行各种优秀 agentic 程序，但统一抽象优先于逐家优化。
+**Git 是首选宏观互操作底座（macro interoperability substrate）**——因为外部 agent 能以 diff / branch / PR 形式交回产物，零定制成本即可进入谓词门。**它不是主权 ChainTape substrate**，除非被显式实例化为 TuringOS 微观账本的内部 runtime repo（§4.3）：Git is the preferred macro interoperability substrate because external agents can hand back diff/branch/PR artifacts; it is **not** the sovereign ChainTape substrate unless explicitly instantiated as the internal runtime repo for TuringOS micro-ledger. 外部 agent 只要交付 branch / commit / diff / PR / CI result，就能进入谓词门——但这些都是**宏观产物**，经 `MacroArtifactProposed` / `MacroObservationImported` 过缝（§7.0.1），不直接改内部 accepted-world。深度定制仅当四条件同时成立：真实用户规模、能给动作级回执、维护成本不损内核抽象、边界卡能保持最新。开放性原则不变：作为 OS 原则上支持运行各种优秀 agentic 程序，但统一抽象优先于逐家优化。
 
 **如实声明一项未竟调研**：各 agent 社区的用户粘性、切换成本与用户群体规模评估（评审要求"社区调研而非主观感受"）本版**尚未进行**——已列入 FEASIBILITY Part III 增补第 13 项跟踪；上文"真实用户规模"作为深度定制门槛条件，其判定依据即该项调研的产出，做完之前不下结论。
 
@@ -773,8 +930,8 @@ ExternalAgentAdapter
 
 1. **alpha：Software 3.0 Shell** —— Dynamic Orb；Facilitator AI（本地 FM + API fallback + 降级模式）；Meta AI 配置；Generative 投影原型（View IR 雏形）；项目发现；Git 只读状态。
 2. **beta：Project Ready** —— Init Spec；Retro-Init；预算与自治契约；凭证域声明；应用内批准（过渡形态）；WorkGraph 生成。
-3. **M1：Execution Loop + Protocol Gateway** —— 内部 Worker；MCP client/server 网关；Model Gateway 三面适配（OpenAI-compatible / Responses / Anthropic Messages + Apple FM 本地）；Git-first 外部 agent 交接与再入观测；三类动作支路 + draft-by-default；GitHub PR/CI 观测；修复回路 + 止损护栏；Merge Dossier。
-4. **M2：Kernel Receipt Loop + Capability Registry** —— ChainTape/回执 schema + 哈希链；provenance 分级；Predicate Gate；Failure Certificate；Morning Ritual；Touch ID + SE 签名升级；能力 manifest schema + 安装/升级/移除入带 + 初始 Skill 库（12 类）+ Skill eval harness。
+3. **M1：Minimal Sovereign Kernel + Execution Loop** —— **先落最小主权内核（前置一切执行面）**：internal ChainTape append（micro tick / `wtool = bus.append()`）+ FailureNode + ApprovalEvent + BudgetEvent + PredicateResult + basic replay；其上才是内部 Worker、三类动作支路 + draft-by-default、Git-first 外部 agent 交接与再入观测、GitHub PR/CI 观测（macro substrate）、修复回路 + 止损护栏、Merge Dossier、Model Gateway 三面适配（OpenAI-compatible / Responses / Anthropic Messages + Apple FM 本地）与 MCP client/server 网关。**Protocol Gateway 不得先于 minimal ChainTape 成为实际执行路径**——没有最小账本与谓词门就没有 lawful execution loop，只有"会动手的 agent shell"。
+4. **M2：Kernel Hardening + Capability Registry** —— ChainTape 哈希链；schema migration；full provenance lattice（四级，§14.3）；Predicate Gate 加固；Failure Certificate；Morning Ritual；Touch ID + SE 签名升级；能力 manifest schema + 安装/升级/移除入带 + 初始 Skill 库（12 类）+ Skill eval harness。
 5. **M3：Strategy Loop + Live Software 3.0** —— Project Stumps；portfolio search；Market observe-only；MCTS-lite 实验；FailureNode 聚类 → 候选 Skill/谓词提案流 → Veto + eval 激活；adapter 训练数据集导出（实训依 Part IV-3 运营税评估后再启动）。
 6. **M4：首批外部集成 + Hostile Host 原型** —— 集成按接入面厚度排序：OpenClaw → Hermes → Claude Code → Codex（experimental 档），每个附边界卡（§14.3）；Canvas Projection（Excalidraw 底座）；外部 Sudo-Anchor PoC + Audit Anchor（Rekor 模式）+ no-audit-no-execution 不变量实验（§9.1 Tier 2）。
 
@@ -803,6 +960,8 @@ ExternalAgentAdapter
 19. 未声明或无法核验动作类的外部能力 fail-closed；Install ≠ trust，安装/升级/移除必须入带。
 20. 模型与 adapter 的产物仅用于呈现与路由辅助，永不获得 Predicate Gate 权威；Live 回路的候选工件必须过 Veto + 留出 eval 才能激活。
 21. 在 Tier 2 Sudo-Anchor 落地之前，不宣称任何 hostile-host（T3）级安全；威胁分级如实写在产品里。
+22. **两尺度主权不变量**：内部 ChainTape 是主权微观账本，GitHub 是宏观执行底物（macro execution substrate）；`HEAD_t` 是内部 accepted-world 指针、永不等同 GitHub merge SHA；`wtool = internal bus.append()`、永不等同 git commit/merge（除非显式内部 runtime repo）；GitHub commit/PR/merge 是 macro artifact / provenance anchor，不是 ChainTape 节点；§8 内核必须同时呈现 micro tick 与 macro boundary，且 macro merge 需 `Πp_macro ∧ 批准路由`。
+23. **图间连接契约（Flowchart Interface Contract）**：所有 flow chart 只能经类型化 ChainTape 过缝事件传递控制；每条跨图箭头必须声明 event_type / canonical schema / hash binding / 必要签名 / replay 规则；签名对象哈希必须逐字节等于下游谓词消费对象哈希（Approval Integrity Law）。
 
 ---
 

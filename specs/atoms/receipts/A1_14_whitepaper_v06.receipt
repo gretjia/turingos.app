@@ -1,0 +1,80 @@
+atom: A1_14_whitepaper_v06
+shipped_at: 2026-06-15T17:54:17Z
+git_head: c9ad6a4 (pre-ship)
+gate: bash scripts/shipgate.sh p1 && bash scripts/predicates/audit_whitepaper_v06.sh
+
+note: User ruling 2026-06-15 (/goal, ADR-012 autonomous execution) — revise
+WHITEPAPER v0.5 → v0.6 "Two-Scale Sovereign Kernel Correction" via a
+workflow/agent-loop composition with recursive audit against drift. Veto-AI
+联合审计 PASS ([VETO-AI VERDICT_SIGNATURE: APPROVED_AND_ENFORCED]). Core defect
+fixed: v0.5 conflated TuringOS INTERNAL micro ChainTape (sovereign micro-ledger)
+with the user's project GitHub PR/CI/merge (macro execution substrate). Phase A
+scope only: whitepaper + directive archive + ADR-019 + recursive-audit apparatus.
+Contracts (Phase B) and impl reorder (Phase C) are separate ratification-gated
+atoms, NOT this work.
+
+DELIVERED:
+- WHITEPAPER.md v0.6 (Two-Scale Sovereign Kernel Correction). Surgical edits,
+  not a rewrite — the directive's 29-row §五 checklist applied section by section:
+  * §0 core theorem callout (Internal ChainTape = sovereign micro-ledger; GitHub
+    = macro execution substrate; merge = macro artifact / provenance anchor, not
+    a node) + daemon-never-holds-key wording.
+  * §1 v0.6 change list (6 corrections) + Phase A/B/C discipline note.
+  * §4.1 Pencil/Rubber rows: wtool = internal bus.append() (unconditional append);
+    Rubber = accepted_head doesn't advance but failure MUST append.
+  * §4.2 dual cursors tape_tip (unconditional, incl. failure) vs accepted_head
+    (advances iff Πp=1) — resolves the Art.0.1↔0.2 tension without amending the
+    constitution.
+  * §4.3 Q_t mapping table fully replaced: HEAD_t = internal accepted-world
+    pointer (never GitHub merge SHA); project_git_head separated as macro
+    substrate; Path B clarified as internal runtime repo, not the project repo.
+  * §5.1/5.2 Meta AI = InitAI embodiment by mode; Facilitator no top-whitebox.
+  * §5.3 + §7.4 ArchitectAI landing split into 3 tiers (ordinary / protocol-
+    contract → sig#7+ratification / constitutional substrate → sudo#8).
+  * §6.3/§6.6 projections declare source event hashes; §6.5 IntentCaptured入带.
+  * §7.0.1 NEW Flowchart Interface Contract (verbatim EN contract + 12 typed
+    cross-seam events; MacroArtifactProposed/MacroObservationImported = only
+    legal micro↔macro seam).
+  * §7.2 ProjectReady typed event (4 hashes). §7.3 macro boundary +
+    macro_merge_allowed = Πp_macro ∧ budget/provenance ∧ approval route; node-26
+    merge SHA anchors back as provenance (not HEAD_t).
+  * §8 two-scale kernel equation (Micro Tick + Macro Boundary), the largest
+    rewrite; §8.4 failure node = unconditional result of Micro Tick.
+  * §9 Approval Integrity Law + 8-node→event/schema/action_kind/status map.
+  * §10 action classification is a typed node. §11 Reward split into hard gates
+    vs post-gate ranking (predicate_pass/user_approval removed from reward;
+    Goodhart, Art.III.4). §12 on_init minting as hard predicate.
+  * §13.4 project_git_head wording; §13.6 protocol ironclad + budget/stop-loss;
+    §13.7 replay_fidelity; §13.8 install/upgrade typed events; §13.10 candidate
+    artifacts are proposals, protocol changes go ratification.
+  * §14.3 four-level provenance (FULL_ACTION/REPO_LEVEL/PARTIAL/OUTSIDE_GOVERNANCE);
+    §14.4 Git = macro interoperability substrate, not ChainTape substrate.
+  * §18 roadmap reorder: Minimal Sovereign Kernel → M1 before Protocol Gateway.
+  * §19 +2 non-negotiables (22 two-scale invariant; 23 Flowchart Interface
+    Contract + Approval Integrity Law).
+- research/R_v06_directive.md — verbatim archive of the ratified directive +
+  Veto-AI report; serves as the recursive-audit ground-truth spec.
+- scripts/predicates/audit_whitepaper_v06.sh — mechanical {PASS,FAIL} predicate
+  for the grep-able invariants (1/2/5/6/10/11) + 31 spine anchors. Fail-closed.
+- ADR.md += ADR-019 (two-scale sovereign kernel ruling, A–G + boundaries).
+- specs/atoms/A1_14_whitepaper_v06.md (Phase A atom card); CURRENT reset to NONE.
+
+RECURSIVE AUDIT (workflow/loop composition, drift prevention):
+- Mechanical predicate audit_whitepaper_v06.sh: PASS 31/31 (one iteration of
+  repair — a quoted v0.5 reward formula in the §11 correction note was
+  paraphrased so the banned prescriptive string is absent).
+- Independent clean-context invariant auditor (general-purpose, never saw the
+  edits): AUDIT RESULT: CLEAN — all 12 invariants PASS; no residual scale-
+  conflation (only line-569 strings are the deliberate quotation of the v0.5
+  error inside the correction note); no internal contradiction; coherent across
+  all 10 seams; no dangling/half-done edit.
+- Independent clean-context Veto-AI constitutional review: VERDICT PASS — no
+  contradiction on Art. 0.1/0.2/0.3/0.4(Path B)/I.1/I.2/II.2/III.4/V.1.2/V.1.3.
+  Confirmed the highest-risk claim (Path B substrate = internal runtime repo,
+  not project repo) is a CORRECT reading of Art. 0.4, not a misstatement; no
+  silent constitution/ADR amendment.
+
+EXTERNAL FACTS: none new (顶层 spec 修订；不引入外部 API 事实).
+---
+SHIPGATE p1: PASS (16/16)
+audit_whitepaper_v06: PASS (mechanical invariants 1/2/5/6/10/11 + 31 spine anchors)
