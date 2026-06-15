@@ -45,6 +45,22 @@ implementer: claude-opus-4-8 (用户反馈 commit 基本信息 → 实证数据�
   自行点一个 commit 节点目视)。
 - popover 视觉打磨属主观,走 RiskFinding(非 predicate);headline 主色 + 单个 accent 词不违"安静即成功"(复核确认)。
 
+## A1_69 续修订(用户反馈:卡片要有"说明",commit 也有说明项)
+commit popover 原只显 message **首行(subject)**;用户要像 PR 一样的**说明**——commit 的 message **正文(body)**。
+已加:NodeCardContent 加 `body: String?`(var+默认,非 commit 路径 nil);deriveCommit 取 message 首行=subject(headline)、
+**余下正文 trim 后=body**(空→nil);detailPopover 在 headline 下渲染 body(ui11/secondary/lineLimit8/换行,
+防超长消息撑爆)。机械测扩充:commit 带多行 message → ccm.body=="body paragraph"、无 meta → cc.body==nil。
+shipgate p1 **16/16 再绿**(a169b_shipgate.log;golden 仍不变——body 是视图层)。
+
+**dist 重建(回应用户"我们是否在同一个版本上")**:用户跑 `app/dist/TuringOS.app`,但该 bundle 先前是 A1_69
+**诊断构建**(含临时 commit 自选 hack)。gate 的 build_app.sh 已从干净源**重建** dist(19:12,源 grep 无 DIAGNOSTIC),
+现 dist = a1_69 分支最新 = A1_67(退出)+A1_68(色块)+A1_57/58(细节卡)+A1_69(commit 信息+body)。**Railroad 树
+(A1_63)尚未构建**,不在 dist 内。用户重启 app(退出+重开)即见最新;点 commit 节点可亲见 body。
+
+**commit popover live 截屏残留(承上)**:本轮仍未拿到 commit 专属截屏(诊断自选后窗口又漂非活跃 Space + SCContentFilter
+失败=环境)。body 经机械测钉死 + 与已目视证实的 branch popover 同 detailPopover 机制(Text block 下挂),渲染必现;
+dist 已干净,用户重启点 commit 即为 live 验证。不再为截屏反复 dirty 已干净的 dist。
+
 ## shipgate p1 输出
 [PASS] 1 constitution pin (sha256 matches PINS.toml)
 [PASS] 2 contracts+fixtures valid (structural-subset)

@@ -818,6 +818,9 @@ public struct NodeCardContent: Equatable, Sendable {
     /// The card LEADS with what this node means (a sentence), not a generic
     /// "状态: 安静" row — which was meaningless for branch/commit nodes (#5).
     public let headline: String?
+    /// A1_69: optional longer description block (e.g. a commit message body / 说明)
+    /// shown below the headline. `var` with default so non-commit derive paths omit it.
+    public var body: String? = nil
     public let detailRows: [(String, String)]
     public let showsEvidenceAction: Bool
 
@@ -827,6 +830,7 @@ public struct NodeCardContent: Equatable, Sendable {
     public var accessibilityValue: String? {
         var parts: [String] = []
         if let headline { parts.append(headline) }
+        if let body { parts.append(body) }
         parts.append(contentsOf: detailRows.map { "\($0.0) \($0.1)" })
         return parts.isEmpty ? nil : parts.joined(separator: "，")
     }
@@ -834,6 +838,7 @@ public struct NodeCardContent: Equatable, Sendable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.showsTitle == rhs.showsTitle
             && lhs.headline == rhs.headline
+            && lhs.body == rhs.body
             && lhs.detailRows.elementsEqual(rhs.detailRows, by: ==)
             && lhs.showsEvidenceAction == rhs.showsEvidenceAction
     }
@@ -894,11 +899,14 @@ public struct NodeCardContent: Equatable, Sendable {
     /// did) leads; author/date answer who/when; sha/branch give identity. All
     /// fields are OBSERVED (CommitMeta folded from CommitFact), never fabricated.
     private static func deriveCommit(_ node: RadarNode) -> NodeCardContent {
-        let subject = node.commitMeta?.summary
-            .split(separator: "\n", omittingEmptySubsequences: false).first
-            .map(String.init)?
-            .trimmingCharacters(in: .whitespaces) ?? ""
+        let lines = (node.commitMeta?.summary ?? "")
+            .split(separator: "\n", omittingEmptySubsequences: false)
+        let subject = lines.first.map(String.init)?.trimmingCharacters(in: .whitespaces) ?? ""
         let headline = subject.isEmpty ? "提交节点" : subject
+        // A1_69: the rest of the message (the commit "说明" / body), trimmed; nil if absent.
+        let bodyText = lines.dropFirst().joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let body: String? = bodyText.isEmpty ? nil : bodyText
         var rows: [(String, String)] = []
         if let head = node.head, !head.isEmpty {
             rows.append(("commit", String(head.prefix(8))))
@@ -910,7 +918,8 @@ public struct NodeCardContent: Equatable, Sendable {
         if let branch = node.branch {
             rows.append(("分支", String(branch.split(separator: "/").last ?? Substring(branch))))
         }
-        return NodeCardContent(showsTitle: true, headline: headline, detailRows: rows, showsEvidenceAction: true)
+        return NodeCardContent(showsTitle: true, headline: headline, body: body,
+                               detailRows: rows, showsEvidenceAction: true)
     }
 
     /// Worktree: the form label IS meaningful here (失败/冲突/孤儿/有未提交改动/安静),

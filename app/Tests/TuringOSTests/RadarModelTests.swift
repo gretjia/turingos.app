@@ -422,6 +422,7 @@ final class RadarModelTests: XCTestCase {
         XCTAssertTrue(cc.detailRows.contains { $0.1.contains("abcdef12") },
                       "commit card must show its short sha")
         XCTAssertEqual(cc.headline, "提交节点", "no observed meta → fallback headline")
+        XCTAssertNil(cc.body, "no observed meta → no description body")
 
         // A1_69: commit WITH observed meta → the message SUBJECT (first line) leads,
         // and author/date rows appear (all observed CommitFact facts).
@@ -436,6 +437,8 @@ final class RadarModelTests: XCTestCase {
         let ccm = NodeCardContent.derive(node: commitWithMeta, selected: true, far: false)
         XCTAssertEqual(ccm.headline, "A1_69: show commit info",
                        "commit headline = message subject (first line only)")
+        XCTAssertEqual(ccm.body, "body paragraph",
+                       "commit body (message after the subject) shown as the description")
         XCTAssertTrue(ccm.detailRows.contains { $0.0 == "作者" && $0.1 == "zephryj" },
                       "commit card shows the observed author")
         XCTAssertTrue(ccm.detailRows.contains { $0.0 == "时间" && $0.1 == "2026-06-14" },

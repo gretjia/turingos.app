@@ -715,6 +715,15 @@ struct RadarNodeCard: View {
                     .foregroundStyle(Tokens.Text.primary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            // A1_69: the longer description (commit message body / 说明), wrapped.
+            // lineLimit caps a pathological message so the popover stays sane.
+            if let body = content.body {
+                Text(body)
+                    .font(Tokens.Typography.ui(11))
+                    .foregroundStyle(Tokens.Text.secondary)
+                    .lineLimit(8)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if !content.detailRows.isEmpty {
                 Divider().overlay(Tokens.Space.glassBorder)
                 VStack(alignment: .leading, spacing: 5) {

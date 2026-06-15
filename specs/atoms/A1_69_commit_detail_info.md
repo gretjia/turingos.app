@@ -17,8 +17,9 @@ intent: >
   **修复**:
   - RadarModel:加 `CommitMeta {summary, author, ts}` 值类型 + RadarNode 末尾 additive `commitMeta: CommitMeta? = nil`
     (默认 nil → worktree/branch 构造与既有调用点不变);commit 构造从 CommitFact 填 commitMeta。
-  - `deriveCommit`:headline = commit message **首行(subject)** = "发生了什么"(语言优先);行 commit(sha8)+
-    作者 + 时间(ts prefix10 日期)+ 分支。subject 空则回退"提交节点"。
+  - `deriveCommit`:headline = commit message **首行(subject)** = "发生了什么"(语言优先);
+    **body = message 余下正文(说明)**(用户反馈续:像 PR 一样要有说明)展示在 headline 下方(NodeCardContent
+    加 `body: String?`);行 commit(sha8)+ 作者 + 时间(ts prefix10 日期)+ 分支。subject 空则回退"提交节点"。
   - RadarViews `detailPopover` **轻度视觉打磨**(语言优先 + Tokens 内,低风险):headline 升为主色更醒目的引导句、
     背景/描边与 chip 的 V6 glass 一致、间距节奏。**主观,走 RiskFinding 非 predicate。**
 
