@@ -24,6 +24,11 @@ implementer: claude-opus-4-8 (ADR-017 落点1; 调研 wf_3a765aaa + 对抗审查
 - **真机 daemon-replay 已证(2026-06-15,/tmp/galaxy_evidence/a162_replay*.jsonl)**:
   - turingos_app → relation=`local_unobserved`(registry 无 local path → 本地诚实未观测、local=null、不猜测),remote=claude/brave-knuth-5uo3ce(github_api),observed_at 在。
   - turingosv4 → relation=`agree`,remote=main(github_api) ∧ local=main(local_head_cached,级联 rung1 命中)。
+- **真机 UX 亲验(computer-use,2026-06-15,新立标准:每 atom 验后才 PR)**:重建 daemon+app→视图菜单进 galaxy→截屏。
+  galaxy 渲染**无回归**(~20 项目聚合铺开、各带 accent 色+计数,turingosv4「17 分支·82 commit」,A1_55 取景/A1_56 重连完好);
+  新 RefReconciliation 事件 + observed_at 字段流过 app(Events.swift 解码不 fold)**不破坏任何现有渲染**。
+  **诚实**:本卡为数据基座、**无新可见 UI**(RefReconciliation 渲染押 A1_64/65),故 UX 验 = 无回归 + 数据流通,
+  非"用户可见 spine 修复"。
 
 ## 诚实交代（报忧）
 - **本卡级联 = remote-default vs local-origin/HEAD;实测二者一致(origin/HEAD 镜像远程 default),故 relation=agree/local_unobserved,非 ref_differs。**
