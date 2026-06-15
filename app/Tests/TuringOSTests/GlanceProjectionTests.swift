@@ -55,4 +55,90 @@ final class GlanceProjectionTests: XCTestCase {
             XCTAssertEqual(incremental, GlanceProjection.fold(events), file.lastPathComponent)
         }
     }
+
+    // MARK: - A1_56 reconnect supervisor
+
+    func testReconnectBackoffIsBoundedAt8s() {
+        XCTAssertEqual(ReconnectSupervisor.backoff(attempt: 0), 0.5, accuracy: 1e-9)
+        XCTAssertEqual(ReconnectSupervisor.backoff(attempt: 1), 1.0, accuracy: 1e-9)
+        XCTAssertEqual(ReconnectSupervisor.backoff(attempt: 2), 2.0, accuracy: 1e-9)
+        XCTAssertEqual(ReconnectSupervisor.backoff(attempt: 3), 4.0, accuracy: 1e-9)
+        XCTAssertEqual(ReconnectSupervisor.backoff(attempt: 4), 8.0, accuracy: 1e-9)
+        XCTAssertEqual(ReconnectSupervisor.backoff(attempt: 9), 8.0, accuracy: 1e-9) // capped, never unbounded
+    }
+
+    func testShouldReconnectSuppressedOnlyByUserStop() {
+        XCTAssertTrue(ReconnectSupervisor.shouldReconnect(
+            reason: "daemon closed the stream", userStopped: false))
+        XCTAssertFalse(ReconnectSupervisor.shouldReconnect(
+            reason: GlanceStore.userStopReason, userStopped: false))
+        XCTAssertFalse(ReconnectSupervisor.shouldReconnect(
+            reason: "daemon closed the stream", userStopped: true))
+    }
+
+    @MainActor
+    func testPerformStepGatedOnSocketLiveness() {
+        var connectCount = 0
+        var ensureCount = 0
+        var live = false
+        let sup = ReconnectSupervisor(
+            connect: { connectCount += 1 },
+            socketIsLive: { live },
+            ensureDaemon: { ensureCount += 1 },
+            sleepFor: { _ in }
+        )
+        // Socket dead → no connect, daemon-revive hook fired (fail-visible: caller stays disconnected).
+        XCTAssertFalse(sup.performStep())
+        XCTAssertEqual(connectCount, 0, "must NOT connect while the socket is dead")
+        XCTAssertEqual(ensureCount, 1, "must try to revive a dead daemon via the injected hook")
+        // Socket live → exactly one connect issued.
+        live = true
+        XCTAssertTrue(sup.performStep())
+        XCTAssertEqual(connectCount, 1, "must connect once the socket is accepting")
+    }
+
+    @MainActor
+    func testUserStopSuppressesScheduledReconnect() {
+        var connectCount = 0
+        let sup = ReconnectSupervisor(
+            connect: { connectCount += 1 },
+            socketIsLive: { true },
+            ensureDaemon: nil,
+            sleepFor: { _ in }
+        )
+        sup.markUserStopped()
+        sup.noteDisconnected(reason: "daemon closed the stream")
+        XCTAssertNil(sup.inFlight, "a user-initiated stop must suppress any scheduled reconnect")
+        XCTAssertEqual(connectCount, 0)
+    }
+
+    @MainActor
+    func testDisconnectSchedulesOneGatedReconnect() async {
+        var connectCount = 0
+        let sup = ReconnectSupervisor(
+            connect: { connectCount += 1 },
+            socketIsLive: { true },
+            ensureDaemon: nil,
+            sleepFor: { _ in } // instant backoff for determinism
+        )
+        sup.noteDisconnected(reason: "daemon closed the stream")
+        await sup.inFlight?.value
+        XCTAssertEqual(connectCount, 1, "a dropped live stream schedules exactly one gated reconnect")
+    }
+
+    @MainActor
+    func testManualReconnectClearsUserStopAndForcesGatedAttempt() async {
+        var connectCount = 0
+        let sup = ReconnectSupervisor(
+            connect: { connectCount += 1 },
+            socketIsLive: { true },
+            ensureDaemon: nil,
+            sleepFor: { _ in }
+        )
+        sup.markUserStopped()       // even after a user stop...
+        sup.requestManual()         // ...manual 重连 clears it and forces an attempt
+        await sup.inFlight?.value
+        XCTAssertFalse(sup.userStopped, "manual reconnect clears the user-stop flag")
+        XCTAssertEqual(connectCount, 1, "manual reconnect issues exactly one gated connect")
+    }
 }

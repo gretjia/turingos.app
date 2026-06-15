@@ -1,0 +1,57 @@
+---
+atom: A1_56_daemon_reconnect
+timestamp_utc: 2026-06-15T01:18:07Z
+git_head: e48744335dac3073daa18a87b1bce88bc3506693
+implementer: claude-opus-4-8 (real-machine feedback #4 → investigation wf_cc0c719c → Opus impl + live kill-daemon recovery test)
+---
+
+# A1_56 — daemon 断连自动重连 + 手动重连 affordance（galaxy 反馈 #4）
+
+## 交付
+真机反馈：daemon 流断开后 app 永不重连（诚实 banner 在、恢复缺失）。根因（调研 wf_cc0c719c 实锤）：
+`UDSClient.disconnect` 终态设计 + 唯一有界重试只覆盖**首次 connect 瞬时 errno**，不覆盖连上后的 EOF。
+- **GlanceStore 加 `ReconnectSupervisor`**（UDSClient 零改动，保住其 generation/顺序不变式）：消费循环见
+  `.connected`→`noteConnected`(退避归零)；`.disconnected`→`noteDisconnected`(非用户 stop 则有界退避排程)。
+  退避 0.5→1→2→4→8s 封顶；每次 `performStep` 先 socketIsLive 探活、socket 死则调注入的 `ensureDaemon`
+  (= daemon.ensureRunning 重生)，活才 `client.connect()`；socket 仍死则继续探（自愈，banner 不撤）。
+- **手动「重连」**：`GlanceStore.reconnect()`→`requestManual`(退避归零+清 userStopped+立即一次 gated 尝试)；
+  断连 banner 上一个安静玻璃按钮（RadarViews MoodBanner，只 capsule 捕获点击、不挡星系拖动）。
+- **诚实/fail-visible 不变**：disconnected/reconnecting 全程灰+banner，只真 `.connected` 翻 live；
+  状态恒可见 .connecting/.disconnected，不吞 .waiting。`ensureDaemon` 经 app 注入(TuringOSApp.startWorkspace)，
+  GlanceStore 不 import DaemonController（解耦）。
+
+## 验证
+- shipgate p1 16/16 PASS（见下）。
+- **6 个督导单测**：backoff 有界封顶 8s；shouldReconnect 仅被用户 stop 抑制；performStep 被 socketIsLive 把门
+  （socket 死=不连+调 ensureDaemon、活=连一次）；用户 stop 抑制排程；disconnect 排一次 gated 重连；手动重连清
+  userStopped+强制一次 gated 连。
+- **真机端到端已证（我 computer-use，机器解锁）**：fresh launch→galaxy 彩色/live(turingosv4 21分支·189commit)；
+  `pkill turingosd`→app 在 ~1s 内经 ensureDaemon **自动重生 daemon**(新 pid 无人工干预)→**自动重连**→galaxy 复活
+  彩色/live(数据从新 daemon 重放)。证据 /tmp/galaxy_evidence/a156_baseline_color.png + a156_recovered.png。
+
+## 诚实交代（报忧）
+- 断连瞬态的 banner+「重连」按钮：自动重生太快(~1s)，锁屏/多窗环境下未截到清晰的「断连态+按钮」帧；
+  banner 出现已早证(a156_2)，按钮代码编译+wiring 直；手动按钮的"按下"未截清晰图（auto-recover 抢先）。
+- a156_recovered 截图右侧出现蓝/品红色块——疑似 screencapture 跨 space 过渡的合成伪影(干净基线无)，
+  非确认 bug；若正常使用复现请反馈。
+- 我前期一度用 `lsof | grep daemon.sock` 判连接=误(UDS 连接显示为 peer 地址非路径名)，已改用视觉(彩色=live)
+  与 Swift socket 探针为准。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

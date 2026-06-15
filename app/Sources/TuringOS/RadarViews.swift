@@ -136,11 +136,19 @@ public struct RadarCanvasView: View {
                 .padding(16)
 
                 if let banner = mood.banner {
-                    MoodBanner(sentence: banner)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity,
-                               alignment: .top)
-                        .padding(.top, 14)
-                        .allowsHitTesting(false)
+                    // A1_56: when disconnected, the honest banner carries a quiet
+                    // 重连 button (only the capsule captures taps; the surrounding
+                    // area stays non-interactive so the galaxy is still draggable).
+                    let isDisconnected: Bool = {
+                        if case .disconnected = store.connection { return true }
+                        return false
+                    }()
+                    MoodBanner(
+                        sentence: banner,
+                        onReconnect: isDisconnected ? { store.reconnect() } : nil
+                    )
+                    .padding(.top, 14)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
 
                 ScrollWheelMonitor { deltaY, local in
@@ -509,6 +517,8 @@ public struct RadarCanvasView: View {
 
 struct MoodBanner: View {
     let sentence: String
+    /// A1_56: when non-nil (disconnected), render a quiet 重连 button.
+    var onReconnect: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 8) {
@@ -518,13 +528,24 @@ struct MoodBanner: View {
             Text(sentence)
                 .font(Tokens.Typography.ui(12, weight: .medium))
                 .foregroundStyle(Tokens.Text.primary)
+            if let onReconnect {
+                Button(action: onReconnect) {
+                    Text("重连")
+                        .font(Tokens.Typography.ui(12, weight: .semibold))
+                        .foregroundStyle(Tokens.Text.primary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 3)
+                        .background(Tokens.Space.glassBorder, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("重连 daemon")
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Tokens.Space.glassBase, in: Capsule())
         .overlay(Capsule().stroke(Tokens.Space.glassBorder))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(sentence)
+        .accessibilityElement(children: .contain)
     }
 }
 
