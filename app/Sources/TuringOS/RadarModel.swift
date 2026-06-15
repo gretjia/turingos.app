@@ -460,22 +460,158 @@ public enum RadarLayout {
         return .zero
     }
 
-    /// Base radius for the star system (branch orbit around anchor).
-    private static let starBaseRadius: CGFloat = 380
-    /// Radius added per commit divergence unit (ahead + behind).
-    private static let starRadiusPerDivergence: CGFloat = 18
-    /// Maximum orbital radius cap.
-    private static let starMaxRadius: CGFloat = 780
+    /// A1_63b: Railroad swimlane layout constants.
+    /// LANE_WIDTH: horizontal column pitch (pixels between lane centers).
+    public static let LANE_WIDTH: CGFloat = 60
+    /// ROW_SPACING: vertical pitch between commit rows.
+    public static let ROW_SPACING: CGFloat = 80
+    /// RAIL_TOP_OFFSET: distance below the galaxy center to the first commit row.
+    public static let RAIL_TOP_OFFSET: CGFloat = 200
 
-    /// A1_51b: Galaxy layout (pure arithmetic, deterministic, no clock/random).
+    /// A1_63b: Pure-arithmetic railroad lane assignments for one project.
+    /// No geometry inside (no CGPoint, no center): returns integer row/lane maps
+    /// that positions() scales by LANE_WIDTH / ROW_SPACING / RAIL_TOP_OFFSET.
+    ///
+    /// rowOf:     commitSha → topological row (0 = earliest root, Kahn order)
+    /// laneOf:    commitSha → horizontal lane index (0 = trunk spine)
+    /// branchLane: branchRef → lane header index for the branch node
+    ///
+    /// Partial-DAG resilient: parents absent from `commits` do not count toward
+    /// in-degree, so such commits are Kahn roots (partial reachability window).
+    /// Forest degrade: 0 isDefault → all lanes ≥ 1; >1 isDefault → each
+    /// isDefault branch gets its own lane (0, 1, …); neither crashes.
+    public static func railroadLanes(
+        branches: [BranchFact],
+        commits: [CommitFact]
+    ) -> (rowOf: [String: Int], laneOf: [String: Int], branchLane: [String: Int]) {
+
+        // ---- Fast lookup tables ----
+        let commitMap: [String: CommitFact] = Dictionary(
+            uniqueKeysWithValues: commits.map { ($0.commitSha, $0) })
+        let commitSet = Set(commitMap.keys)
+
+        // ---- Kahn topological sort (ADR-017 honesty: ts is TIE-BREAK only) ----
+        var children: [String: [String]] = [:]
+        var inDegree: [String: Int] = [:]
+        for c in commits {
+            let inSceneParents = c.parentShas.filter { commitSet.contains($0) }
+            inDegree[c.commitSha] = inSceneParents.count
+            for p in inSceneParents { children[p, default: []].append(c.commitSha) }
+        }
+        for k in children.keys { children[k]?.sort() } // sha-sort children for determinism
+
+        // Seed: in-degree-0 roots, sorted (ts asc, sha asc).
+        var queue: [String] = inDegree.filter { $0.value == 0 }.map(\.key)
+            .sorted {
+                let t0 = commitMap[$0]?.ts ?? ""; let t1 = commitMap[$1]?.ts ?? ""
+                return t0 != t1 ? t0 < t1 : $0 < $1
+            }
+
+        var rowOf: [String: Int] = [:]
+        var currentRow = 0
+        while !queue.isEmpty {
+            let sha = queue.removeFirst()
+            rowOf[sha] = currentRow
+            currentRow += 1
+            for childSha in (children[sha] ?? []) {
+                inDegree[childSha, default: 0] -= 1
+                if inDegree[childSha] == 0 {
+                    // Insert into sorted position by (ts, sha).
+                    let cTs = commitMap[childSha]?.ts ?? ""
+                    let insertAt = queue.firstIndex {
+                        let qt = commitMap[$0]?.ts ?? ""
+                        return cTs != qt ? cTs < qt : childSha < $0
+                    } ?? queue.endIndex
+                    queue.insert(childSha, at: insertAt)
+                }
+            }
+        }
+
+        // ---- Trunk first-parent chains (isDefault branches; lex order → lanes 0,1,2…) ----
+        var laneOf: [String: Int] = [:]
+        let defaultBranches = branches.filter(\.isDefault).sorted { $0.branchRef < $1.branchRef }
+        for (trunkLane, trunk) in defaultBranches.enumerated() {
+            var sha: String? = trunk.headSha.flatMap { commitSet.contains($0) ? $0 : nil }
+            while let current = sha, laneOf[current] == nil {
+                laneOf[current] = trunkLane
+                sha = commitMap[current]?.parentShas.first.flatMap {
+                    commitSet.contains($0) ? $0 : nil
+                }
+            }
+        }
+
+        // ---- Non-trunk lane assignment (pvigier algorithm, lanes ≥ 1) ----
+        // activeLanes[i] = sha currently at lane i; nil = vacated.
+        // Index 0 (lane 0) is never searched (trunk-reserved).
+        var activeLanes: [String?] = [nil] // slot 0 = lane 0, excluded from non-trunk pool
+
+        let nonTrunkShas = commits
+            .filter { laneOf[$0.commitSha] == nil }
+            .sorted { rowOf[$0.commitSha, default: Int.max] < rowOf[$1.commitSha, default: Int.max] }
+            .map(\.commitSha)
+
+        for sha in nonTrunkShas {
+            guard let commit = commitMap[sha] else { continue }
+
+            // Prefer the lane of the first in-scene non-trunk parent (straight continuation).
+            let parentLane: Int? = commit.parentShas.lazy
+                .compactMap { p -> Int? in
+                    guard commitSet.contains(p), let pl = laneOf[p], pl >= 1 else { return nil }
+                    return activeLanes.indices.first(where: { activeLanes[$0] == p && $0 >= 1 })
+                }
+                .first
+
+            var assignedLane: Int
+            if let pl = parentLane {
+                activeLanes[pl] = sha   // straight continuation
+                assignedLane = pl
+            } else if let nilLane = activeLanes.indices.first(where: { $0 >= 1 && activeLanes[$0] == nil }) {
+                activeLanes[nilLane] = sha  // reuse vacated slot
+                assignedLane = nilLane
+            } else {
+                activeLanes.append(sha) // open new lane
+                assignedLane = activeLanes.count - 1
+            }
+
+            laneOf[sha] = assignedLane
+
+            // Vacate consumed parent slots (parent fully "passed through").
+            for p in commit.parentShas {
+                if let idx = activeLanes.indices.first(where: {
+                    activeLanes[$0] == p && $0 >= 1 && $0 != assignedLane
+                }) { activeLanes[idx] = nil }
+            }
+        }
+
+        // ---- Branch lane assignment ----
+        var branchLane: [String: Int] = [:]
+
+        // Default branches → their trunk lane indices (0, 1, 2…).
+        for (laneIdx, trunk) in defaultBranches.enumerated() {
+            branchLane[trunk.branchRef] = laneIdx
+        }
+
+        // Non-default branches: head commit's lane if in-scene; else 1 + lex-rank.
+        let nonDefault = branches.filter { !$0.isDefault }.sorted { $0.branchRef < $1.branchRef }
+        for (rank, bf) in nonDefault.enumerated() {
+            if let head = bf.headSha, let lane = laneOf[head] {
+                branchLane[bf.branchRef] = lane
+            } else {
+                branchLane[bf.branchRef] = 1 + rank
+            }
+        }
+
+        return (rowOf: rowOf, laneOf: laneOf, branchLane: branchLane)
+    }
+
+    /// A1_51b / A1_63b: Galaxy layout (pure arithmetic, deterministic, no clock/random).
     ///
     /// Three tiers:
     /// 1. galaxyCenters – scatter project centers by stableHash(projectId) in a
     ///    loose spiral with MIN_GALAXY_GAP guaranteed between any two centers.
-    /// 2. starSystem – default branch at center anchor; each branch at a polar
-    ///    angle derived from stableHash(branchRef), radius = base + k*(ahead+behind).
-    /// 3. commitSwimlane – online lane algorithm (topological/temporal order,
-    ///    vacant lanes set to nil not removed so columns don't shift).
+    /// 2. Worktree nodes – legacy horizontal lane within the galaxy (unchanged).
+    /// 3. Railroad swimlane – branch headers at column top (x=center+lane*LANE_WIDTH,
+    ///    y=center); commits at (x=center+lane*LANE_WIDTH, y=center+RAIL_TOP_OFFSET+row*ROW_SPACING).
     public static func positions(
         projects: [RadarProject],
         branches: [String: BranchFact] = [:],
@@ -506,96 +642,38 @@ public enum RadarLayout {
             }
         }
 
-        // --- 3. Star system (branch nodes in polar orbit around galaxy center) ---
-        // Group branches by projectId.
+        // --- 3. Branch & commit nodes (A1_63b railroad swimlane) ---
+        // Per project: compute lane/row assignments via railroadLanes(), then
+        // place branch headers at column tops and commits in the grid below.
         var branchByProject: [String: [BranchFact]] = [:]
-        for bf in branches.values {
-            branchByProject[bf.projectId, default: []].append(bf)
-        }
+        var commitByProject: [String: [CommitFact]] = [:]
+        for bf in branches.values { branchByProject[bf.projectId, default: []].append(bf) }
+        for cf in commits.values  { commitByProject[cf.projectId, default: []].append(cf) }
 
-        for (pid, branchFacts) in branchByProject {
-            guard let center = centers[pid] else { continue }
-            // Default branch sits at center anchor; others orbit.
-            for bf in branchFacts {
-                let nodeId = "branch:\(pid):\(bf.branchRef)"
-                if bf.isDefault {
-                    out[nodeId] = center
-                } else {
-                    let h = abs(Tokens.Accent.stableHash(bf.branchRef))
-                    let angle = Double(h % 10000) / 10000.0 * 2.0 * .pi
-                    let divergence = CGFloat(bf.ahead + bf.behind)
-                    let radius = min(starBaseRadius + starRadiusPerDivergence * divergence,
-                                     starMaxRadius)
-                    out[nodeId] = CGPoint(
-                        x: center.x + radius * CGFloat(cos(angle)),
-                        y: center.y + radius * CGFloat(sin(angle))
-                    )
-                }
+        for project in projects {
+            guard let center = centers[project.id] else { continue }
+            let bfList = branchByProject[project.id] ?? []
+            let cfList = commitByProject[project.id] ?? []
+            let (rowOf, laneOf, branchLane) = railroadLanes(branches: bfList, commits: cfList)
+
+            // Branch nodes: column header at (center.x + lane*LANE_WIDTH, center.y).
+            for bf in bfList {
+                let lane = branchLane[bf.branchRef] ?? 0
+                out["branch:\(project.id):\(bf.branchRef)"] = CGPoint(
+                    x: center.x + CGFloat(lane) * LANE_WIDTH,
+                    y: center.y
+                )
             }
-        }
 
-        // --- 4. Commit swimlane (online lane algorithm, topological order) ---
-        // Per branch: sort commits by ts (temporal/topological), assign rows
-        // and lanes. Lane = index in active-lane array; vacated slots stay nil
-        // so columns don't shift (pvigier online-lane algorithm).
-        var commitByBranch: [String: [CommitFact]] = [:]
-        for cf in commits.values {
-            let key = "\(cf.projectId)\u{0}\(cf.branchRef)"
-            commitByBranch[key, default: []].append(cf)
-        }
-
-        for (key, branchCommits) in commitByBranch {
-            // key = "projectId\0branchRef"
-            let parts = key.split(separator: "\u{0}", maxSplits: 1)
-            guard parts.count == 2 else { continue }
-            let pid = String(parts[0])
-            let branchRef = String(parts[1])
-            guard let branchCenter = out["branch:\(pid):\(branchRef)"] ?? centers[pid] else { continue }
-
-            // Sort by ts (lexicographic on ISO-8601 = temporal order ascending).
-            let sorted = branchCommits.sorted { $0.ts < $1.ts }
-            let shaSet = Set(sorted.map(\.commitSha))
-
-            // Online lane assignment: maintain active lanes array. nil = vacated.
-            var activeLanes: [String?] = [] // lane index -> current commit sha
-
-            for (row, commit) in sorted.enumerated() {
-                // Which lane to use? Prefer the lane occupied by this commit's
-                // parent (straight continuation); otherwise pick the first nil
-                // or append a new lane.
-                let parentInBranch = commit.parentShas.first { shaSet.contains($0) }
-                var assignedLane: Int
-                if let parent = parentInBranch,
-                   let parentLane = activeLanes.firstIndex(where: { $0 == parent }) {
-                    // Straight continuation: same lane, vacate the parent slot.
-                    activeLanes[parentLane] = commit.commitSha
-                    assignedLane = parentLane
-                } else if let nilLane = activeLanes.firstIndex(where: { $0 == nil }) {
-                    // Reuse a vacated lane (columns don't shift).
-                    activeLanes[nilLane] = commit.commitSha
-                    assignedLane = nilLane
-                } else {
-                    // Open a new lane.
-                    activeLanes.append(commit.commitSha)
-                    assignedLane = activeLanes.count - 1
-                }
-
-                // Vacate the lane of each parent that is now fully consumed.
-                for parentSha in commit.parentShas {
-                    if let idx = activeLanes.firstIndex(where: { $0 == parentSha }),
-                       idx != assignedLane {
-                        activeLanes[idx] = nil
-                    }
-                }
-
-                // Position: row = temporal order (parents above children in y),
-                // lane = horizontal column within the branch cluster.
-                let commitRowSpacing: CGFloat = 80
-                let commitLaneSpacing: CGFloat = 60
-                let x = branchCenter.x + CGFloat(assignedLane) * commitLaneSpacing
-                let y = branchCenter.y + 200 + CGFloat(row) * commitRowSpacing
-                let nodeId = "commit:\(pid):\(commit.commitSha)"
-                out[nodeId] = CGPoint(x: x, y: y)
+            // Commit nodes: grid cell at (center.x + lane*LANE_WIDTH,
+            //                             center.y + RAIL_TOP_OFFSET + row*ROW_SPACING).
+            for cf in cfList {
+                let lane = laneOf[cf.commitSha] ?? 0
+                let row  = rowOf[cf.commitSha]  ?? 0
+                out["commit:\(project.id):\(cf.commitSha)"] = CGPoint(
+                    x: center.x + CGFloat(lane) * LANE_WIDTH,
+                    y: center.y + RAIL_TOP_OFFSET + CGFloat(row) * ROW_SPACING
+                )
             }
         }
 

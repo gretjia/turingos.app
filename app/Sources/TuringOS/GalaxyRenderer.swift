@@ -304,7 +304,7 @@ extension GalaxyRenderer {
                     case .conflictTension: edgeA = 0.7
                     case .membership: edgeA = 0.18
                     case .fork: edgeA = 0.12
-                    case .parent: edgeA = 0.08
+                    case .parent: edgeA = 0.30
                     }
                     out.append(GalaxyInstanceData.edge(
                         fromScreen: fs, toScreen: ts,
