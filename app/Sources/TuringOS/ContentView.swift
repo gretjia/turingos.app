@@ -46,7 +46,12 @@ struct ContentView: View {
         detail
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Tokens.Space.background)
-            .frame(minWidth: 960, minHeight: 600)
+            // A1_67: this pane is now an inline NON-MODAL cover inside OrbView's
+            // window (was a `.sheet`). Match the host window's min (OrbView 640×520)
+            // so presenting it never ratchets the window larger than the Orb and
+            // leaves it stuck oversized on return. It still fills via maxWidth/Height
+            // .infinity; the real fullscreen/resize affordance is A1_60.
+            .frame(minWidth: 640, minHeight: 520)
             .onReceive(commandBus.$pending) { command in
                 // @Published replays the current value on subscription, so a
                 // command sent BEFORE this pane was presented still lands.
@@ -80,8 +85,8 @@ struct ContentView: View {
             selection = .globalOps
             return true
         case .showKernelDebug:
-            // ContentView IS the kernel debug pane — presentation is
-            // OrbView's sheet; the current panel selection is kept.
+            // ContentView IS the kernel debug pane — presentation is OrbView's
+            // non-modal inline cover (A1_67, was a sheet); panel selection kept.
             return true
         case .newInit, .connectRepo, .projectOverview, .showOrb,
              .runCICheck, .morningRitual:

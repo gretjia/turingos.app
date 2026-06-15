@@ -1,0 +1,75 @@
+---
+atom: A1_67_quit_demodalize
+timestamp_utc: 2026-06-15T06:37:50Z
+git_head_base: 1c12c529966873f9107e846fb22a0cc95ab690f9
+implementer: claude-opus-4-8 (真机反馈 #3 复现 → 根因实锤 → Opus impl → 清洁视角对抗复核 wf/agent ae14cbd5 → 真机端到端自验)
+---
+
+# A1_67 — Quit 去模态(kernel-debug sheet → 非模态全幅覆盖;真机 #3)
+
+## 交付
+真机反馈 #3「程序无法退出」(菜单 Quit / ⌘Q / Dock 右键退出全部无效)。**根因实锤(真机 AX 复现)**:
+galaxy / 内核调试面由 OrbView 以**窗口模态 `.sheet`** 承载,macOS 在模态 sheet 存在期间拒绝
+`NSApp.terminate:` —— 用户处在 galaxy 时永远有一个 sheet 挂着,故 Quit 恒被推迟。System Events
+实证:修复前 window 1 `sheets=1` 且点「Quit TuringOS」menu item 后进程存活;且此 sheet 违反
+docs/NAVIGATION_MODEL.md「Glance 路径必须零模态、零阻塞」。
+
+**修复**:把 kernel-debug `ContentView` 从 `.sheet(isPresented:)` 改为 OrbView `ZStack` 内的
+**非模态全幅条件覆盖**(`if showKernelDebug { ContentView()... }`):
+- `showKernelDebug` 标志仍控制呈现(视图菜单 / ⌘D / 调试按钮);`.transition(.opacity)` 安静淡入。
+- 返回 Orb 三路全保留:`.showOrb`(⌘0)、`Escape`(`.onExitCommand`)、覆盖层左上角安静「‹ Orb 主屏」玻璃胶囊。
+- 无任何模态 → `terminate:` 立即生效 → Quit 复活;同时满足 NAVIGATION_MODEL 零模态零阻塞。
+
+**对抗复核(清洁视角 agent ae14cbd5)发现并已修的本卡引入回归**:去模态后 `ContentView` 自带
+`.frame(minWidth:960,minHeight:600)` 会传导到主窗口 → 开 galaxy 把窗口棘轮放大到 ≥960,且 AppKit
+不回缩 → 回 Orb 后窗口卡在超大尺寸。已把 ContentView 硬 min 放到与 OrbView 主窗 min 一致(640×520),
+真机实证棘轮消失(见验证)。复核同时确认:无其它 quit-阻塞模态(两处 `.popover` 不阻 terminate;
+OnboardingView 是 in-window 非 sheet);命令总线面板选择经 @Published replay-on-subscribe 仍生效;
+覆盖层背景 `0x030305` alpha=1 不透;AppCommandBusTests 不依赖 sheet,不 stale。复核结论 SHIP。
+
+**副作用利好(本卡不声称、未验收,留给 A1_60)**:ContentView 现填满主窗口 → 可调整大小 / 可全屏的
+底座已就位。
+
+## 验证
+- shipgate p1 **16/16 PASS**(见下;ratchet 修复后二次重跑,goldens 逐字节不变 —— 纯视图 chrome)。
+- **真机 UX 端到端(我 computer-use,机器解锁,AX 驱动菜单——动态壁纸吃鼠标点击判定故走 AX/键盘)**:
+  - 进 galaxy 时 `sheets=0`(无模态);Orb / galaxy / 重进 galaxy 三态均 `sheets=0`。
+  - **决定性**:进 galaxy 后点「Quit TuringOS」menu item → 进程**干净退出**(app + 它拉起的 daemon 子进程都消失)
+    —— 即修复前 100% 失败的那条路径现在成功。
+  - 棘轮回归已消:窗口在 Orb→galaxy→回 Orb 三态恒 900×552(不再放大卡死)。
+  - 返回 Orb 三路:⌘0(视图→Orb 主屏)实测有效并可重进;Escape/`‹Orb` 按钮同一 `showKernelDebug=false`
+    状态翻转(按钮已在截图中目视确认渲染)。
+  - 证据:/tmp/galaxy_evidence/a167_galaxy_demodalized.png(去模态后 galaxy + ‹Orb 按钮 + zoom HUD,
+    backing-store 直抓)。
+
+## 诚实交代(报忧 / RiskFinding —— 非本卡范围,不阻塞本卡)
+- **galaxy 宏观档蓝/品红大色块是真渲染 bug,不是截图伪影**:A1_56 回执曾猜「screencapture 跨 space 合成
+  伪影」,本次用 `screencapture -l <winID>` 直抓**窗口 backing store** 仍见蓝(左上~60%)+品红(右下)实心
+  色块铺满,故**实锤为真**(疑 GalaxyRenderer 宏观档 nebula/glow 实例尺寸失算)。前置存在(A1_56 截图同款)、
+  与本卡去模态无关(本卡不碰 Metal/颜色)。已立任务 #25,候选归 A1_65(视觉方案)或专门 bug 原子。证据
+  /tmp/galaxy_evidence/a167_window_direct.png。
+- 鼠标点击/scroll 经动态壁纸合成被判定到「程序坞」而失效(已知环境坑),故全程用 AX 菜单 + 键盘驱动 +
+  backing-store 抓图;Escape/`‹Orb` 按钮的「物理按下」未单独截帧,但其状态翻转与 ⌘0 同一路径、已实测等价。
+
+## 后续序(同批真机反馈)
+#2 全屏/resize 重取景(A1_60,本卡已铺非模态全幅底座)→ #4 细节卡(A1_57 宽度 + A1_58 按 kind 内容)
+→ #1 主线脊柱布局重构(A1_63,positions() 让 canonical-main commits 顺脊柱拓扑排布、分支分叉)。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

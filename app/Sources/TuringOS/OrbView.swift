@@ -77,11 +77,24 @@ public struct OrbView: View {
                 Spacer()
             }
             .padding(.horizontal, 24)
-        }
-        .sheet(isPresented: $showKernelDebug) {
-            ContentView(store: store)
-                .environmentObject(commandBus)
-                .frame(minWidth: 960, minHeight: 600)
+
+            // A1_67: the kernel-debug / galaxy surface is a NON-MODAL full-bleed
+            // cover, never a `.sheet`. A window-modal sheet blocks NSApp.terminate
+            // (real-machine #3: Quit was dead whenever the galaxy was open) AND
+            // violates NAVIGATION_MODEL「Glance 路径必须零模态、零阻塞」. Filling the
+            // main window also lets the canvas resize / go fullscreen (groundwork
+            // for #2, claimed in A1_60). The showKernelDebug flag still gates it;
+            // ⌘0 / Escape / the quiet ‹Orb button all return.
+            if showKernelDebug {
+                ContentView(store: store)
+                    .environmentObject(commandBus)
+                    .overlay(alignment: .topLeading) { backToOrbButton }
+                    .transition(.opacity)
+                    .zIndex(10)
+                    .onExitCommand {
+                        withAnimation(Self.coverAnim) { showKernelDebug = false }
+                    }
+            }
         }
         .onReceive(commandBus.$pending) { command in
             guard let command else { return }
@@ -97,9 +110,9 @@ public struct OrbView: View {
     /// Consume bus commands addressed to the Orb. Intent commands replay
     /// the exact typed path (`vm.send(.inputSubmitted)`), so menu and input
     /// field stay behaviorally identical. Panel commands only PRESENT the
-    /// kernel debug sheet and are left on the bus — ContentView consumes
-    /// them to select its panel (its @Published subscription replays the
-    /// pending value even when the sheet mounts afterwards).
+    /// kernel-debug cover (A1_67: non-modal, was a sheet) and are left on the
+    /// bus — ContentView consumes them to select its panel (its @Published
+    /// subscription replays the pending value even when the cover mounts after).
     private func handleAppCommand(_ command: AppCommand) {
         switch command {
         case .newInit:
@@ -130,12 +143,42 @@ public struct OrbView: View {
             vm.send(.inputSubmitted(text: "ci 检查"))
             commandBus.consume()
         case .showOrb:
-            showKernelDebug = false
+            withAnimation(Self.coverAnim) { showKernelDebug = false }
             commandBus.consume()
         case .showKernelDebug, .showRadar, .showAttention, .showCI:
             // Present only; ContentView consumes to pick the panel.
-            showKernelDebug = true
+            withAnimation(Self.coverAnim) { showKernelDebug = true }
         }
+    }
+
+    // MARK: - Kernel-debug cover chrome (A1_67)
+
+    /// Quiet fade for presenting/dismissing the non-modal kernel-debug cover.
+    private static let coverAnim: Animation = .easeInOut(duration: 0.2)
+
+    /// A1_67: discoverable return-to-Orb affordance on the cover. The modal
+    /// sheet's implicit close is gone now that the surface is non-modal, so the
+    /// way back is made explicit (⌘0 and Escape also return). 安静即成功: a single
+    /// quiet glass capsule, no toolbar.
+    private var backToOrbButton: some View {
+        Button {
+            withAnimation(Self.coverAnim) { showKernelDebug = false }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 10, weight: .semibold))
+                Text("Orb 主屏")
+                    .font(Tokens.Typography.mono(11))
+            }
+            .foregroundStyle(Tokens.Text.secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(Tokens.Space.glassBase, in: Capsule())
+            .overlay(Capsule().stroke(Tokens.Space.glassBorder))
+        }
+        .buttonStyle(.plain)
+        .padding(16)
+        .accessibilityLabel("返回 Orb 主屏")
     }
 
     // MARK: - Debug toolbar
@@ -149,7 +192,7 @@ public struct OrbView: View {
         HStack {
             Spacer()
             Button {
-                showKernelDebug = true
+                withAnimation(Self.coverAnim) { showKernelDebug = true }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "cpu")

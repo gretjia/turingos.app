@@ -1,0 +1,64 @@
+---
+atom: A1_68_galaxy_instance_layout
+timestamp_utc: 2026-06-15T09:30:04Z
+git_head_base: 64f1e80bfd8416fce618b69cd0790ce6ce6bcb63 (stacked on A1_67)
+implementer: claude-opus-4-8 (真机反馈 #4 → workflow 研究[误判 nebula] → 我 bisection+NSLog 探针实锤真因 → Opus impl → 真机 backing-store 验)
+---
+
+# A1_68 — galaxy 实例缓冲 Swift↔MSL 布局修复(真机反馈 #4「大色块」)
+
+## 交付
+真机反馈:galaxy 宏观档两块**实心硬边**蓝/品红大色块铺满半屏、遮住项目标签。
+
+**根因实锤(诚实交代:研究 workflow 的 R5 误判为 nebula 半径未钳;我逐层 bisection 推翻)**:
+- nebula(GalaxyStaticLayer)是**柔和 0.18 椭圆径向渐变** → 物理上不可能产生饱和硬边矩形(已排除)。
+- Metal 关闭实例(buildInstances 返回空)→ 色块消失 → **锁定 Metal 层**。
+- NSLog 探针(直抓 app stderr):drawable=3000x1888 正确、所有 aggregate glyph 的 Swift 侧 size=0.0067–0.02
+  (微小、正确)、ndc 全在左/上;但屏幕右侧仍铺硬边色块 → **Swift↔MSL `InstanceData` 结构体内存布局错位**。
+- MSL `{float2 center; float4 color; float size; uint kind;}`:`float4` 强制 16 字节对齐 → color@16/size@32/
+  kind@36/**stride 48**;Swift 旧紧凑标量布局 **stride 32**。着色器按 48 索引 `instances[id]`、Swift 按 32 写
+  → 错位:`inst.size` 读到**相邻实例的 centerX**(NDC ~−1..1)→ 巨型四边形;颜色读错位字节 → 蓝/品红。
+- 此 bug 自 A1_51c 潜伏;**A1_56 回执曾误判为「screencapture 跨 space 合成伪影」——本次用 `screencapture -l`
+  直抓窗口 backing store 仍见色块,实锤为真渲染 bug**(纠错留痕)。
+
+**修复(根因级、最小)**:Swift `GalaxyInstanceData` 改用 `SIMD2<Float>`/`SIMD4<Float>`(与 MSL float2/float4
+**同对齐**)→ center@0/color@16/size@32/kind@36/stride 48,与 MSL 逐字节吻合;4 处构造点(star/aggregate/
+node/edge)同步迁移;MSL 着色器本就正确,仅加一行防御 `clamp(inst.size,0,0.6)` 限制任何未来布局漂移的爆炸半径。
+**机械护栏**:RadarLODTests.testGalaxyInstanceDataMatchesMSLLayout 断言 stride==48 / offset(color)==16 /
+offset(size)==32 / offset(kind)==36 —— 把 Swift↔MSL 契约钉死。
+
+## 验证
+- shipgate p1 **16/16 PASS**(见下;过门前 pkill app+daemon+删 lock)。gate 16(swift build+test)绿 ⇒ 布局断言
+  测试编译+通过 ⇒ MemoryLayout 确为 48/0/16/32/36(契约成立);执行测试数 ≥ 既有 floor(新增 1 测)。
+- golden 逐字节不变(gate 12 绿;本卡只动 GPU 私有实例缓冲布局,不碰 scene/positions/canonicalDump/契约/daemon)。
+- **真机 UX(我 computer-use,`screencapture -l` 窗口 backing store 直抓)**:进 galaxy 宏观档 →
+  **无任何实心蓝/品红色块**;项目标签 + 柔和 nebula + 微小聚合光点干净可读。证据
+  /tmp/galaxy_evidence/cb_fixed.png(修后)、cb_zoomed_node.png(relaunch 复核,仍干净);对照
+  cb_nebula_on→cb_test_nometal(Metal 关→色块消失,bisection)+ cb_test_instrumented(色块在)+ NSLog。
+
+## 诚实交代(报忧 / RiskFinding)
+- **多 z 验证**:色块只在宏观/cluster 档(aggregate glyph 是该档唯一 palette 着色实例);node/detail 档自始
+  无色块(session 初 state_now.png 缩进项目即无块)。修复是**结构性 z-不变**(结构体布局与 z 无关)+ 防御 clamp,
+  故无 z-依赖路径能再触发;动态壁纸吃鼠标 + AX HUD「放大」按钮 description 无法定位,未单独驱动深缩进截帧,
+  以「宏观修后干净 + node/detail 本就无块 + 布局断言 + z-不变」论证替代(诚实标注,非掩盖)。
+- **聚合光点 vs 标签轻微错位**(Metal NDC 映射 vs SwiftUI Canvas screen 映射差异)= **前置、独立**问题,非本卡
+  范围;将随 #1 树布局(A1_63)/视觉(A1_65)重做时一并校正。已观察,记此备忘。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS
