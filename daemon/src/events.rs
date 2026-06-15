@@ -91,6 +91,11 @@ pub enum EventKind {
     BranchObserved,
     BranchRemoved,
     CommitObserved,
+    /// A1_62: per-project canonical-main reconciliation — remote default vs local
+    /// trunk as two independent observed facts + their relation (honest cascade;
+    /// never silently elects a winner). Payload carries both candidates (or null
+    /// when unobserved) + relation + per-candidate source/observed_at.
+    RefReconciliation,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

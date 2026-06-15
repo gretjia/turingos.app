@@ -61,6 +61,10 @@ public enum EventKind: String, Codable, Sendable, CaseIterable {
     case branchObserved = "BranchObserved"
     case branchRemoved = "BranchRemoved"
     case commitObserved = "CommitObserved"
+    /// A1_62: canonical-main reconciliation (remote default vs local trunk).
+    /// Decoded for contract conformance; NOT folded into the scene yet (the
+    /// galaxy rendering of trunk contention lands in A1_64/A1_65).
+    case refReconciliation = "RefReconciliation"
 }
 
 public enum EventSource: String, Codable, Sendable {

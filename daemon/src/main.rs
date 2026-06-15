@@ -185,9 +185,10 @@ fn serve_registry(registry: std::path::PathBuf, socket: String) -> ExitCode {
         let poll_registry = registry.clone();
         std::thread::spawn(move || {
             let gh = turingosd::branch_poller::LiveGhClient;
+            let git = turingosd::branch_poller::LiveGitRunner;
             let mut poller = turingosd::branch_poller::BranchPoller::new(&poll_registry);
             loop {
-                poller.poll(&poll_hub, &gh);
+                poller.poll(&poll_hub, &gh, &git);
                 std::thread::sleep(std::time::Duration::from_secs(300));
             }
         });
