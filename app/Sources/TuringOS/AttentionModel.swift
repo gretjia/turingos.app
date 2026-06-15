@@ -112,11 +112,17 @@ public struct CommitFact: Equatable, Sendable {
     public let branchRef: String
     public let author: String
     public let ts: String
+    /// Commit subject — the first line of the message (git %s).
     public let summary: String
+    /// A1_70: the commit message body (git %b) — everything after the subject,
+    /// trimmed by the daemon. Empty when the commit has no body. Defaults to ""
+    /// so events from a pre-A1_70 daemon (no `body` field) decode cleanly.
+    public let body: String
 
     public init(
         projectId: String, commitSha: String, parentShas: [String],
-        branchRef: String, author: String, ts: String, summary: String
+        branchRef: String, author: String, ts: String, summary: String,
+        body: String = ""
     ) {
         self.projectId = projectId
         self.commitSha = commitSha
@@ -125,6 +131,7 @@ public struct CommitFact: Equatable, Sendable {
         self.author = author
         self.ts = ts
         self.summary = summary
+        self.body = body
     }
 }
 
@@ -233,7 +240,9 @@ public struct WorktreeLedger: Equatable, Sendable {
                 branchRef: ref,
                 author: event.payload["author"]?.stringValue ?? "",
                 ts: event.payload["ts"]?.stringValue ?? "",
-                summary: event.payload["summary"]?.stringValue ?? ""
+                summary: event.payload["summary"]?.stringValue ?? "",
+                // A1_70: body absent on pre-A1_70 daemon events → "" (no fabrication).
+                body: event.payload["body"]?.stringValue ?? ""
             )
         default:
             break

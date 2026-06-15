@@ -1,0 +1,77 @@
+---
+atom: A1_70_commit_body_capture
+timestamp_utc: 2026-06-15T12:05:00Z
+git_head_base: b5900cf888d3e39a7dc65be9481d8314b3e33d44 (stacked on A1_69 branch / PR #51)
+implementer: claude-opus-4-8 (用户反馈"看不到说明 + 是没重新build吗" → 只读 socket 订阅实证根因 → daemon+app 跨层修 → shipgate 16/16 + 数据边界 live 证)
+---
+
+# A1_70 — commit 正文(body)诚实承载:daemon 不再截断 + app 显示说明
+
+## 交付
+用户反馈(细节卡 #7):commit popover 有主题但**永远看不到"说明"**(message 正文),问"是没重新 build 的原因吗"。
+
+**实证根因(只读 socket 订阅 daemon 实时 tape 钉死,非猜)**:`daemon/src/branch_poller.rs:448`
+`let summary = message.lines().next()` —— commit message **只取首行**,正文丢弃。从实时 tape 抽 turingos_app
+**1107 条** CommitObserved,**0 条含换行**(全被截成主题行)。**答用户:不是 build 问题,是 daemon 截断 bug。**
+app(A1_69)的 body 渲染代码正确,但收到的 `summary` 里从来没有正文。
+
+**修复(诚实数据模型,git 语义)**:`summary`=subject(首行,git %s)本就该是首行 —— daemon 命名没错,错在
+**正文从未承载**。故**加独立 `body` 字段**(git %b),additive、不撒谎、不破坏既有消费者:
+- daemon `CommitFact` 加 `body: String`;parse `splitn(2,'\n')` → summary=首行 trim、body=余下 trim;
+  两处 CommitObserved emit(默认 commits + compare commits)都带 `body`。
+- app `CommitFact`(AttentionModel)加 `body`(decode `payload["body"] ?? ""`,旧事件缺省 → 向后兼容);
+  `CommitMeta` 加 `body`;`deriveCommit` **改用真字段 commitMeta.body**(headline=summary 主题直接用)——
+  纠正 A1_69 基于"summary=全文"错误假设的"劈 summary"权宜做法。
+- fixture `commit_observed.jsonl` 给 merge commit 补 `body`(additive 样本)。
+
+**诚实**:summary/body/author/ts 全是已观测 GitHub API 事实;body 空(commit 无正文)→ NodeCardContent.body
+== nil 不渲染说明块(诚实占位非伪造);**body 不入 canonicalDump**(展示层,golden 逐字节不变)。
+
+## 验证
+- **shipgate p1 16/16 PASS**(/tmp/a170_shipgate.log;**gate 12 golden 逐字节不变** → body 确为视图层,
+  不入 canonicalDump)。**rust 24/24 lib 单测**(含新 parse body-split + payload conformance)。**app 363 测**(build_app.sh)。
+- **daemon 截断修复(机械)**:parse_compare_commits 单测扩充 —— 多行 message(subject\n\nbody一\nbody二)
+  → summary=="first line"、body=="body paragraph one\nbody paragraph two";单行 → body=="". PASS。
+- **app 内容测(机械)**:CommitMeta(summary,body) → deriveCommit headline==subject、body==正文;空 body → body==nil. PASS。
+- **数据边界 live 证(环境无关,直接验 bug)**:重建 daemon(带 body)启动 → 只读 socket 订阅实测:
+  turingos_app **201 条 CommitObserved,175 条带非空 body**(修前 0/1107)。**用户截屏的那一条 commit
+  `53f7f209`("A1_11: Turing Agentic OS whitepaper…")现已携带其完整正文**(WHITEPAPER/FEASIBILITY/159 sourced
+  claims …)。这是用户反馈的精确缺口被闭合的直证。
+- **app 端到端**:dist 重建(含 fix)启动 app(pid 90484 alive),daemon 日志见 subscriber connect →
+  **app 进程订阅了新 daemon、收到了带 body 的 replay 流**(body 已抵达 app,非仅 socket)。
+
+## 诚实交代(报忧 / 残留)
+- **commit popover 的 live 像素截屏本轮仍未拿到**:app 窗口又漂到非活跃 Space(CGWindowList 见 winID 21518
+  1500×976 在屏坐标但非当前 Space;System Events windows=0;screencapture -l 报 "could not create image from
+  window";computer-use screenshot 报 SCContentFilter nil)——**环境性**,与 A1_69 同一堵墙
+  ([[reference_computer_use_coordinate_workaround]]/[[reference_locked_mac_live_verify]]),**非代码问题**
+  (app 进程活着且已订阅收流)。
+  代偿证据:① **数据边界 live 证**(53f7f209 + 174 条现带 body)= 用户缺口直接闭合;② body 渲染走与
+  **branch popover 同一套 detailPopover 机制**,后者已在 A1_57 真机截屏目视证实(card_popover_context.png);
+  ③ 内容机械测钉死(headline=subject / body=正文 / 空→nil);④ shipgate 16/16 + golden 不变。
+  → "数据"经 live 证、"渲染"经测+共享已验机制证;唯独 commit 专属 live 帧待环境恢复(**用户在自己交互
+  session 里点一个 commit 节点即可亲见** —— 用户先前能截到 popover,说明交互态正常,只 headless computer-use 撞 Space 墙)。
+- **附带诊断(用户问题 #2「只 turingos.app 有 branch/commit,其他空」)**:实证为**冷启动串行轮询时序**,非 bug。
+  daemon 轮询串行、每分支一次 gh compare(实测 ~3s/次),turingos.app 排第一(25 分支)、turingosv4 第二
+  (73 分支 ≈ 单独 3.6min)。读 daemon 现 tape:**25 项目全有事件、24 个已带 branch+commit**;唯一空的 mindsync
+  是 **GitHub 空仓库**(0 分支,API 409 "Git Repository is empty")= 诚实显空。→ 答用户:多等一两分钟其他会出现;
+  但"几分钟才淌完"的冷启动延迟是真 UX 缺陷,**另记跟进项**(与 A1_63 本地全分支发现一起排优先级,本原子不触)。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

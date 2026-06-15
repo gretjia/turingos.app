@@ -393,8 +393,13 @@ pub struct CommitFact {
     pub parent_shas: Vec<String>,
     pub author: String,
     pub ts: String,
-    /// First line of the commit message.
+    /// First line of the commit message (git `%s` subject).
     pub summary: String,
+    /// A1_70: the commit message body — everything after the subject line,
+    /// trimmed (git `%b`). Empty when the commit has no body. Carried so the
+    /// galaxy detail card can show the "说明" the author wrote, not just the
+    /// subject. Honest: it is the observed message, never inferred.
+    pub body: String,
 }
 
 /// Pure: parse a GitHub compare `--jq` response that contains a `commits` array.
@@ -445,13 +450,19 @@ pub fn parse_compare_commits(compare_json: &str) -> Result<Vec<CommitFact>, Stri
             .and_then(|c| c.get("message"))
             .and_then(serde_json::Value::as_str)
             .unwrap_or("");
-        let summary = message.lines().next().unwrap_or("").to_string();
+        // A1_70: split the message into subject (first line, git %s) and body
+        // (everything after, trimmed, git %b). Before this, the body was dropped
+        // entirely (`.lines().next()`), so the detail card never had a "说明".
+        let mut parts = message.splitn(2, '\n');
+        let summary = parts.next().unwrap_or("").trim().to_string();
+        let body = parts.next().unwrap_or("").trim().to_string();
         out.push(CommitFact {
             sha,
             parent_shas,
             author,
             ts,
             summary,
+            body,
         });
     }
     Ok(out)
@@ -768,6 +779,7 @@ impl BranchPoller {
                         "author": commit.author,
                         "ts": commit.ts,
                         "summary": commit.summary,
+                        "body": commit.body,
                         "provenance": "github_api",
                     }),
                 );
@@ -820,6 +832,7 @@ impl BranchPoller {
                             "author": commit.author,
                             "ts": commit.ts,
                             "summary": commit.summary,
+                            "body": commit.body,
                             "provenance": "github_api",
                         });
                         if truncated {
@@ -1107,7 +1120,7 @@ mod tests {
         let json = r#"{
             "status":"ahead","ahead_by":2,"behind_by":0,
             "commits":[
-                {"sha":"abc1","parents":[{"sha":"p0"}],"commit":{"author":{"name":"Alice","date":"2026-06-14T10:00:00Z"},"message":"first line\nsecond line"}},
+                {"sha":"abc1","parents":[{"sha":"p0"}],"commit":{"author":{"name":"Alice","date":"2026-06-14T10:00:00Z"},"message":"first line\n\nbody paragraph one\nbody paragraph two\n"}},
                 {"sha":"abc2","parents":[{"sha":"abc1"}],"commit":{"author":{"name":"Bob","date":"2026-06-14T11:00:00Z"},"message":"just one line"}}
             ]
         }"#;
@@ -1117,11 +1130,14 @@ mod tests {
         assert_eq!(commits[0].parent_shas, vec!["p0"]);
         assert_eq!(commits[0].author, "Alice");
         assert_eq!(commits[0].ts, "2026-06-14T10:00:00Z");
-        // summary = first line only
+        // A1_70: summary = subject (first line, %s); body = the rest, trimmed (%b).
         assert_eq!(commits[0].summary, "first line");
+        assert_eq!(commits[0].body, "body paragraph one\nbody paragraph two");
+        // single-line message → subject only, body empty (never fabricated).
         assert_eq!(commits[1].sha, "abc2");
         assert_eq!(commits[1].parent_shas, vec!["abc1"]);
         assert_eq!(commits[1].summary, "just one line");
+        assert_eq!(commits[1].body, "");
     }
 
     #[test]
@@ -1213,7 +1229,7 @@ mod tests {
     fn payload_has_no_merged_or_green_field() {
         // CommitFact carries no merged/green/verified field — verify by checking
         // that the CountingGh compare_json round-trips to CommitFact with only
-        // the declared fields (sha, parent_shas, author, ts, summary).
+        // the declared fields (sha, parent_shas, author, ts, summary, body).
         let json = counting_gh().compare_json;
         let commits = parse_compare_commits(&json).unwrap();
         assert!(!commits.is_empty(), "test data must have commits");
@@ -1226,6 +1242,7 @@ mod tests {
             "author": commits[0].author,
             "ts": commits[0].ts,
             "summary": commits[0].summary,
+            "body": commits[0].body,
             "provenance": "github_api",
         });
         let s = payload.to_string();
