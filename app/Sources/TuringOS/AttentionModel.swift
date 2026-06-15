@@ -58,11 +58,95 @@ public struct ProjectFact: Equatable, Sendable {
     public let path: String?
 }
 
+/// A1_49/A1_51b: one observed branch (local git or GitHub, per provenance).
+/// A1_51b adds ahead/behind/mergeStatus/mergeBase/containedInDefault from the
+/// A1_50 BranchObserved wire fields; safe defaults keep old fold sites intact.
+public struct BranchFact: Equatable, Sendable {
+    public let projectId: String
+    public let branchRef: String
+    public let headSha: String?
+    public let isDefault: Bool
+    public let mergedIntoDefault: Bool
+    /// "local_git" | "github_api" | "both" - the honesty field (network-attested
+    /// facts are labelled, never silently equated with locally-verified ones).
+    public let provenance: String
+    // A1_51b fields (A1_50 wire payload; 0/"unknown"/nil/false when absent):
+    public let ahead: Int
+    public let behind: Int
+    /// "identical" | "ahead" | "behind" | "diverged" | "unknown"
+    public let mergeStatus: String
+    /// SHA of the common merge-base with the default branch; nil when unknown.
+    public let mergeBase: String?
+    /// True when the branch head is reachable from the default branch HEAD.
+    public let containedInDefault: Bool
+
+    public init(
+        projectId: String, branchRef: String, headSha: String? = nil,
+        isDefault: Bool = false, mergedIntoDefault: Bool = false,
+        provenance: String = "unknown",
+        ahead: Int = 0, behind: Int = 0,
+        mergeStatus: String = "unknown", mergeBase: String? = nil,
+        containedInDefault: Bool = false
+    ) {
+        self.projectId = projectId
+        self.branchRef = branchRef
+        self.headSha = headSha
+        self.isDefault = isDefault
+        self.mergedIntoDefault = mergedIntoDefault
+        self.provenance = provenance
+        self.ahead = ahead
+        self.behind = behind
+        self.mergeStatus = mergeStatus
+        self.mergeBase = mergeBase
+        self.containedInDefault = containedInDefault
+    }
+}
+
+/// A1_51b: one observed commit (from CommitObserved, supplied by A1_52).
+/// Append-only: no CommitRemoved event exists; lifecycle is branch-scoped
+/// (branchRemoved cascades a cleanup of that branch_ref's commits).
+public struct CommitFact: Equatable, Sendable {
+    public let projectId: String
+    public let commitSha: String
+    public let parentShas: [String]
+    public let branchRef: String
+    public let author: String
+    public let ts: String
+    public let summary: String
+
+    public init(
+        projectId: String, commitSha: String, parentShas: [String],
+        branchRef: String, author: String, ts: String, summary: String
+    ) {
+        self.projectId = projectId
+        self.commitSha = commitSha
+        self.parentShas = parentShas
+        self.branchRef = branchRef
+        self.author = author
+        self.ts = ts
+        self.summary = summary
+    }
+}
+
 public struct WorktreeLedger: Equatable, Sendable {
     public private(set) var worktrees: [String: WorktreeFact] = [:] // worktree_id -> latest
     public private(set) var projects: [String: ProjectFact] = [:] // project_id -> latest
+    /// A1_49: branch facts keyed "project_id\0branch_ref" (NUL: git forbids it
+    /// in refs, so the key can never collide).
+    public private(set) var branches: [String: BranchFact] = [:]
+    /// A1_51b: commit facts keyed "project_id\0commit_sha". Append-only in the
+    /// stream; branchRemoved cascades a cleanup (commit lifecycle = branch-scoped).
+    public private(set) var commits: [String: CommitFact] = [:]
 
     public init() {}
+
+    private static func branchKey(_ projectId: String, _ branchRef: String) -> String {
+        "\(projectId)\u{0}\(branchRef)"
+    }
+
+    private static func commitKey(_ projectId: String, _ commitSha: String) -> String {
+        "\(projectId)\u{0}\(commitSha)"
+    }
 
     public mutating func apply(_ event: EventEnvelope) {
         switch event.kind {
@@ -102,6 +186,55 @@ public struct WorktreeLedger: Equatable, Sendable {
             if let id = event.payload["worktree_id"]?.stringValue {
                 worktrees.removeValue(forKey: id)
             }
+        case .branchObserved:
+            guard let pid = event.payload["project_id"]?.stringValue,
+                  let ref = event.payload["branch_ref"]?.stringValue else { return }
+            // A1_51b: extract new wire fields with safe defaults so older
+            // fixtures (without ahead/behind/etc.) keep folding correctly.
+            let mergeBaseRaw = event.payload["merge_base"]?.stringValue ?? ""
+            branches[Self.branchKey(pid, ref)] = BranchFact(
+                projectId: pid,
+                branchRef: ref,
+                headSha: event.payload["head_sha"]?.stringValue,
+                isDefault: event.payload["is_default"]?.boolValue ?? false,
+                mergedIntoDefault: event.payload["merged_into_default"]?.boolValue ?? false,
+                provenance: event.payload["provenance"]?.stringValue ?? "unknown",
+                ahead: event.payload["ahead"]?.numberValue.map(Int.init) ?? 0,
+                behind: event.payload["behind"]?.numberValue.map(Int.init) ?? 0,
+                mergeStatus: event.payload["merge_status"]?.stringValue ?? "unknown",
+                mergeBase: mergeBaseRaw.isEmpty ? nil : mergeBaseRaw,
+                containedInDefault: event.payload["contained_in_default"]?.boolValue ?? false
+            )
+        case .branchRemoved:
+            guard let pid = event.payload["project_id"]?.stringValue,
+                  let ref = event.payload["branch_ref"]?.stringValue else { return }
+            branches.removeValue(forKey: Self.branchKey(pid, ref))
+            // A1_51b: cascade - prune commits whose branch_ref matches this
+            // removed branch (commit lifecycle is branch-scoped; no CommitRemoved event).
+            commits = commits.filter { _, fact in
+                !(fact.projectId == pid && fact.branchRef == ref)
+            }
+        case .commitObserved:
+            // A1_51b: fold CommitObserved (supplied by A1_52). Missing
+            // required fields are DROPPED - no phantom commits.
+            guard let pid = event.payload["project_id"]?.stringValue,
+                  let sha = event.payload["commit_sha"]?.stringValue,
+                  let ref = event.payload["branch_ref"]?.stringValue else { return }
+            let parentShas: [String]
+            if case .array(let arr) = event.payload["parent_shas"] {
+                parentShas = arr.compactMap { $0.stringValue }
+            } else {
+                parentShas = []
+            }
+            commits[Self.commitKey(pid, sha)] = CommitFact(
+                projectId: pid,
+                commitSha: sha,
+                parentShas: parentShas,
+                branchRef: ref,
+                author: event.payload["author"]?.stringValue ?? "",
+                ts: event.payload["ts"]?.stringValue ?? "",
+                summary: event.payload["summary"]?.stringValue ?? ""
+            )
         default:
             break
         }

@@ -92,6 +92,13 @@ final class ProbeBox: @unchecked Sendable {
 }
 
 struct TuringOSApp: App {
+    // A1_51d: register bundled fonts BEFORE any SwiftUI view is created.
+    // Must live in App.init — placing it in view body causes SwiftUI to
+    // silently fall back to system fonts and never retry.
+    init() {
+        registerBundledFonts()
+    }
+
     @StateObject private var store = GlanceStore()
     @StateObject private var daemon = DaemonController()
     /// A1_30: menu bar → views command channel. The sidebar is gone; the

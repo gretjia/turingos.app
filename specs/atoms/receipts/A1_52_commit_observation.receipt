@@ -1,0 +1,45 @@
+---
+atom: A1_52_commit_observation
+timestamp_utc: 2026-06-14T15:54:19Z
+git_head: b7825ac313b3400697b653947bb283b7bd3dcd8a
+implementer: claude-opus-4-8 (Sonnet impl agent + Haiku audit CONFIRM + Opus diff review)
+---
+
+# A1_52 — daemon commit/commit-graph 观测（galaxy commit 层底座；A1_50 姊妹原子）
+
+## 交付
+branch poller 顺带发 per-commit 观测，把可观测深度从分支顶点下探到 commit。
+- parse_compare_commits 纯函数（sha/parent_shas/author/ts/summary）；compare --jq 单次调用富化取 commits[]。
+- **CachedCompare 加宽存 Vec<CommitFact>+truncated**：cache miss 取+缓存+发；**cache hit 用缓存幂等再发、零 gh**
+  （镜像 BranchObserved 每轮再发）；compute_merge 返 (CompareFact, Vec<CommitFact>, truncated)。
+- 默认分支：一次 commits?sha=default&per_page=30、按 default_sha memoize、发主干脊柱。
+- CommitObserved payload：project_id/commit_sha/parent_shas/branch_ref/author/ts/summary/provenance(+truncated)；
+  trust_state=observed_unsigned、source=github；**无 merged/green/verified**。
+- 截断诚实：commits.len()>=250 → 标 truncated、只发已得、**绝不补造**（branch_poller.rs:417-426,604-626 核实）。
+- 无 CommitRemoved（commit append-only）。events.rs +EventKind::CommitObserved；contract kind 枚举 +CommitObserved（additive）；
+  Events.swift +case commitObserved（**不 fold**，apply default break）。
+- fixture commit_observed.jsonl：9 行 seq 0-8 单调、event_id 唯一、含 truncated 行、全行无 merged/green。
+
+## 验证
+shipgate p1 16/16 PASS（见下）。Haiku 独立审计 7/7 CONFIRM。Opus diff 复核诚实律（截断不补造、payload 无假绿）通过。
+**cache-hit 两轮 poll 测有 teeth**：cache_hit_reemits_commits_without_extra_gh_call —— gh.calls==1 after 2 polls
+∧ commits 集逐一相同（堵 never-exercised-path 假绿；对抗复核 wf_913b000f 揪出的设计洞已实测修复）。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

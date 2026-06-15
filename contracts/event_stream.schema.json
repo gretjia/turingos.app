@@ -33,11 +33,14 @@
         "RatificationSigned",
         "RatificationTagCreated",
         "MarketTxObserved",
-        "ReconciliationCompleted"
+        "ReconciliationCompleted",
+        "BranchObserved",
+        "BranchRemoved",
+        "CommitObserved"
       ]
     },
     "source": {
-      "enum": ["git", "fsevents", "claude_hook", "codex_appserver", "human", "daemon", "fixture"]
+      "enum": ["git", "fsevents", "claude_hook", "codex_appserver", "human", "daemon", "fixture", "github"]
     },
     "trust_state": {
       "enum": [

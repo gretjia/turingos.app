@@ -88,6 +88,9 @@ pub enum EventKind {
     RatificationTagCreated,
     MarketTxObserved,
     ReconciliationCompleted,
+    BranchObserved,
+    BranchRemoved,
+    CommitObserved,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -100,6 +103,7 @@ pub enum EventSource {
     Human,
     Daemon,
     Fixture,
+    Github,
 }
 
 /// ActorTrustState - the single trust vocabulary (docs/TRUST_STATES.md).

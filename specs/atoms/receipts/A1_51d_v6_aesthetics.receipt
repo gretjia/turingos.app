@@ -1,0 +1,47 @@
+---
+atom: A1_51d_v6_aesthetics
+timestamp_utc: 2026-06-14T17:04:46Z
+git_head: 622c81ca134d168acda9bb46e0b11553b21ed34c
+implementer: claude-opus-4-8 (Sonnet impl agent + Haiku audit 8/8 CONFIRM + Opus 主环 ground-truth)
+---
+
+# A1_51d — V6 美学落位（字体/玻璃/星云/幽灵字/边缘渐隐）
+
+## 交付
+- **字体真打包+真注册**：Inter[opsz,wght].ttf + JetBrainsMono[wght].ttf（**变量字体**——M5 偏差：OFL 镜像只有变量、
+  无静态分重；变量字体注册正常、weight 经 Font.custom(family).weight() 实例解析，已 fc-scan+name-table 核 family 名
+  "Inter"/"JetBrains Mono"）+ 两 OFL.txt 入 Resources/Fonts/。Package.swift resources:[.copy("Resources/Fonts")]；
+  registerBundledFonts() 自由函数(Bundle.module，CTFontManagerRegisterFontsForURL .process)由 App.init + TypographyTests
+  双调；**Bundle.module 在 swift test 下真解析成功**（无需 Bundle(for:) fallback）；build_app.sh test -d 守卫 + cp -R bundle
+  进 Contents/Resources；MIN_TESTS 302→304。TypographyTests 先断 register()==true 再断 NSFont(name:)!=nil（真注册 teeth）。
+- **手工玻璃**：RadarNodeCard 用 glassBase 填 + glassBorder 描边 + outerShadow + insetGlow 顶渐变 + cornerRadius 16；
+  无 .ultraThinMaterial/.glassEffect（grep 0）；正向耦合（节点卡引用每个配方常量符号）。
+- **星云+幽灵字**(GalaxyStaticLayer.swift 新，静态层)：8 停止点缓出径向渐变星云 + 巨型幽灵项目名(accent.opacity 0.03)；
+  身份色**只经 Tokens.Accent.color(forProjectId:)**(零内联 Color 字面量 teeth)。
+- **三层分区 + 零 .blur**：静态层(GalaxyStaticLayer) ∥ 动画轴扫+源色贝塞尔 DAG 边(fork/parent 中性、conflict 黄) ∥ Metal 节点点；
+  星网边缘径向 alpha 渐隐 mask。三文件 .blur 计数 = 0。
+- 诚实律：scene golden（p1_galaxy/p1_radar/a1_09）逐字节不变（美学不改 scene 派生）；branch/commit 节点 chrome 不引入新色（承 A1_51b 绿保留回归）。
+
+## 验证
+**主环 ground-truth shipgate p1 16/16 PASS（EXIT=0，见下）；.blur 计数 0；scene golden 逐字节不变（均主环 re-confirm）。**
+Haiku 审计 8/8 CONFIRM(全 16 门绿含 rust 13-15 + 字体真注册 teeth + 玻璃正向耦合 + 身份色 teeth + golden 不变)。
+345 测试执行。注：字体真渲染（粗细/字形）+ 玻璃/星云/幽灵字真观感待 Computer Use 真机驱动核实。
+
+## shipgate p1 输出（主环 ground-truth）
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

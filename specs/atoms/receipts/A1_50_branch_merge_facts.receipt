@@ -1,0 +1,62 @@
+---
+atom: A1_50_branch_merge_facts
+timestamp_utc: 2026-06-14T10:43:09Z
+git_head: f243d4ae717a07202581e0d16c358327a695a315
+implementer: claude-opus-4-8
+---
+
+# A1_50 — daemon 诚实分支关系观测（轨3：先把 Git 机制建实）
+
+## 范围（最终）
+daemon branch_poller 对每非默认分支算 `gh api compare/{default}...{branch}` →
+merge_status(ahead/behind/identical/diverged) / ahead / behind / merge_base + 中性派生
+contained_in_default(status≠Unknown ∧ ahead==0)。merged_into_default 恒 emit false。
+按 (branch_sha, default_sha) memoize；空 sha 或 Unknown 不缓存。app 的 BranchFact 已 fold
+merged_into_default（恒收 false、永不上绿），零 app 改动。
+
+## 关键事件：对抗复核推翻初版"PR 可证 merged-green"（本会话最重要的判断）
+初版尝试用「已合并 PR + mergeCommit 仍是 default 祖先」判 merged-green，过了 16 门 +
+单测 + live seam 验证。但对抗复核 workflow(wf_ee716a30) Critic×3+Witness **本地真跑 git** 实证
+3 条 constitutional 假绿，**不能 ship**：
+1. **revert**：`git revert` 加反向 commit、不删 mergeCommit → mergeCommit 仍是 default 祖先
+   (compare/{mc}...{default} behind==0)，内容已撤 → ancestry 判 merged = 假绿。
+   （前一轮调研 wf_eca86de5 误判"revert→behind>0"，被本地 git 验证纠正。）
+2. **同名重建 / force-push-after-merge**：PR 按 headRefName 匹配命中旧 PR，旧 mergeCommit 仍在
+   default → 给当前未合 tip 判绿。GitHub 不暴露"合并时刻 head SHA"，无法绑 current tip。
+3. **空 default_sha 缓存冻结**：>100 分支分页致 default 解析为空 → 缓存键判别力坍塌冻 stale 绿。
+根因：git 可达性 ≠ 内容存活；廉价 gh 信号无法 sound 证明 merged-and-live。
+**裁决（守宪法 绝不假绿）**：A1_50 砍掉 merged-green，只发 sound 观测 + contained(中性)；
+sound merged-green（内容/树级核验或人工确认）另立 A1_53。
+
+## 重设计后再验证
+- 移除 `gh pr list` + ancestry 探测 + merged_pr/merge_commit_in_default/merged_into_default 全部机制
+  （grep 断言无残留；merged_into_default 仅余 doc 注释 + 常量 false 字面量）。
+- 加固：空 sha / Unknown 结果不缓存（防 stale）；Unknown → contained_in_default=false（无观测不宣称）。
+- 聚焦对抗 Agent 重读简化代码：4 项(merged可emit真/contained诚实/缓存stale/panic)全 CLEAN。
+
+## 过闸记录（shipgate p1，16/16）
+[PASS] 1-12 (constitution/contracts/fixtures/projection/predicate/market/no-claude/ratification/determinism/hooks/slice/golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance) — branch_poller 12 测试全绿
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS
+
+## 真机复观（真 turingosv4 registry，daemon 真跑读 UDS）
+72 BranchObserved；merge_status 真实分布 diverged42/behind29/identical1；
+**merged_into_default==True 计数 = 0**（结构性零假绿）；
+contained_in_default 与 (ahead==0∧status≠unknown) **零不一致**；无 daemon 错误。
+样本：adversarial-task-a-new-gate diverged a3 b550 contained=F；audit-base behind a0 b194 contained=T。
+
+```json
+{
+  "scope": "daemon honest branch relationship observations only; merged-green dropped as unsound",
+  "emits": ["merge_status","ahead","behind","merge_base","contained_in_default","merged_into_default(const false)"],
+  "merged_green": "DEFERRED to A1_53 (cheap gh ancestry/PR cannot soundly prove merged-and-live; revert keeps mergeCommit reachable)",
+  "adversarial_review": "wf_ee716a30: 3 constitutional false-greens in v1 (revert / recreated-name / empty-default-sha cache) -> redesigned; re-review CLEAN",
+  "shipgate_p1": "PASS 16/16",
+  "real_machine": "72 turingosv4 branches, merged_into_default==true count = 0, contained==(ahead==0 && status!=unknown) zero mismatch",
+  "tests_added": "branch_poller 12 (parse_compare x5, contained incl unknown-guard, diff_removed, memoize, degenerate-key, unknown-not-cached, default-branch)",
+  "out_of_allowlist_needed": "none"
+}
+```

@@ -126,6 +126,74 @@ public struct MetaDrafting: Sendable {
         }
     }
 
+    // MARK: - Worktree-task proposal (A1_41: "与 Meta AI 沟通" step)
+
+    /// System prompt for the worktree-task proposal lane (proposal only).
+    static let worktreeSystemPrompt =
+        "你是 TuringOS 的 Meta AI。基于对该项目 git 的研究（当前分支、分支列表、近期提交、工作树状态），提议一个【小型、可测试、范围明确】的新 worktree 任务。给出：任务目标（一句话）、建议的基分支、建议的新分支名、为什么选这个。输出纯文本提议，用户自行采纳。不要输出 HTML 或代码。"
+
+    /// Send the read-only git research context + `userAsk` to the Meta model and
+    /// project a worktree-task PROPOSAL.
+    ///
+    /// RED LINE 4: proposal ONLY — writes nothing, executes nothing. RED LINE 1:
+    /// the model text lands ONLY in the summary_card body string.
+    /// FAILURE → deterministic "meta_unavailable" fallback document.
+    public func proposeWorktreeTask(
+        research: WorktreeResearchContext,
+        projectId: String,
+        userAsk: String
+    ) async -> ViewIRDocument {
+        guard let preset = DeepSeekPresets.config(for: .meta) else {
+            return Self.unavailableDocument(reason: "Meta 预设缺失")
+        }
+
+        let request = GatewayRequest(
+            role: .meta,
+            messages: [
+                GatewayMessage(role: .system, content: Self.worktreeSystemPrompt),
+                GatewayMessage(role: .user, content: Self.worktreeProposalMessage(
+                    research: research, projectId: projectId, userAsk: userAsk)),
+            ],
+            maxTokens: 4096,
+            thinkingMode: preset.thinking
+        )
+        let config = MetaAIConfig(
+            providerKind: .openaiCompatible,
+            endpointURL: preset.endpoint,
+            credentialScope: credentialScope,
+            displayName: "Meta AI (DeepSeek v4 Pro)"
+        )
+
+        do {
+            let response = try await gateway.send(request, config: config, model: preset.model)
+            return ViewIRDocument(
+                kind: "meta_worktree_proposal",
+                deriveSource: [
+                    "user_input",
+                    "git_research:\(projectId)",
+                    "model_call:meta:\(preset.model)",
+                ],
+                blocks: [.summaryCard(SummaryCardPayload(
+                    title: "Meta AI worktree 提议（提案，未执行）",
+                    body: response.finishReason == "length"
+                        ? response.content + "\n\n（注：回复因长度上限被截断）"
+                        : response.content
+                ))]
+            )
+        } catch let error as GatewayError {
+            return Self.unavailableDocument(reason: Self.fallbackReason(for: error))
+        } catch {
+            return Self.unavailableDocument(reason: "未知网关错误")
+        }
+    }
+
+    /// Serialize the git research + user ask as proposal context (deterministic).
+    static func worktreeProposalMessage(
+        research: WorktreeResearchContext, projectId: String, userAsk: String
+    ) -> String {
+        "\(WorktreeResearch.contextString(research, projectId: projectId))\n\n用户请求：\(userAsk)"
+    }
+
     // MARK: - Context serialization
 
     /// Serialize the answered wizard steps as drafting context: one

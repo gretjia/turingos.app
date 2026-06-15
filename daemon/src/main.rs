@@ -177,6 +177,21 @@ fn serve_registry(registry: std::path::PathBuf, socket: String) -> ExitCode {
             registry.display()
         );
 
+        // A1_47: registry-hub branch poller on its OWN slow-cadence thread —
+        // GitHub branches for every repo with a remote, never blocking the 2s
+        // reconcile tick. poll() is panic-free (visible eprintln on every
+        // failure), so a bare supervised loop suffices.
+        let poll_hub = hub.clone();
+        let poll_registry = registry.clone();
+        std::thread::spawn(move || {
+            let gh = turingosd::branch_poller::LiveGhClient;
+            let mut poller = turingosd::branch_poller::BranchPoller::new(&poll_registry);
+            loop {
+                poller.poll(&poll_hub, &gh);
+                std::thread::sleep(std::time::Duration::from_secs(300));
+            }
+        });
+
         let recon_hub = hub.clone();
         std::thread::spawn(move || loop {
             let hub = recon_hub.clone();
