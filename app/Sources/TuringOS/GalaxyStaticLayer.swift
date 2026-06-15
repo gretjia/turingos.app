@@ -22,9 +22,10 @@ struct GalaxyStaticLayer: View {
 
     var body: some View {
         Canvas { context, size in
-            for (row, project) in scene.projects.enumerated() {
-                drawNebula(context, project: project, row: row, size: size)
-                drawGhostLabel(context, project: project, row: row, size: size)
+            // A1_55: positions now derived from galaxyCenter (not lane-Y).
+            for project in scene.projects {
+                drawNebula(context, project: project, size: size)
+                drawGhostLabel(context, project: project, size: size)
             }
         }
     }
@@ -33,19 +34,15 @@ struct GalaxyStaticLayer: View {
 
     /// Emulates a 150px Gaussian blur via 8 eased radial stops.
     /// Color ONLY from Tokens.Accent.color(forProjectId:) — never inline hex.
+    /// A1_55: center is now RadarLayout.galaxyCenter (not lane-Y).
     private func drawNebula(
         _ context: GraphicsContext,
         project: RadarProject,
-        row: Int,
         size: CGSize
     ) {
-        // Project axis center in screen space (mirrors laneSpan anchor in RadarViews).
-        let y = RadarLayout.topMargin + CGFloat(row) * RadarLayout.laneHeight
-        let xs = project.nodeIds.compactMap { scene.positions[$0]?.x }
-        let midWorldX = xs.isEmpty
-            ? RadarLayout.anchorX
-            : (xs.min()! + xs.max()!) / 2
-        let screenCenter = camera.toScreen(CGPoint(x: midWorldX, y: y))
+        // A1_55: anchor to galaxy center (coupled to node positions, not lane-Y).
+        let worldCenter = RadarLayout.galaxyCenter(projectId: project.id, in: scene)
+        let screenCenter = camera.toScreen(worldCenter)
         let center = CGPoint(x: screenCenter.x, y: screenCenter.y)
 
         // Base radius scales with zoom — stay visible at galaxy band.
@@ -85,18 +82,15 @@ struct GalaxyStaticLayer: View {
 
     /// Giant ghost project label — identity surface, color from Tokens.Accent only.
     /// Opacity 0.03 keeps it subliminal (the star field reads over it).
+    /// A1_55: anchored at galaxyCenter (not lane-Y).
     private func drawGhostLabel(
         _ context: GraphicsContext,
         project: RadarProject,
-        row: Int,
         size: CGSize
     ) {
-        let y = RadarLayout.topMargin + CGFloat(row) * RadarLayout.laneHeight
-        let xs = project.nodeIds.compactMap { scene.positions[$0]?.x }
-        let leftWorldX = xs.isEmpty
-            ? RadarLayout.anchorX - 200
-            : (xs.min() ?? RadarLayout.anchorX) - 200
-        let screenPt = camera.toScreen(CGPoint(x: leftWorldX, y: y))
+        // A1_55: anchor ghost label to galaxy center (same origin as nodes).
+        let worldCenter = RadarLayout.galaxyCenter(projectId: project.id, in: scene)
+        let screenPt = camera.toScreen(worldCenter)
 
         // Ghost label: accent color at 3% opacity — identity channel.
         // Scale proportional to camera zoom so it stays readable at galaxy band.
@@ -108,6 +102,6 @@ struct GalaxyStaticLayer: View {
                 .font(Tokens.Typography.ui(fontSize, weight: .bold))
                 .foregroundStyle(accent.opacity(0.03)),
             at: CGPoint(x: screenPt.x, y: screenPt.y - fontSize * 0.3),
-            anchor: .leading)
+            anchor: .center)
     }
 }

@@ -436,6 +436,150 @@ public func visibleA11yElements(
     return mirrors
 }
 
+// MARK: - RenderSet (LOD aggregation, A1_55)
+//
+// Pure functional gate that replaces the unconditional `for node in scene.nodes` loop.
+// GalaxyRenderer.buildInstances and RadarViews.nodeOverlay MUST consume this set
+// instead of iterating scene.nodes directly.
+//
+// Honesty law: all counts (branchCount/commitCount) are derived from scene.nodes —
+// never fabricated. Invariant: at galaxy/cluster band, expandedNodes is always empty.
+
+/// One coarse-band glyph per project. Rendered as a single large Metal instance;
+/// carries the honest branch/commit counts derived from actual scene nodes.
+public struct ProjectAggregate: Sendable {
+    /// Stable project identifier.
+    public let projectId: String
+    /// Galaxy center in world space (= RadarLayout.galaxyCenter(projectId, in: scene)).
+    /// All visual elements (label, nebula, branch-ring) anchor here.
+    public let center: CGPoint
+    /// Count of branch-kind nodes for this project (scene-derived, never fabricated).
+    public let branchCount: Int
+    /// Count of commit-kind nodes for this project (scene-derived, never fabricated).
+    public let commitCount: Int
+
+    public init(projectId: String, center: CGPoint, branchCount: Int, commitCount: Int) {
+        self.projectId = projectId
+        self.center = center
+        self.branchCount = branchCount
+        self.commitCount = commitCount
+    }
+}
+
+/// One item in the band-aware render set.
+public enum RenderSetItem: Sendable {
+    /// Coarse: one glyph representing the whole project (galaxy/cluster band).
+    case aggregate(ProjectAggregate)
+    /// Fine: an individual node that is currently expanded (node/detail band).
+    case node(RadarNode)
+}
+
+/// The LOD-selected set of what GalaxyRenderer and RadarViews must render this frame.
+///
+/// Invariants (verifiable, pinned by integration tests):
+/// - galaxy/cluster band: expandedNodes.count == 0, aggregates.count == scene.projects.count
+/// - node/detail band: projects whose galaxyCenter is in the expanded viewport are
+///   flattened to their individual nodes; others remain aggregates.
+/// - edges: only between currently-expanded nodes (empty at galaxy/cluster band).
+public struct RenderSet: Sendable {
+    public let items: [RenderSetItem]
+    /// Edges connecting expanded nodes only.
+    public let edges: [RadarEdge]
+    /// Band at which this render set was computed.
+    public let band: RadarCamera.Band
+
+    public init(items: [RenderSetItem], edges: [RadarEdge], band: RadarCamera.Band) {
+        self.items = items
+        self.edges = edges
+        self.band = band
+    }
+
+    public var aggregates: [ProjectAggregate] {
+        items.compactMap { guard case .aggregate(let a) = $0 else { return nil }; return a }
+    }
+
+    public var expandedNodes: [RadarNode] {
+        items.compactMap { guard case .node(let n) = $0 else { return nil }; return n }
+    }
+}
+
+/// Extra world-space margin added around the viewport when checking if a project center
+/// is "in view" for the purpose of expanding it to individual nodes.
+/// Ensures expansion starts slightly before the center enters the viewport.
+private let renderSetExpansionMargin: CGFloat = 400
+
+/// Pure function: LOD-selected render set for the current camera and viewport.
+/// This is the mandatory gate replacing `for node in scene.nodes` everywhere.
+///
+/// - galaxy/cluster band → one `ProjectAggregate` per project, zero expanded nodes.
+/// - node/detail band    → projects whose galaxyCenter is inside the expanded viewport
+///   are flattened to their `[RadarNode]`; others remain aggregates.
+///
+/// Deterministic: same (scene, camera, viewport) → same RenderSet.
+/// Consumed by: GalaxyRenderer.buildInstances, RadarViews.nodeOverlay+projectLaneCanvas.
+public func renderSet(
+    scene: RadarScene,
+    camera: RadarCamera,
+    viewport: CGSize
+) -> RenderSet {
+    let band = camera.currentBand()
+    let wv = worldViewport(camera: camera, size: viewport)
+    // Slightly expanded viewport for expansion-trigger tests (smooth transitions).
+    let expandedWV = wv.insetBy(dx: -renderSetExpansionMargin, dy: -renderSetExpansionMargin)
+
+    var items: [RenderSetItem] = []
+    var expandedNodeIds: Set<String> = []
+
+    // Compute the deterministic spiral centers once (avoids O(n²) per frame).
+    let centers = RadarLayout.galaxyCenters(projectIds: scene.projects.map(\.id))
+
+    for project in scene.projects {
+        let center = centers[project.id] ?? .zero
+        let branchCount = scene.nodes.filter {
+            $0.projectId == project.id && $0.kind == .branch
+        }.count
+        let commitCount = scene.nodes.filter {
+            $0.projectId == project.id && $0.kind == .commit
+        }.count
+
+        // Only expand when the galaxy center is visible AND we are zoomed in enough.
+        let shouldExpand: Bool
+        switch band {
+        case .galaxy, .cluster:
+            shouldExpand = false
+        case .node, .detail:
+            shouldExpand = expandedWV.contains(center)
+        }
+
+        if shouldExpand {
+            for node in scene.nodes where node.projectId == project.id {
+                items.append(.node(node))
+                expandedNodeIds.insert(node.id)
+            }
+        } else {
+            items.append(.aggregate(ProjectAggregate(
+                projectId: project.id,
+                center: center,
+                branchCount: branchCount,
+                commitCount: commitCount
+            )))
+        }
+    }
+
+    // Edges are only meaningful between currently-expanded nodes.
+    let filteredEdges: [RadarEdge]
+    switch band {
+    case .galaxy, .cluster:
+        filteredEdges = []
+    case .node, .detail:
+        filteredEdges = scene.edges.filter {
+            expandedNodeIds.contains($0.from) && expandedNodeIds.contains($0.to)
+        }
+    }
+
+    return RenderSet(items: items, edges: filteredEdges, band: band)
+}
+
 // MARK: - Tile tree canonical dump (for golden test)
 
 /// Produce a deterministic text dump of a tile tree (BFS traversal).

@@ -390,6 +390,48 @@ public enum RadarLayout {
     /// Any two galaxy centers satisfy |a - b| >= MIN_GALAXY_GAP (asserted in tests).
     public static let MIN_GALAXY_GAP: CGFloat = 1800
 
+    /// A1_55: Deterministic Fermat-spiral placement of every project's galaxy
+    /// center, with MIN_GALAXY_GAP enforced between any two. Pure function of the
+    /// project-id set (sorted for stability) — NOT of observed node positions —
+    /// so a project's center is fixed the instant it appears in the registry,
+    /// before any branch is observed. Shared by positions() and galaxyCenter().
+    public static func galaxyCenters(projectIds: [String]) -> [String: CGPoint] {
+        var centers: [String: CGPoint] = [:]
+        var placedCenters: [CGPoint] = []
+        for pid in projectIds.sorted() {
+            let h = abs(Tokens.Accent.stableHash(pid))
+            // Search candidate spiral points until one satisfies the gap.
+            var candidate = CGPoint.zero
+            var k = 0
+            repeat {
+                // Fermat spiral: r = C*sqrt(n), angle = n * golden_angle
+                let n = Double(h % 97 + k * 97) // start at a hash-seeded offset
+                let r = MIN_GALAXY_GAP * CGFloat(sqrt(n) * 0.5 + 1.0)
+                let angle = Double(n) * 2.399963 // 137.508° golden angle in radians
+                candidate = CGPoint(x: r * CGFloat(cos(angle)), y: r * CGFloat(sin(angle)))
+                k += 1
+            } while placedCenters.contains(where: {
+                hypot($0.x - candidate.x, $0.y - candidate.y) < MIN_GALAXY_GAP
+            }) && k < 500
+            centers[pid] = candidate
+            placedCenters.append(candidate)
+        }
+        return centers
+    }
+
+    /// A1_55: Galaxy center for a project in world space.
+    /// The default-branch anchor node is positioned exactly at this point in
+    /// positions(); all visual elements (label, nebula, branch-ring, aggregate
+    /// glyph) anchor here. Returns the DETERMINISTIC spiral center — identical
+    /// whether or not the project's branches have streamed in — so unscanned /
+    /// remote-only repos never collapse onto the world origin and overlap.
+    public static func galaxyCenter(projectId: String, in scene: RadarScene) -> CGPoint {
+        let ids = scene.projects.map(\.id)
+        if let c = galaxyCenters(projectIds: ids)[projectId] { return c }
+        // projectId not in the project list (defensive): fall back to origin.
+        return .zero
+    }
+
     /// Base radius for the star system (branch orbit around anchor).
     private static let starBaseRadius: CGFloat = 380
     /// Radius added per commit divergence unit (ahead + behind).
@@ -414,30 +456,10 @@ public enum RadarLayout {
         var out: [String: CGPoint] = [:]
 
         // --- 1. Galaxy centers (spiral scatter, MIN_GALAXY_GAP enforced) ---
-        // We place centers by walking sorted project ids and finding the next
-        // point on a Fermat spiral that is >= MIN_GALAXY_GAP from all prior.
-        var centers: [String: CGPoint] = [:]
-        var placedCenters: [CGPoint] = []
-
-        let sortedProjectIds = projects.map(\.id).sorted()
-        for pid in sortedProjectIds {
-            let h = abs(Tokens.Accent.stableHash(pid))
-            // Search candidate spiral points until one satisfies the gap.
-            var candidate = CGPoint.zero
-            var k = 0
-            repeat {
-                // Fermat spiral: r = C*sqrt(n), angle = n * golden_angle
-                let n = Double(h % 97 + k * 97) // start at a hash-seeded offset
-                let r = MIN_GALAXY_GAP * CGFloat(sqrt(n) * 0.5 + 1.0)
-                let angle = Double(n) * 2.399963 // 137.508° golden angle in radians
-                candidate = CGPoint(x: r * CGFloat(cos(angle)), y: r * CGFloat(sin(angle)))
-                k += 1
-            } while placedCenters.contains(where: {
-                hypot($0.x - candidate.x, $0.y - candidate.y) < MIN_GALAXY_GAP
-            }) && k < 500
-            centers[pid] = candidate
-            placedCenters.append(candidate)
-        }
+        // Deterministic Fermat-spiral placement (shared with galaxyCenter so a
+        // project's center is identical whether or not its branches have been
+        // observed yet — no collapse to the origin for unscanned repos).
+        let centers = galaxyCenters(projectIds: projects.map(\.id))
 
         // --- 2. Worktree nodes (legacy horizontal layout within galaxy) ---
         // Worktrees are positioned relative to their galaxy center in the
@@ -684,6 +706,33 @@ public struct RadarCamera: Equatable, Sendable {
         return RadarCamera(x: cx, y: cy, logZoom: clampedLogZoom)
     }
 
+    /// A1_55: macro framing — a camera centered on the bounding-box centroid of
+    /// `centers` (the project galaxy-centers) and zoomed to fit them with margin.
+    /// The fixed origin default (x=0,y=0,z=0.25) parked world-origin at the
+    /// screen's top-left while the Fermat-spiral centers scatter around world
+    /// (0,0) out to several thousand units, so almost every aggregate fell
+    /// off-screen (real-machine symptom: "zoom-out is a mess / can't see them").
+    /// Clamped to stay strictly inside the galaxy/cluster band so the macro view
+    /// always renders aggregates, never an accidental node-band expansion.
+    /// Pure + deterministic (no clock/random) → testable.
+    public static func fittingGalaxy(centers: [CGPoint], viewport: CGSize) -> RadarCamera {
+        guard !centers.isEmpty, viewport.width > 0, viewport.height > 0 else {
+            return RadarCamera()
+        }
+        let xs = centers.map(\.x), ys = centers.map(\.y)
+        let minX = xs.min()!, maxX = xs.max()!
+        let minY = ys.min()!, maxY = ys.max()!
+        let center = CGPoint(x: (minX + maxX) / 2, y: (minY + maxY) / 2)
+        // 1.35× padding so edge aggregates (and glyph radius) are not clipped.
+        let margin: CGFloat = 1.35
+        let spanX = max((maxX - minX) * margin, 1)
+        let spanY = max((maxY - minY) * margin, 1)
+        let fitZ = min(Double(viewport.width) / Double(spanX),
+                       Double(viewport.height) / Double(spanY))
+        let macroZ = min(fitZ, Tokens.Motion.ZBand.nodeThreshold * 0.8)
+        return .focusing(on: center, scale: CGFloat(macroZ), viewport: viewport)
+    }
+
     // MARK: - Log-space interpolation (pure, no clock/random)
 
     /// Linear interpolation in log2 space. Deterministic: same inputs → same output.
@@ -695,7 +744,7 @@ public struct RadarCamera: Equatable, Sendable {
 
     // MARK: - Z-band classification (A1_51a: defined; A1_51c+ consumes)
 
-    public enum Band: Equatable {
+    public enum Band: Equatable, Sendable {
         case galaxy, cluster, node, detail
     }
 

@@ -455,7 +455,102 @@ final class TileTreeTests: XCTestCase {
         }
     }
 
-    // MARK: - 9. Tile-tree golden (RADAR_GOLDEN_WRITE guard)
+    // MARK: - 9. A1_55 renderSet integration tests
+
+    /// A1_55 mandatory: at galaxy band the renderSet gate delivers exactly ONE aggregate per
+    /// project — NOT 72 individual branch nodes. This is the "LOD not wired" regression catch.
+    func testRenderSetIntegrationGalaxyBandOneAggregatePerProject() {
+        // Build a multi-project scene mimicking turingosv4: one project with 72 branch nodes.
+        var nodes: [RadarNode] = []
+        var positions: [String: CGPoint] = [:]
+        // Anchor branch node (isAnchor=true) sits at the spiral center.
+        let anchorId = "branch:v4:main"
+        nodes.append(RadarNode(
+            id: anchorId, projectId: "v4", title: "main", branch: "main", head: nil,
+            form: .quiet, kind: .branch, isAnchor: true, sameBranchConflict: false,
+            locked: false, detached: false, evidence: .object([:]),
+            ahead: 0, behind: 0, mergeStatus: "merged", containedInDefault: true, mergedIntoDefault: true
+        ))
+        positions[anchorId] = CGPoint(x: 0, y: 0) // galaxy center
+        // 71 additional branch nodes (non-anchor)
+        for i in 1..<72 {
+            let id = "branch:v4:feature\(i)"
+            nodes.append(RadarNode(
+                id: id, projectId: "v4", title: "feature\(i)", branch: "feature\(i)", head: nil,
+                form: .quiet, kind: .branch, isAnchor: false, sameBranchConflict: false,
+                locked: false, detached: false, evidence: .object([:]),
+                ahead: 0, behind: 0, mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false
+            ))
+            positions[id] = CGPoint(x: Double(i) * 50, y: Double(i % 10) * 50)
+        }
+        let project = RadarProject(id: "v4", path: "/v4", nodeIds: nodes.map(\.id))
+        let scene = RadarScene(projects: [project], nodes: nodes, edges: [], positions: positions)
+
+        // Galaxy-band camera: zoom far below cluster threshold.
+        let galaxyCamera = RadarCamera(x: 0, y: 0, logZoom: log2(0.01)) // z=0.01 << clusterThreshold=0.08
+        XCTAssertEqual(galaxyCamera.currentBand(), .galaxy, "test setup: camera must be at galaxy band")
+
+        let viewport = CGSize(width: 1920, height: 1080)
+        let rs = renderSet(scene: scene, camera: galaxyCamera, viewport: viewport)
+
+        // Core LOD predicate (Bug 1 regression): ONE aggregate for the project, not 72 nodes.
+        XCTAssertEqual(rs.band, .galaxy, "renderSet must report galaxy band")
+        XCTAssertEqual(rs.aggregates.count, 1,
+            "galaxy band must deliver exactly 1 ProjectAggregate (not individual nodes)")
+        XCTAssertEqual(rs.expandedNodes.count, 0,
+            "galaxy band must have ZERO expanded individual nodes")
+
+        // Aggregate must correctly report the actual branch count.
+        let agg = rs.aggregates[0]
+        XCTAssertEqual(agg.projectId, "v4")
+        XCTAssertEqual(agg.branchCount, 72,
+            "branchCount must match scene branch nodes (honesty law — never fabricated)")
+    }
+
+    /// A1_55: node-band camera centered on the project expands it to individual nodes.
+    func testRenderSetNodeBandExpandsInViewportProject() {
+        // Single-project scene. The anchor sits at the project's DETERMINISTIC
+        // spiral center (as positions() places it), with branches orbiting it —
+        // matching real scenes (galaxyCenter == spiral center, not the origin).
+        let center = RadarLayout.galaxyCenters(projectIds: ["np"])["np"]!
+        var nodes: [RadarNode] = []
+        var positions: [String: CGPoint] = [:]
+        let anchorId = "branch:np:main"
+        nodes.append(RadarNode(
+            id: anchorId, projectId: "np", title: "main", branch: "main", head: nil,
+            form: .quiet, kind: .branch, isAnchor: true, sameBranchConflict: false,
+            locked: false, detached: false, evidence: .object([:]),
+            ahead: 0, behind: 0, mergeStatus: "merged", containedInDefault: true, mergedIntoDefault: true
+        ))
+        positions[anchorId] = center
+        for i in 1..<10 {
+            let id = "branch:np:b\(i)"
+            nodes.append(RadarNode(
+                id: id, projectId: "np", title: "b\(i)", branch: "b\(i)", head: nil,
+                form: .quiet, kind: .branch, isAnchor: false, sameBranchConflict: false,
+                locked: false, detached: false, evidence: .object([:]),
+                ahead: 0, behind: 0, mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false
+            ))
+            positions[id] = CGPoint(x: center.x + Double(i) * 20, y: center.y)
+        }
+        let project = RadarProject(id: "np", path: "/np", nodeIds: nodes.map(\.id))
+        let scene = RadarScene(projects: [project], nodes: nodes, edges: [], positions: positions)
+
+        // Node-band camera centered ON THE PROJECT (its galaxy center), z=1.0.
+        let nodeCamera = RadarCamera.focusing(on: center, scale: 1.0, viewport: CGSize(width: 1920, height: 1080))
+        XCTAssertEqual(nodeCamera.currentBand(), .node, "test setup: camera must be at node band")
+
+        let viewport = CGSize(width: 1920, height: 1080)
+        let rs = renderSet(scene: scene, camera: nodeCamera, viewport: viewport)
+
+        XCTAssertEqual(rs.band, .node, "renderSet must report node band")
+        XCTAssertEqual(rs.aggregates.count, 0, "node band must have ZERO aggregates")
+        // All 10 branch nodes should be expanded (they're all near origin, well within viewport).
+        XCTAssertEqual(rs.expandedNodes.count, 10,
+            "node band: all 10 in-viewport branch nodes must be expanded")
+    }
+
+    // MARK: - 10. Tile-tree golden (RADAR_GOLDEN_WRITE guard)
 
     private static var snapshotsDir: URL {
         URL(fileURLWithPath: #filePath)

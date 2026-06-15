@@ -223,4 +223,203 @@ final class RadarLODTests: XCTestCase {
         XCTAssertEqual(bounds.size.width,  40, accuracy: 0.01)
         XCTAssertEqual(bounds.size.height, 40, accuracy: 0.01)
     }
+
+    // MARK: - A1_55 structural + honesty predicates
+
+    /// Grep predicate: GalaxyRenderer must not contain bare `for node in scene.nodes`
+    /// (the pre-A1_55 LOD bypass); must reference `renderSet` instead.
+    func testRenderSetGrepGalaxyRendererNotRaw() throws {
+        let fileURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()   // TuringOSTests
+            .deletingLastPathComponent()   // Tests
+            .deletingLastPathComponent()   // app
+            .appendingPathComponent("Sources/TuringOS/GalaxyRenderer.swift")
+        let src = try String(contentsOf: fileURL, encoding: .utf8)
+        XCTAssertFalse(
+            src.contains("for node in scene.nodes"),
+            "GalaxyRenderer must NOT iterate raw scene.nodes (LOD bypass — use renderSet instead)")
+        XCTAssertTrue(
+            src.contains("renderSet("),
+            "GalaxyRenderer must call renderSet() (A1_55 LOD wiring)")
+    }
+
+    /// Grep predicate: RadarViews must not contain bare `ForEach(scene.nodes)` (double-render bug).
+    func testRenderSetGrepRadarViewsNotRaw() throws {
+        let fileURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/TuringOS/RadarViews.swift")
+        let src = try String(contentsOf: fileURL, encoding: .utf8)
+        XCTAssertFalse(
+            src.contains("ForEach(scene.nodes)"),
+            "RadarViews must NOT ForEach(scene.nodes) unconditionally (double-render bug — use renderSet)")
+        XCTAssertTrue(
+            src.contains("renderSet("),
+            "RadarViews must call renderSet() (A1_55 LOD wiring)")
+    }
+
+    /// Position coupling: GalaxyStaticLayer must not reference lane-Y (topMargin/laneHeight).
+    func testPositionCouplingGalaxyStaticLayerNoLaneY() throws {
+        let fileURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/TuringOS/GalaxyStaticLayer.swift")
+        let src = try String(contentsOf: fileURL, encoding: .utf8)
+        XCTAssertFalse(
+            src.contains("topMargin"),
+            "GalaxyStaticLayer must not reference topMargin (position-decoupled Bug 2 — use galaxyCenter)")
+        XCTAssertFalse(
+            src.contains("laneHeight"),
+            "GalaxyStaticLayer must not reference laneHeight (position-decoupled Bug 2 — use galaxyCenter)")
+        XCTAssertTrue(
+            src.contains("galaxyCenter"),
+            "GalaxyStaticLayer must anchor to RadarLayout.galaxyCenter (A1_55 position coupling)")
+    }
+
+    /// A1_55 no double-render: galaxy band produces ZERO expandedNodes (no SwiftUI node cards).
+    func testNoDoubleRenderGalaxyBand() {
+        let scene = RadarLODTests.makeMultiProjectScene(projectCount: 3, branchesPerProject: 5)
+        let galaxyCam = RadarCamera(x: 0, y: 0, logZoom: log2(0.01))
+        XCTAssertEqual(galaxyCam.currentBand(), .galaxy)
+        let rs = renderSet(scene: scene, camera: galaxyCam, viewport: CGSize(width: 1920, height: 1080))
+        XCTAssertEqual(rs.expandedNodes.count, 0,
+            "galaxy band: expandedNodes must be ZERO — no SwiftUI node cards drawn at this band")
+    }
+
+    /// A1_55 honesty: aggregate branchCount/commitCount must equal actual scene node counts.
+    /// Honesty law: no fabricated counts; branch/commit nodes never wear .green.
+    func testAggregateCountsHonest() {
+        let scene = RadarLODTests.makeMultiProjectScene(projectCount: 2, branchesPerProject: 4)
+        let galaxyCam = RadarCamera(x: 0, y: 0, logZoom: log2(0.01))
+        let rs = renderSet(scene: scene, camera: galaxyCam, viewport: CGSize(width: 1920, height: 1080))
+        XCTAssertEqual(rs.aggregates.count, 2, "2-project scene must yield 2 aggregates at galaxy band")
+        for agg in rs.aggregates {
+            let realBranchCount = scene.nodes.filter { $0.projectId == agg.projectId && $0.kind == .branch }.count
+            let realCommitCount = scene.nodes.filter { $0.projectId == agg.projectId && $0.kind == .commit }.count
+            XCTAssertEqual(agg.branchCount, realBranchCount,
+                "ProjectAggregate branchCount must equal actual scene branch count (honesty law)")
+            XCTAssertEqual(agg.commitCount, realCommitCount,
+                "ProjectAggregate commitCount must equal actual scene commit count (honesty law)")
+        }
+        // Honesty law: no branch or commit node carries mergeStatus = "merged" (none .green).
+        // Only worktree nodes may express merge facts; branch/commit nodes are structural.
+        // Aggregates never fabricate: branchCount > 0 means real branch nodes exist.
+        XCTAssertTrue(rs.aggregates.allSatisfy { $0.branchCount > 0 },
+            "All aggregates must report at least one branch node (honesty law: no empty fabrications)")
+    }
+
+    /// A1_55: the macro framing camera must put EVERY galaxy center on-screen and
+    /// stay in the galaxy/cluster band. This is the regression guard for the
+    /// real-machine bug where the fixed origin default left the galaxy off-screen
+    /// (Fermat centers scatter around world (0,0), including negative coords).
+    func testFittingGalaxyFramesAllCentersOnScreen() {
+        // Scattered centers around origin like the Fermat spiral — includes the
+        // negative quadrants the old fixed (0,0) default pushed off the top-left.
+        let centers = [
+            CGPoint(x: -4200, y: 3100), CGPoint(x: 5300, y: -2600),
+            CGPoint(x: 0, y: 0), CGPoint(x: -1800, y: -4400),
+            CGPoint(x: 6100, y: 5200), CGPoint(x: -6000, y: 700),
+            CGPoint(x: 2500, y: -5800),
+        ]
+        let viewport = CGSize(width: 1500, height: 976)
+        let cam = RadarCamera.fittingGalaxy(centers: centers, viewport: viewport)
+
+        // 1. Macro view stays in galaxy/cluster band (never node/detail expansion).
+        XCTAssertTrue(cam.currentBand() == .galaxy || cam.currentBand() == .cluster,
+            "fitted macro camera must be galaxy/cluster band, got \(cam.currentBand())")
+
+        // 2. EVERY center lands inside the viewport (the off-screen bug is fixed).
+        for c in centers {
+            let s = cam.toScreen(c)
+            XCTAssertTrue(
+                s.x >= 0 && s.x <= viewport.width && s.y >= 0 && s.y <= viewport.height,
+                "center \(c) must be on-screen after fitting; got screen \(s)")
+        }
+
+        // 3. The bounding-box centroid maps to the viewport center.
+        let bboxCenter = CGPoint(
+            x: (centers.map(\.x).min()! + centers.map(\.x).max()!) / 2,
+            y: (centers.map(\.y).min()! + centers.map(\.y).max()!) / 2)
+        let sc = cam.toScreen(bboxCenter)
+        XCTAssertEqual(sc.x, viewport.width / 2, accuracy: 1.0)
+        XCTAssertEqual(sc.y, viewport.height / 2, accuracy: 1.0)
+    }
+
+    /// A1_55: degenerate inputs fall back to the plain default (no crash, no NaN).
+    func testFittingGalaxyEmptyFallsBackToDefault() {
+        let cam = RadarCamera.fittingGalaxy(centers: [], viewport: CGSize(width: 1500, height: 976))
+        XCTAssertEqual(cam.x, 0)
+        XCTAssertEqual(cam.y, 0)
+    }
+
+    /// A1_55 predicate #3 (NUMERICAL position coupling, not just grep): every
+    /// project's render-set aggregate center == RadarLayout.galaxyCenter(project)
+    /// within ε. The label, nebula and branch-ring all anchor on galaxyCenter,
+    /// so pinning aggregate.center == galaxyCenter numerically proves they are
+    /// coupled to a single source of truth (no lane-Y / origin drift).
+    func testAggregateCenterEqualsGalaxyCenterNumerically() {
+        let scene = RadarLODTests.makeMultiProjectScene(projectCount: 12, branchesPerProject: 4)
+        let galaxyCam = RadarCamera(x: 0, y: 0, logZoom: log2(0.01)) // galaxy band
+        let rs = renderSet(scene: scene, camera: galaxyCam,
+                           viewport: CGSize(width: 1920, height: 1080))
+        XCTAssertEqual(rs.aggregates.count, scene.projects.count,
+            "one aggregate per project at galaxy band")
+        for agg in rs.aggregates {
+            let gc = RadarLayout.galaxyCenter(projectId: agg.projectId, in: scene)
+            XCTAssertEqual(agg.center.x, gc.x, accuracy: 0.001,
+                "aggregate center.x must equal galaxyCenter (coupling, predicate #3)")
+            XCTAssertEqual(agg.center.y, gc.y, accuracy: 0.001,
+                "aggregate center.y must equal galaxyCenter (coupling, predicate #3)")
+        }
+    }
+
+    // MARK: - Helpers for A1_55 tests
+
+    /// Build a deterministic multi-project scene for LOD predicate tests.
+    private static func makeMultiProjectScene(projectCount: Int, branchesPerProject: Int) -> RadarScene {
+        var nodes: [RadarNode] = []
+        var positions: [String: CGPoint] = [:]
+        var projects: [RadarProject] = []
+
+        for p in 0..<projectCount {
+            let pid = "proj\(p)"
+            var nodeIds: [String] = []
+            // Anchor branch node (isAnchor=true)
+            let anchorId = "branch:\(pid):main"
+            nodes.append(RadarNode(
+                id: anchorId, projectId: pid, title: "main", branch: "main", head: nil,
+                form: .quiet, kind: .branch, isAnchor: true, sameBranchConflict: false,
+                locked: false, detached: false, evidence: .object([:]),
+                ahead: 0, behind: 0, mergeStatus: "merged", containedInDefault: true, mergedIntoDefault: true
+            ))
+            positions[anchorId] = CGPoint(x: Double(p) * 2000, y: 0)
+            nodeIds.append(anchorId)
+            // Additional branch nodes
+            for b in 1..<branchesPerProject {
+                let bid = "branch:\(pid):feat\(b)"
+                nodes.append(RadarNode(
+                    id: bid, projectId: pid, title: "feat\(b)", branch: "feat\(b)", head: nil,
+                    form: .quiet, kind: .branch, isAnchor: false, sameBranchConflict: false,
+                    locked: false, detached: false, evidence: .object([:]),
+                    ahead: 0, behind: 0, mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false
+                ))
+                positions[bid] = CGPoint(x: Double(p) * 2000 + Double(b) * 50, y: 0)
+                nodeIds.append(bid)
+            }
+            // One commit node per project
+            let cid = "commit:\(pid):abc"
+            nodes.append(RadarNode(
+                id: cid, projectId: pid, title: "abc", branch: "main", head: "abc",
+                form: .quiet, kind: .commit, isAnchor: false, sameBranchConflict: false,
+                locked: false, detached: false, evidence: .object([:]),
+                ahead: 0, behind: 0, mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false
+            ))
+            positions[cid] = CGPoint(x: Double(p) * 2000, y: 300)
+            nodeIds.append(cid)
+            projects.append(RadarProject(id: pid, path: "/\(pid)", nodeIds: nodeIds))
+        }
+        return RadarScene(projects: projects, nodes: nodes, edges: [], positions: positions)
+    }
 }

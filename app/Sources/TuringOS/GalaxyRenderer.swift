@@ -180,39 +180,68 @@ extension GalaxyRenderer {
                 }
             }
 
-            // 2. Node dots (near and far).
-            for node in scene.nodes {
-                guard out.count < Tokens.LOD.instanceBatchSize else { break }
-                guard let worldPos = scene.positions[node.id] else { continue }
-                let screenPt = camera.toScreen(worldPos)
-                // Viewport cull (50pt margin).
-                if screenPt.x < -50 || screenPt.x > Double(viewportSize.width) + 50 { continue }
-                if screenPt.y < -50 || screenPt.y > Double(viewportSize.height) + 50 { continue }
+            // 2. LOD render set — routes through renderSet instead of scene.nodes (A1_55).
+            // GalaxyRenderer MUST NOT iterate scene.nodes unconditionally; all node
+            // instances are derived from the renderSet gate (galaxy/cluster → aggregates,
+            // node/detail → expanded nodes). This is the fix for the dead-code LOD bug.
+            let rs = renderSet(scene: scene, camera: camera, viewport: viewportSize)
 
-                let ndcX = Float(screenPt.x / viewW * 2.0 - 1.0)
-                let ndcY = Float(1.0 - screenPt.y / viewH * 2.0)
-
-                var r: Float = grayMul; var g = r; var b = r
-                var a: Float = node.isAnchor ? 0.9 : 0.45
-                if node.kind == .worktree, let sem = node.form.semantic {
-                    let h = sem.hex
-                    r = Float((h >> 16) & 0xFF) / 255.0 * grayMul
-                    g = Float((h >>  8) & 0xFF) / 255.0 * grayMul
-                    b = Float( h        & 0xFF) / 255.0 * grayMul
-                    a = 0.9
+            switch rs.band {
+            case .galaxy, .cluster:
+                // One aggregate glyph per project at its galaxy center.
+                // Size scales with branchCount so dense projects read as larger.
+                for agg in rs.aggregates {
+                    guard out.count < Tokens.LOD.instanceBatchSize else { break }
+                    let screenPt = camera.toScreen(agg.center)
+                    if screenPt.x < -100 || screenPt.x > viewW + 100 { continue }
+                    if screenPt.y < -100 || screenPt.y > viewH + 100 { continue }
+                    let ndcX = Float(screenPt.x / viewW * 2.0 - 1.0)
+                    let ndcY = Float(1.0 - screenPt.y / viewH * 2.0)
+                    // Glyph size: 20px base + up to 40px extra proportional to branchCount.
+                    let branchFactor = min(Double(agg.branchCount) / 20.0, 1.0)
+                    let dotPx = 20.0 + branchFactor * 40.0
+                    let size = Float(dotPx / viewW)
+                    // Accent color from the palette (same djb2 hash as Tokens.Accent).
+                    let palette = Tokens.Accent.palette
+                    let accentHex = palette[abs(Tokens.Accent.stableHash(agg.projectId)) % palette.count]
+                    let r = Float((accentHex >> 16) & 0xFF) / 255.0 * grayMul
+                    let g = Float((accentHex >>  8) & 0xFF) / 255.0 * grayMul
+                    let b = Float( accentHex         & 0xFF) / 255.0 * grayMul
+                    out.append(GalaxyInstanceData(
+                        centerX: ndcX, centerY: ndcY,
+                        colorR: r, colorG: g, colorB: b, colorA: 0.85,
+                        size: size, kind: 1))
                 }
-                let dotPx: Double = node.isAnchor ? 14.0 : 9.0
-                let size = Float(dotPx / viewW * camera.z.clamped(1.0, 4.0))
-                out.append(GalaxyInstanceData(
-                    centerX: ndcX, centerY: ndcY,
-                    colorR: r, colorG: g, colorB: b, colorA: a,
-                    size: size, kind: 1))
-            }
 
-            // 3. Edge midpoint quads (thin elongated) — only in node/detail band.
-            let band = camera.currentBand()
-            if band == .node || band == .detail {
-                for edge in scene.edges {
+            case .node, .detail:
+                // Expanded node dots (only the projects whose center is in-viewport).
+                for node in rs.expandedNodes {
+                    guard out.count < Tokens.LOD.instanceBatchSize else { break }
+                    guard let worldPos = scene.positions[node.id] else { continue }
+                    let screenPt = camera.toScreen(worldPos)
+                    if screenPt.x < -50 || screenPt.x > viewW + 50 { continue }
+                    if screenPt.y < -50 || screenPt.y > viewH + 50 { continue }
+                    let ndcX = Float(screenPt.x / viewW * 2.0 - 1.0)
+                    let ndcY = Float(1.0 - screenPt.y / viewH * 2.0)
+                    var r: Float = grayMul; var g = r; var b = r
+                    var a: Float = node.isAnchor ? 0.9 : 0.45
+                    if node.kind == .worktree, let sem = node.form.semantic {
+                        let h = sem.hex
+                        r = Float((h >> 16) & 0xFF) / 255.0 * grayMul
+                        g = Float((h >>  8) & 0xFF) / 255.0 * grayMul
+                        b = Float( h        & 0xFF) / 255.0 * grayMul
+                        a = 0.9
+                    }
+                    let dotPx: Double = node.isAnchor ? 14.0 : 9.0
+                    let size = Float(dotPx / viewW * camera.z.clamped(1.0, 4.0))
+                    out.append(GalaxyInstanceData(
+                        centerX: ndcX, centerY: ndcY,
+                        colorR: r, colorG: g, colorB: b, colorA: a,
+                        size: size, kind: 1))
+                }
+
+                // 3. Edge midpoint quads (thin elongated) — only in node/detail band.
+                for edge in rs.edges {
                     guard out.count + 1 < Tokens.LOD.instanceBatchSize else { break }
                     guard let fw = scene.positions[edge.from],
                           let tw = scene.positions[edge.to] else { continue }
