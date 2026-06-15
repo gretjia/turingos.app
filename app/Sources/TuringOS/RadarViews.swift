@@ -504,7 +504,13 @@ public struct RadarCanvasView: View {
                     onSelect: {
                         selectedNodeId = selectedNodeId == node.id ? nil : node.id
                     },
-                    onEvidence: { evidenceNode = node }
+                    onEvidence: { evidenceNode = node },
+                    onDismiss: {
+                        // A1_57: only clear if THIS node is still selected — guards
+                        // the tap-B-while-A-open ordering (A's popover dismissal must
+                        // not clobber a newer selection set by tapping B).
+                        if selectedNodeId == node.id { selectedNodeId = nil }
+                    }
                 )
                 .position(screenPosition(node.id, in: scene))
                 .gesture(nodeDrag(node.id))
@@ -558,6 +564,8 @@ struct RadarNodeCard: View {
     let live: Bool
     let onSelect: () -> Void
     let onEvidence: () -> Void
+    /// A1_57: deselect when the detail popover is dismissed (click-away / Esc).
+    let onDismiss: () -> Void
 
     private var chrome: Color {
         // A1_51b: branch/commit nodes use kind-based NEUTRAL chrome (never
@@ -571,25 +579,37 @@ struct RadarNodeCard: View {
     }
 
     var body: some View {
-        Group {
-            if !content.showsTitle {
-                farDot
-            } else {
-                card
+        chip
+            .onTapGesture(perform: onSelect)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(node.accessibilityLabel)
+            .accessibilityValue(content.accessibilityValue ?? "")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityActions {
+                // The drill-down must be REACHABLE for assistive tech (law 2),
+                // and only when it is actually offered - no phantom actions.
+                if content.showsEvidenceAction {
+                    Button("查看证据", action: onEvidence)
+                }
             }
-        }
-        .onTapGesture(perform: onSelect)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(node.accessibilityLabel)
-        .accessibilityValue(content.accessibilityValue ?? "")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityActions {
-            // The drill-down must be REACHABLE for assistive tech (law 2),
-            // and only when it is actually offered - no phantom actions.
-            if content.showsEvidenceAction {
-                Button("查看证据", action: onEvidence)
+            // A1_57: the detail lives in a self-sizing popover ANCHORED at the
+            // node — never an inline card stretched to canvas width (#5). The
+            // inline node stays a small fixed-size chip; selecting opens the
+            // popover; dismissing (click-away / Esc) deselects via onDismiss.
+            .popover(isPresented: detailPresented, arrowEdge: .top) {
+                detailPopover
             }
-        }
+    }
+
+    /// Present iff this node is selected AND near (showsTitle is false at far).
+    private var detailPresented: Binding<Bool> {
+        Binding(
+            get: { selected && content.showsTitle },
+            set: { if !$0 { onDismiss() } })
+    }
+
+    @ViewBuilder private var chip: some View {
+        if content.showsTitle { titleChip } else { farDot }
     }
 
     /// Far mode: a glow dot is the whole node (semantic zoom hide-list).
@@ -601,61 +621,44 @@ struct RadarNodeCard: View {
             .breathing(active: live && node.form == .active)
     }
 
-    // A1_51d: V6 deep-glass recipe (hand-rolled, no material blur).
+    // A1_51d/A1_57: V6 deep-glass recipe (hand-rolled, no material blur). The
+    // inline node is now a small FIXED-SIZE title chip — the detail rows moved
+    // to the popover, so `.position()` can never stretch it to canvas width (#5).
     // All glass constants live in Tokens.Space — grep must find each symbol here:
     // glassBase, glassBorder, glassCornerRadius, outerShadow, outerShadowRadius,
     // outerShadowY, insetGlowStart.
-    private var card: some View {
+    private var titleChip: some View {
         let r = Tokens.Space.glassCornerRadius
         let baseOpacity = node.form == .quiet && !node.isAnchor ? 0.6 : 1.0
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 7) {
-                Image(systemName: node.form.iconName)
-                    .font(.system(size: node.isAnchor ? 12 : 10))
-                    .foregroundStyle(chrome)
-                Text(node.title)
-                    .font(Tokens.Typography.mono(
-                        node.isAnchor ? 14 : 12,
-                        weight: node.isAnchor ? .bold : .medium))
-                    .foregroundStyle(Tokens.Text.primary)
-            }
-            if !content.detailRows.isEmpty {
-                Divider()
-                ForEach(content.detailRows, id: \.0) { row in
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(row.0)
-                            .font(Tokens.Typography.ui(10))
-                            .foregroundStyle(Tokens.Text.tertiary)
-                        Spacer(minLength: 12)
-                        Text(row.1)
-                            .font(Tokens.Typography.mono(10))
-                            .foregroundStyle(Tokens.Text.secondary)
-                    }
-                }
-            }
-            if content.showsEvidenceAction {
-                Button("查看证据", action: onEvidence)
-                    .buttonStyle(.plain)
-                    .font(Tokens.Typography.ui(11))
-                    .foregroundStyle(Tokens.Text.secondary)
-            }
+        return HStack(spacing: 7) {
+            Image(systemName: node.form.iconName)
+                .font(.system(size: node.isAnchor ? 12 : 10))
+                .foregroundStyle(chrome)
+            Text(node.title)
+                .font(Tokens.Typography.mono(
+                    node.isAnchor ? 14 : 12,
+                    weight: node.isAnchor ? .bold : .medium))
+                .foregroundStyle(Tokens.Text.primary)
+                .lineLimit(1)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
-        .frame(minWidth: selected ? 180 : 0, alignment: .leading)
+        // Size to content — the chip cannot be stretched by the parent proposal.
+        .fixedSize()
         // V6 glass fill (glassBase).
         .background(
             Tokens.Space.glassBase.opacity(baseOpacity),
             in: RoundedRectangle(cornerRadius: r))
-        // V6 chrome stroke (glassBorder) + source-color dash for orphan.
+        // V6 chrome stroke (glassBorder) + source-color dash for orphan; selected
+        // gets a slightly stronger ring so the open-popover anchor reads.
         .overlay(
             RoundedRectangle(cornerRadius: r)
                 .stroke(
                     Tokens.Space.glassBorder.opacity(
                         node.form == .conflict ? 0.8
-                            : node.isAnchor ? 0.5 : 0.3),
+                            : node.isAnchor ? 0.5 : (selected ? 0.6 : 0.3)),
                     style: StrokeStyle(
-                        lineWidth: node.isAnchor ? 1.5 : 1,
+                        lineWidth: node.isAnchor || selected ? 1.5 : 1,
                         dash: node.form == .orphan ? [4, 3] : []))
         )
         // V6 outer shadow (outerShadow / outerShadowRadius / outerShadowY).
@@ -687,6 +690,52 @@ struct RadarNodeCard: View {
             }
         }
         .breathing(active: live && node.form == .active && !selected)
+    }
+
+    // A1_57: bounded, self-sizing detail popover (Software-3.0 language-first —
+    // the kind-aware headline leads, then the fact rows). Fixed width so a long
+    // ref/sha wraps instead of stretching; floats above neighbours (no occlusion).
+    private var detailPopover: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 7) {
+                Image(systemName: node.form.iconName)
+                    .font(.system(size: 12))
+                    .foregroundStyle(chrome)
+                Text(node.title)
+                    .font(Tokens.Typography.mono(14, weight: .bold))
+                    .foregroundStyle(Tokens.Text.primary)
+            }
+            if let headline = content.headline {
+                Text(headline)
+                    .font(Tokens.Typography.ui(12, weight: .medium))
+                    .foregroundStyle(Tokens.Text.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if !content.detailRows.isEmpty {
+                Divider()
+                ForEach(content.detailRows, id: \.0) { row in
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(row.0)
+                            .font(Tokens.Typography.ui(10))
+                            .foregroundStyle(Tokens.Text.tertiary)
+                        Spacer(minLength: 12)
+                        Text(row.1)
+                            .font(Tokens.Typography.mono(10))
+                            .foregroundStyle(Tokens.Text.secondary)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+            }
+            if content.showsEvidenceAction {
+                Button("查看证据", action: onEvidence)
+                    .buttonStyle(.plain)
+                    .font(Tokens.Typography.ui(11))
+                    .foregroundStyle(Tokens.Text.secondary)
+            }
+        }
+        .padding(14)
+        .frame(width: 260, alignment: .leading)
+        .background(Tokens.Space.background)
     }
 }
 

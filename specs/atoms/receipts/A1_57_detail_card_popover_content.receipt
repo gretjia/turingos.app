@@ -1,0 +1,71 @@
+---
+atom: A1_57_detail_card_popover_content
+timestamp_utc: 2026-06-15T10:23:55Z
+git_head_base: 4baca3217166d70b58a9d3402d6efd143dbef7ad (off main, post A1_67+A1_68 merge)
+implementer: claude-opus-4-8 (真机反馈 #5 → 吸收 A1_57+A1_58 → Opus impl → 清洁视角对抗复核 agent a8229a07 SHIP → 真机 popover 截屏自验)
+---
+
+# A1_57（吸收 A1_58）— 节点细节卡:popover 不占满屏 + 按 kind 有意义内容（真机反馈 #5）
+
+## 交付
+真机反馈 #5(用户多次提出):点击最小节点弹出的细节卡**横跨整屏**,且内容(状态/分支/HEAD)**对人类无意义**。
+按用户「proceed to #5」作**一颗**完整修复(分开会留"popover 但内容仍无意义"的半修)。
+
+**根因(已读码实锤)**:
+- 占满屏:`RadarNodeCard` 经 `.position(screenPosition)` 渲染 → 提议全父宽;选中态 `card` 含贪婪
+  `Spacer(minLength:12)` + `.frame(minWidth: selected ? 180)` 无 maxWidth/无 `.fixedSize` → 撑满画布。
+- 内容无意义:`NodeCardContent.derive` 对所有 kind 派生同一套通用行,branch/commit 节点 form 硬编码 `.quiet`
+  → "状态" 恒显无意义的"安静";丢弃了 RadarNode 上已有的 ahead/behind/mergeStatus/containedInDefault。
+
+**修复**:
+- **宽度(原 A1_57)**:细节脱离 inline,改为锚定节点的**自尺寸 `.popover`**(isPresented = selected && 非 far;
+  关闭即 onDismiss)。inline 节点恒为小 `titleChip`(`.fixedSize()`,绝不撑宽)。popover `.frame(width:260)` 有界、
+  长值换行、浮于邻节点之上(不遮挡)。tap-B-while-A-open 排序加固:onDismiss 仅当 `selectedNodeId == node.id`
+  才清空(防 A 的关闭事件覆盖刚点的 B,清洁复核 a8229a07 揪出的非阻塞 nit)。
+- **内容(原 A1_58,Software 3.0 语言优先)**:`NodeCardContent` 加 `headline: String?`,`derive` 按 `node.kind`:
+  - branch:headline = 合并/机会框定(主干 / 已在主线可达(≠已并入内容)/ N 个 commit 待并入—未收割的机会 /
+    分叉中 / 与主线一致)+ 行 分歧 ↑a ↓b + HEAD。**绝不假绿、绝不声称 merged**(mergedIntoDefault 不读;
+    containedInDefault 仅可达性+免责)。
+  - commit:headline "提交节点" + commit(sha8)+ 所在分支。
+  - worktree:headline = form.label(对 worktree 有意义)+ 分支/HEAD/锁。
+
+## 验证
+- shipgate p1 **16/16 PASS**(两次:加 onDismiss 加固前 + 后;见 a157_shipgate2.log）。**golden 逐字节不变**
+  (NodeCardContent 是视图层、不入 canonicalDump;不新增 RadarNode 字段 → testSceneGoldenOverP1Fixture /
+  testSameLeadgeSameCanonicalDump 仍绿)。
+- **机械按 kind 测**:新增 testNodeCardContentIsKindSpecificAndHonest（branch ahead=3→"未收割的机会"且不含
+  "安静"、↑3 行;contained-in-default→"≠已并入内容"免责;default→主干;commit→sha8;worktree→form.label）;
+  更新 testDefaultNodeIsTitleAndGlowOnly(selected detail = headline||rows)+ testSelectedCardContentSpeaksDetailToAssistiveTech
+  (按 kind:worktree 含 form.label / branch 含 ↑或机会或主线 / commit 含 sha)。RadarModelTests 26/26 绿。
+- **清洁视角对抗复核(agent a8229a07)结论 SHIP**:宽度结构性修复(唯一 detail 渲染路径=260pt popover、chip
+  `.fixedSize()` 无贪婪 spacer);binding/dismiss 状态机连贯;诚实不变(无 merged/green、≠免责在);far/unselected/
+  a11y/V6-glass-grep 契约/测试迁移均无回归;golden/RadarNode schema 未碰。揪出 tap-ordering nit → 已加固。
+- **真机 UX 验证(我 computer-use,backing-store 直抓)**:点击(经临时诊断自选 branch 节点,因动态壁纸吃精确
+  点击)→ 细节是**锚定节点的有界 popover**(画布右下一个小框,远小于窗宽),branch 首行 "9 个 commit 待并入 —
+  未收割的机会" + 分歧 ↑9 ↓0 + HEAD 38ef4936 + 查看证据。证据 /tmp/galaxy_evidence/card_popover_context.png。
+  诊断块(onChange 自选)截屏后已删,提交源 = 16/16 绿态(git grep 无 DIAGNOSTIC 残留)。
+
+## 诚实交代(报忧)
+- 动态壁纸吃精确节点点击,故 popover 截屏经临时诊断自选 branch 节点驱动(同色块根因 bisection 技法);
+  诊断为 onChange 内 additive 块,截屏后即删,提交源逐字符 = 第二次 16/16 绿态。tap-B-while-A-open 加固为
+  correctness-by-construction(SwiftUI 交互排序难单测),已加 onDismiss 守卫。
+- 聚合光点 vs 标签轻微错位(Metal NDC vs SwiftUI screen 映射差)前置独立,归 A1_63/A1_65,非本卡。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS

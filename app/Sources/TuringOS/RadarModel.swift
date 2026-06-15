@@ -789,32 +789,86 @@ public struct RadarMood: Equatable, Sendable {
 /// only; detail rows exist solely in the selected state.
 public struct NodeCardContent: Equatable, Sendable {
     public let showsTitle: Bool
+    /// A1_57 (absorbs A1_58): Software-3.0 language-first lead sentence, kind-aware.
+    /// The card LEADS with what this node means (a sentence), not a generic
+    /// "状态: 安静" row — which was meaningless for branch/commit nodes (#5).
+    public let headline: String?
     public let detailRows: [(String, String)]
     public let showsEvidenceAction: Bool
 
     /// Assistive-tech mirror of the visible detail (S-stage blocker: the
-    /// drill-down must be REACHABLE, not just painted - law 2).
+    /// drill-down must be REACHABLE, not just painted - law 2). Includes the
+    /// headline so VoiceOver hears the lead sentence too.
     public var accessibilityValue: String? {
-        detailRows.isEmpty
-            ? nil
-            : detailRows.map { "\($0.0) \($0.1)" }.joined(separator: "，")
+        var parts: [String] = []
+        if let headline { parts.append(headline) }
+        parts.append(contentsOf: detailRows.map { "\($0.0) \($0.1)" })
+        return parts.isEmpty ? nil : parts.joined(separator: "，")
     }
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.showsTitle == rhs.showsTitle
+            && lhs.headline == rhs.headline
             && lhs.detailRows.elementsEqual(rhs.detailRows, by: ==)
             && lhs.showsEvidenceAction == rhs.showsEvidenceAction
     }
 
+    /// A1_57: far → glow only; unselected → title only; selected → KIND-SPECIFIC
+    /// meaningful content (branch merge/opportunity framing, commit identity,
+    /// worktree working-copy state). Replaces the old kind-blind generic rows.
     public static func derive(node: RadarNode, selected: Bool, far: Bool) -> NodeCardContent {
         if far {
-            return NodeCardContent(showsTitle: false, detailRows: [], showsEvidenceAction: false)
+            return NodeCardContent(showsTitle: false, headline: nil, detailRows: [], showsEvidenceAction: false)
         }
         guard selected else {
-            return NodeCardContent(showsTitle: true, detailRows: [], showsEvidenceAction: false)
+            return NodeCardContent(showsTitle: true, headline: nil, detailRows: [], showsEvidenceAction: false)
         }
+        switch node.kind {
+        case .branch: return deriveBranch(node)
+        case .commit: return deriveCommit(node)
+        case .worktree: return deriveWorktree(node)
+        }
+    }
+
+    /// Branch: merge / opportunity framing from OBSERVED facts only. Never asserts
+    /// "merged" and never green — mergedIntoDefault is daemon-hardcoded false, and
+    /// containedInDefault is mere reachability (≠ merged content, ADR-017 §C).
+    private static func deriveBranch(_ node: RadarNode) -> NodeCardContent {
+        let headline: String
+        if node.isAnchor {
+            headline = "主干 · 默认分支"
+        } else if node.containedInDefault {
+            headline = "已在主线可达（≠ 已并入内容）"
+        } else if node.ahead > 0, node.behind == 0 {
+            headline = "\(node.ahead) 个 commit 待并入 — 未收割的机会"
+        } else if node.ahead > 0, node.behind > 0 {
+            headline = "分叉中：领先 \(node.ahead) / 落后 \(node.behind)"
+        } else {
+            headline = "与主线一致"
+        }
+        var rows: [(String, String)] = [("分歧", "↑\(node.ahead)  ↓\(node.behind)")]
+        if let head = node.head, !head.isEmpty {
+            rows.append(("HEAD", String(head.prefix(8))))
+        }
+        return NodeCardContent(showsTitle: true, headline: headline, detailRows: rows, showsEvidenceAction: true)
+    }
+
+    /// Commit: identity — short sha + the branch it was observed on.
+    private static func deriveCommit(_ node: RadarNode) -> NodeCardContent {
         var rows: [(String, String)] = []
-        rows.append(("状态", node.form.label))
+        if let head = node.head, !head.isEmpty {
+            rows.append(("commit", String(head.prefix(8))))
+        }
+        if let branch = node.branch {
+            rows.append(("所在分支", String(branch.split(separator: "/").last ?? Substring(branch))))
+        }
+        return NodeCardContent(showsTitle: true, headline: "提交节点", detailRows: rows, showsEvidenceAction: true)
+    }
+
+    /// Worktree: the form label IS meaningful here (失败/冲突/孤儿/有未提交改动/安静),
+    /// so it leads; plus the working-copy facts (branch / HEAD / lock).
+    private static func deriveWorktree(_ node: RadarNode) -> NodeCardContent {
+        var rows: [(String, String)] = []
         if let branch = node.branch {
             rows.append(("分支", branch))
         } else if node.detached {
@@ -823,7 +877,7 @@ public struct NodeCardContent: Equatable, Sendable {
         if let head = node.head, !head.isEmpty {
             rows.append(("HEAD", String(head.prefix(8))))
         }
-        if node.locked { rows.append(("锁", "locked")) }
-        return NodeCardContent(showsTitle: true, detailRows: rows, showsEvidenceAction: true)
+        if node.locked { rows.append(("锁", "已锁定")) }
+        return NodeCardContent(showsTitle: true, headline: node.form.label, detailRows: rows, showsEvidenceAction: true)
     }
 }
