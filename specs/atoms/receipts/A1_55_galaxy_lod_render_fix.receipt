@@ -1,0 +1,62 @@
+---
+atom: A1_55_galaxy_lod_render_fix
+timestamp_utc: 2026-06-15T00:51:33Z
+git_head: cb47e42d7dc2a1bd39df72bd43eb48ef5941b9eb
+implementer: claude-opus-4-8 (real-machine computer-use diagnosis + Opus impl + adversarial pre-flight review wf_032eac53)
+---
+
+# A1_55 — galaxy 渲染根因修复（宏观取景相机 + 确定性螺旋中心；真机实证）
+
+## 交付
+真机驱动（computer-use + `screencapture -l`，锁屏期间走 backing-store 抓窗口）定位并修复 zoom-out
+「一团糟 / 看不见 / 节点浮空」的两个**代码根因**（非 cosmetics）：
+
+1. **默认/reset 相机没框住星系** → 画布近全黑。固定 `RadarCamera()`(x=0,y=0,z=0.25) 把世界原点
+   钉在屏幕左上角，而 Fermat 螺旋项目中心散布在世界原点周围数千单位 → 几乎所有聚合落屏幕外。
+   修复：`RadarCamera.fittingGalaxy(centers:viewport:)` 纯函数 —— 锚定项目中心包围盒质心 + 缩放
+   装下（1.35× margin），钳制在 galaxy/cluster 档；接进 onAppear/scene-stream/reset，
+   `hasUserMovedCamera` 守卫不抢用户视角。
+2. **未观测分支的项目全塌到世界原点**（`galaxyCenter` 回退 `.zero`）→ 中心一坨重叠标签。
+   修复：`RadarLayout.galaxyCenters(projectIds:)` 把 Fermat 螺旋放置抽成纯函数（与 `positions()`
+   逐字节一致 → golden 不变），`galaxyCenter` 改回确定性螺旋中心，与分支是否流入无关 →
+   每个项目一开机即有独立位置。`renderSet` 一次性预算 centers 避免 per-frame 重算。
+
+此外承接前序 A1_55 工作：LOD renderSet 真接进 GalaxyRenderer + RadarViews（杀死「裸 for node in
+scene.nodes」死代码）、label/nebula 耦合到 galaxyCenter（删 lane-Y）、galaxy 档零 SwiftUI 节点卡（无双重渲染）。
+
+## 验证
+- shipgate p1 16/16 PASS（见下）；测套含 LOD 集成测 + fittingGalaxy 在屏/空回退测 + **数值位置耦合测**
+  （aggregate.center == galaxyCenter，predicate #3）+ node-band 展开测 + v4 aggregate branchCount==72。
+- **真机已证 zoom-out**：干净铺开 ~20 个项目聚合，各带 `N 分支·M commit` 真计数（turingosv4 73 分支·239 commit）。
+  证据 /tmp/galaxy_evidence/fix_galaxy_v2.png。
+- **真机已证 zoom-in（用户亲眼）**：用户截屏显示缩进 turingosv4 后其分支节点（omega091-100-110-overlay /
+  main / commit 节点）展开可见 —— 即本卡 live-zoom-in 硬条件由架构师本人在真机见证满足。
+- 72 分支展开另有机械证（renderSet node-band 测）+ 离屏真数据渲染（v4_starsystem，72 分支铺成星系）。
+
+## 诚实交代（报忧）
+- 工作期间 Mac 锁屏休眠，computer-use 点击/scroll 不可用，**我本人未亲手驱动 live zoom-in**（zoom-out 我亲手证；
+  zoom-in 由用户真机见证 + 机械/离屏证）。
+- 对抗 pre-flight 复核（wf_032eac53）揪出并已修：throwaway 测 V4BranchVerify.swift 依赖本地 scratch 文件污染绿
+  → 移出树后重跑 shipgate 仍绿（可复现）；补数值耦合测；卡内「标签去杂」明确归 cosmetics 押后。
+- **cosmetics / 后续跟进**（不阻塞本卡功能修复）：标签轻微重叠去杂；星系内分支节点重叠（V4 11 对 minPairDist 0.5wu）；
+  相机 per-frame O(n²)/call 重算应 hoist；`galaxyCenters` k<500 gap 逃逸口（承 positions() 原逻辑）。
+- 收口经架构师授权（"先收口 A1_55"），上述 cosmetics 入后续 atom（A1_56+）。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS
