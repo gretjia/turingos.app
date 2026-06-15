@@ -1,0 +1,40 @@
+---
+atom: A1_71_galaxy_edge_line_render
+timestamp_utc: 2026-06-15T15:40:00Z
+git_head_base: a23368a293... (origin/main after A1_63a #53)
+implementer: claude-opus-4-8 (真机反馈灰色大矩形 → 读源根因实锤 edge-as-square → thin oriented line 修复 → shipgate 16/16)
+---
+
+# A1_71 — galaxy 边渲染:thin oriented line(修真机"灰色大矩形")
+
+## 交付
+真机反馈(zoom in turingos.app):galaxy 出现**半屏灰色大矩形**。问"bug 还是不同 build?"
+
+**先确认 build**:app(pid 70841,23:14 启)= 当前 dist(A1_63a gate 21:35 重建,A1_63a daemon-only 故 app 码=A1_70 不变),
+daemon = 新 resolution daemon(pid 79226)。**同一 build,非 mismatch**。扇形布局 = 预期(A1_63a 修的是数据层锚 main[已 socket 证],
+视觉 railroad 树是 A1_63b 未建)。
+
+**灰矩形根因(读源钉死)**:GalaxyRenderer 边(kind 2)`size: lenNDC * 0.5`(:288 旧),而 vertex shader 把**每个**实例
+当**轴对齐正方形**画(`pos=center+localPos*s`,:54 旧,完全忽略 kind)。注释自称"thin elongated"但从未实现。
+故长边 → 边长那么大的灰色正方形(clamp 0.6 NDC=半屏)。A1_68 修 stride 后此潜伏 bug 忠实渲染 → 用户现在看到。**与 A1_63a 无关**。
+
+**修复(proper thin oriented line,零丢弃,A1_63b railroad 边复用)**:
+- GalaxyInstanceData 加 `halfVec: SIMD2<Float>`(线=半边向量 NDC,node=(0,0))——**恰落原 40-48 padding,stride 仍 48**
+  (A1_68 layout 不变,仅加 offset 断言)。MSL InstanceData 同加 `float2 half_vec;`。
+- shader:`length(half_vec)>1e-6` → 画沿边定向细矩形(localPos.x×halfVec 跨全边,localPos.y×perp×s=厚度);否则维持 node 正方形。
+- 抽纯静态工厂 `GalaxyInstanceData.edge(fromScreen,toScreen,viewW,viewH,gray,alpha)`(center=中点 NDC、halfVec=半边向量、size=细常量 0.002、kind=2);buildInstances 边循环调用之。node/nebula 构造经 halfVec 默认值 (0,0) 零改。
+
+## 验证
+- **shipgate p1 16/16 PASS**(a171_shipgate.log;gate 12 golden 逐字节不变 → GPU 实例不入 canonicalDump;gate 16 app lane 绿)。app 364 测。
+- **布局断言(A1_68 续)**:testGalaxyInstanceDataMatchesMSLLayout —— stride 仍 ==48,offset center0/color16/size32/kind36 不变 + **halfVec@40**;防 A1_68-class Swift↔MSL desync 复发。
+- **边=线非方块(机械)**:testEdgeInstanceIsThinOrientedLine —— 长边(100,100)→(900,700)经 .edge() → halfVec==半边向量(非零,机械核对 x/y)、size<0.01(细厚度,**非 lenNDC*0.5**)、kind==2、center==中点。
+- 无回归:swift build+test 绿;node/nebula halfVec=(0,0) → shader 走原正方形分支不变;clamp(size,0,0.6) 保留。
+
+## 诚实交代(报忧 / 残留)
+- **灰矩形消失的 live 像素截屏未由我拿到**:app 窗口 Space 漂移 + SCContentFilter 环境墙([[reference_locked_mac_live_verify]]/[[reference_computer_use_coordinate_workaround]]),非代码。
+  代偿:① 根因精确钉死(edge size=lenNDC*0.5 + shader 画正方形);② 修复 correct-by-construction(halfVec 非零 → shader 画定向细线,长边不再产大 size);
+  ③ edgeInstance 机械测证 size 细常量非 lenNDC*0.5;④ 布局测证无 desync。gate 已重建 dist;**用户重开 galaxy zoom in turingos.app 即见灰矩形消失、边为细线**(用户先前能交互截屏,交互态正常,仅 headless computer-use 撞墙)。
+- **扇形布局仍在**:A1_63a 修数据锚(main),本原子修边渲染(线非方块),**视觉 railroad 树是 A1_63b**(OID scene+topo lanes+first-parent 脊柱+merge_base 边)——下一颗 marquee。本原子的 oriented-line 原语 A1_63b 复用。
+
+## shipgate p1 输出
+[PASS] 1-16 全绿(见 a171_shipgate.log);SHIPGATE p1: PASS。golden 不变。

@@ -19,9 +19,11 @@ final class RadarLODTests: XCTestCase {
 
     /// The Swift instance struct MUST match the MSL `InstanceData` byte layout
     /// (float2 center @0, float4 color @16 [16-byte aligned], float size @32,
-    /// uint kind @36, stride 48). A mismatch desyncs the instance buffer so the
-    /// shader reads `inst.size` from a neighbor's bytes → screen-filling quads
-    /// (the blue/magenta color-block bug). This pins the contract mechanically.
+    /// uint kind @36, float2 half_vec @40, stride 48). A mismatch desyncs the
+    /// instance buffer so the shader reads `inst.size` from a neighbor's bytes →
+    /// screen-filling quads (the blue/magenta color-block bug). This pins the
+    /// contract mechanically. A1_71: half_vec fills the former 40-48 padding, so
+    /// the stride is UNCHANGED at 48.
     func testGalaxyInstanceDataMatchesMSLLayout() {
         XCTAssertEqual(
             MemoryLayout<GalaxyInstanceData>.stride, 48,
@@ -32,6 +34,32 @@ final class RadarLODTests: XCTestCase {
             "float4 color must be 16-byte aligned to match MSL (the A1_68 desync was here)")
         XCTAssertEqual(MemoryLayout<GalaxyInstanceData>.offset(of: \.size), 32)
         XCTAssertEqual(MemoryLayout<GalaxyInstanceData>.offset(of: \.kind), 36)
+        XCTAssertEqual(
+            MemoryLayout<GalaxyInstanceData>.offset(of: \.halfVec), 40,
+            "A1_71: half_vec must sit at 40 (the former tail padding) to match MSL float2 half_vec")
+    }
+
+    /// A1_71: an edge instance must be a thin ORIENTED line, never a square sized
+    /// to the edge length (the gray-rectangle bug). The geometry: center at the
+    /// NDC midpoint, halfVec = half the edge vector (so center±halfVec are the
+    /// endpoints), size a small constant half-thickness.
+    func testEdgeInstanceIsThinOrientedLine() {
+        // A long edge across most of a 1000x800 viewport.
+        let inst = GalaxyInstanceData.edge(
+            fromScreen: CGPoint(x: 100, y: 100), toScreen: CGPoint(x: 900, y: 700),
+            viewW: 1000, viewH: 800, gray: 1.0, alpha: 0.18)
+        XCTAssertEqual(inst.kind, 2)
+        // size is a small constant thickness — NOT the edge length (~1.0+ NDC).
+        XCTAssertLessThan(inst.size, 0.01, "edge thickness must be thin, not the edge length")
+        // halfVec = half the edge vector in NDC (non-zero → shader draws a line).
+        let expHalfX = Float((900.0 / 1000.0 * 2 - 1) - (100.0 / 1000.0 * 2 - 1)) * 0.5
+        let expHalfY = Float((1 - 700.0 / 800.0 * 2) - (1 - 100.0 / 800.0 * 2)) * 0.5
+        XCTAssertEqual(inst.halfVec.x, expHalfX, accuracy: 1e-5)
+        XCTAssertEqual(inst.halfVec.y, expHalfY, accuracy: 1e-5)
+        XCTAssertGreaterThan(abs(inst.halfVec.x) + abs(inst.halfVec.y), 0.1,
+                             "a long edge must have a non-trivial halfVec (oriented line)")
+        // center is the NDC midpoint.
+        XCTAssertEqual(inst.center.x, Float((100.0 / 1000.0 * 2 - 1) + (900.0 / 1000.0 * 2 - 1)) * 0.5, accuracy: 1e-5)
     }
 
     // MARK: - 1. Metal fail-safe: Coordinator with nil device is safe
