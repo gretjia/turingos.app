@@ -18,11 +18,13 @@ import Foundation
 /// facts (message / author / date), never fabricated. Shown in the commit popover
 /// so the user can see what a commit actually did. View-layer only.
 public struct CommitMeta: Equatable, Sendable {
-    public let summary: String // full commit message (subject = first line)
+    public let summary: String // commit subject — first line of the message (git %s)
+    public let body: String // A1_70: commit message body (git %b); "" when none
     public let author: String
     public let ts: String // ISO-8601 author date
-    public init(summary: String, author: String, ts: String) {
+    public init(summary: String, body: String = "", author: String, ts: String) {
         self.summary = summary
+        self.body = body
         self.author = author
         self.ts = ts
     }
@@ -257,6 +259,7 @@ public struct RadarScene: Equatable, Sendable {
                 mergedIntoDefault: false,
                 commitMeta: CommitMeta(
                     summary: commitFact.summary,
+                    body: commitFact.body,
                     author: commitFact.author,
                     ts: commitFact.ts)
             ))
@@ -899,12 +902,13 @@ public struct NodeCardContent: Equatable, Sendable {
     /// did) leads; author/date answer who/when; sha/branch give identity. All
     /// fields are OBSERVED (CommitMeta folded from CommitFact), never fabricated.
     private static func deriveCommit(_ node: RadarNode) -> NodeCardContent {
-        let lines = (node.commitMeta?.summary ?? "")
-            .split(separator: "\n", omittingEmptySubsequences: false)
-        let subject = lines.first.map(String.init)?.trimmingCharacters(in: .whitespaces) ?? ""
+        // A1_70: subject and body are now distinct OBSERVED fields (the daemon
+        // carries git %s and %b separately), not a split of one `summary`. The
+        // subject leads; the body is the author's "说明", shown when present.
+        let subject = (node.commitMeta?.summary ?? "")
+            .trimmingCharacters(in: .whitespaces)
         let headline = subject.isEmpty ? "提交节点" : subject
-        // A1_69: the rest of the message (the commit "说明" / body), trimmed; nil if absent.
-        let bodyText = lines.dropFirst().joined(separator: "\n")
+        let bodyText = (node.commitMeta?.body ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let body: String? = bodyText.isEmpty ? nil : bodyText
         var rows: [(String, String)] = []
