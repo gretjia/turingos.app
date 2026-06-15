@@ -84,6 +84,176 @@ pub fn owner_repo(remote: &str) -> Option<(String, String)> {
     Some((owner.to_string(), repo.to_string()))
 }
 
+// ---------------------------------------------------------------------------
+// A1_62: canonical-main cascade (ADR-017). Observe the LOCAL trunk (never the
+// arbitrary local HEAD) and reconcile it against the GitHub remote default as
+// TWO independent observed facts; emit RefReconciliation. All shelling goes
+// through the GitRunner seam so the cascade is unit-tested without a real repo;
+// the pure parsers/relate are tested directly.
+// ---------------------------------------------------------------------------
+
+/// git invocation seam scoped to a repo path (LiveGitRunner shells real git;
+/// tests use a fake to exercise the local-trunk cascade without a real repo).
+pub trait GitRunner: Send + Sync {
+    fn run_in(&self, repo: &Path, args: &[&str]) -> Result<String, String>;
+}
+
+pub struct LiveGitRunner;
+
+impl GitRunner for LiveGitRunner {
+    fn run_in(&self, repo: &Path, args: &[&str]) -> Result<String, String> {
+        let out = Command::new("git")
+            .arg("-C")
+            .arg(repo)
+            .args(args)
+            .output()
+            .map_err(|e| format!("git spawn: {e}"))?;
+        if !out.status.success() {
+            return Err(format!(
+                "git -C exit {:?}: {}",
+                out.status.code(),
+                String::from_utf8_lossy(&out.stderr).trim()
+            ));
+        }
+        Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+    }
+}
+
+/// Where a trunk ref was observed (per-candidate provenance; distinct from the
+/// envelope source and from the existing payload `provenance` tag — ADR-017).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TrunkSource {
+    GithubApi,
+    LocalHeadCached,
+    RemoteSymrefLive,
+    LocalHeuristic,
+}
+
+pub fn trunk_source_str(s: TrunkSource) -> &'static str {
+    match s {
+        TrunkSource::GithubApi => "github_api",
+        TrunkSource::LocalHeadCached => "local_head_cached",
+        TrunkSource::RemoteSymrefLive => "remote_symref_live",
+        TrunkSource::LocalHeuristic => "local_heuristic",
+    }
+}
+
+/// One observed trunk candidate: a ref name + where it was observed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TrunkObservation {
+    pub git_ref: String,
+    pub source: TrunkSource,
+}
+
+/// The honest relation between the two trunk candidates — a PURE function of the
+/// observed (remote, local) tuple. A missing side is an explicit *_unobserved
+/// arm; the missing ref is NEVER inferred.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Relation {
+    Agree,
+    RefDiffers,
+    RemoteUnobserved,
+    LocalUnobserved,
+}
+
+pub fn relation_str(r: Relation) -> &'static str {
+    match r {
+        Relation::Agree => "agree",
+        Relation::RefDiffers => "ref_differs",
+        Relation::RemoteUnobserved => "remote_unobserved",
+        Relation::LocalUnobserved => "local_unobserved",
+    }
+}
+
+/// Pure: relate the two observed trunk refs. In poll() remote is always present
+/// (gh default succeeded before this point); local may be absent (no path).
+pub fn relate(remote: Option<&str>, local: Option<&str>) -> Relation {
+    match (remote, local) {
+        (Some(r), Some(l)) if r == l => Relation::Agree,
+        (Some(_), Some(_)) => Relation::RefDiffers,
+        (Some(_), None) => Relation::LocalUnobserved,
+        (None, _) => Relation::RemoteUnobserved,
+    }
+}
+
+/// Pure: parse `git symbolic-ref --short refs/remotes/origin/HEAD` output
+/// (e.g. "origin/main\n") -> "main". None for empty/unexpected.
+pub fn parse_symbolic_ref(output: &str) -> Option<String> {
+    let t = output.trim();
+    if t.is_empty() {
+        return None;
+    }
+    // "origin/main" -> "main": strip the leading remote-name segment.
+    let name = t.split_once('/').map_or(t, |(_, rest)| rest);
+    (!name.is_empty()).then(|| name.to_string())
+}
+
+/// Pure: parse `git ls-remote --symref origin HEAD`; first line is
+/// "ref: refs/heads/main\tHEAD" -> "main".
+pub fn parse_ls_remote_symref(output: &str) -> Option<String> {
+    for line in output.lines() {
+        if let Some(rest) = line.trim().strip_prefix("ref:") {
+            if let Some(first) = rest.split_whitespace().next() {
+                if let Some(name) = first.strip_prefix("refs/heads/") {
+                    if !name.is_empty() {
+                        return Some(name.to_string());
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Observe the LOCAL trunk via a sound cascade (never the arbitrary local HEAD).
+///
+/// Rungs, first hit wins: (1) cached `git symbolic-ref --short
+/// refs/remotes/origin/HEAD` (offline; may be stale); (2) live `git ls-remote
+/// --symref origin HEAD`; (3) existence heuristic — first of main/master/trunk/
+/// develop present as a local head. Returns None when none resolve (honestly
+/// unobserved — never guessed).
+pub fn observe_local_trunk(git: &dyn GitRunner, repo: &Path) -> Option<TrunkObservation> {
+    if let Ok(out) = git.run_in(
+        repo,
+        &["symbolic-ref", "--short", "refs/remotes/origin/HEAD"],
+    ) {
+        if let Some(name) = parse_symbolic_ref(&out) {
+            return Some(TrunkObservation {
+                git_ref: name,
+                source: TrunkSource::LocalHeadCached,
+            });
+        }
+    }
+    if let Ok(out) = git.run_in(repo, &["ls-remote", "--symref", "origin", "HEAD"]) {
+        if let Some(name) = parse_ls_remote_symref(&out) {
+            return Some(TrunkObservation {
+                git_ref: name,
+                source: TrunkSource::RemoteSymrefLive,
+            });
+        }
+    }
+    for cand in ["main", "master", "trunk", "develop"] {
+        if git
+            .run_in(
+                repo,
+                &[
+                    "show-ref",
+                    "--verify",
+                    "--quiet",
+                    &format!("refs/heads/{cand}"),
+                ],
+            )
+            .is_ok()
+        {
+            return Some(TrunkObservation {
+                git_ref: cand.to_string(),
+                source: TrunkSource::LocalHeuristic,
+            });
+        }
+    }
+    None
+}
+
 /// One branch as seen in the GitHub branch list (pure projection of the list JSON;
 /// merge facts are computed downstream via compare so the list parse stays trivial).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -444,7 +614,7 @@ impl BranchPoller {
 
     /// One poll cycle over every registry entry that has a remote. Panic-free by
     /// construction (every failure path is a visible eprintln, never an unwrap).
-    pub fn poll(&mut self, hub: &EventHub, gh: &dyn GhClient) {
+    pub fn poll(&mut self, hub: &EventHub, gh: &dyn GhClient, git: &dyn GitRunner) {
         let entries = match load_registry(&self.registry_path) {
             Ok(e) => e,
             Err(e) => {
@@ -473,6 +643,41 @@ impl BranchPoller {
                         continue;
                     }
                 };
+
+            // A1_62: observe the LOCAL trunk (honest cascade, never local HEAD)
+            // and reconcile it against the remote default as TWO independent
+            // observed facts. Emitted regardless of branch-list success below.
+            let observed_at = crate::snapshot::utc_now_iso();
+            let local_trunk = entry
+                .path
+                .as_deref()
+                .and_then(|p| observe_local_trunk(git, p));
+            let relation = relate(
+                Some(default_branch.as_str()),
+                local_trunk.as_ref().map(|t| t.git_ref.as_str()),
+            );
+            hub.publish(
+                EventKind::RefReconciliation,
+                EventSource::Daemon,
+                TrustState::ObservedUnsigned,
+                serde_json::json!({
+                    "project_id": entry.project_id,
+                    "remote_default": {
+                        "git_ref": default_branch,
+                        "source": trunk_source_str(TrunkSource::GithubApi),
+                        "observed_at": observed_at,
+                    },
+                    // null when the project has no local clone or none of the
+                    // cascade rungs resolve — honestly unobserved, never guessed.
+                    "local_trunk": local_trunk.as_ref().map(|t| serde_json::json!({
+                        "git_ref": t.git_ref,
+                        "source": trunk_source_str(t.source),
+                        "observed_at": observed_at,
+                    })),
+                    "relation": relation_str(relation),
+                }),
+            );
+
             // ?per_page=100 returns a single JSON array (no --paginate
             // concatenation); 100 covers every repo here (max=72).
             let branches_json =
@@ -590,6 +795,10 @@ impl BranchPoller {
                     // signal is not computable from cheap gh facts (see module doc).
                     // Emitted false so the app never greens; sound merged-green = A1_53.
                     "merged_into_default": false,
+                    // A1_62: when WE observed this branch (daemon poll time). The
+                    // honest basis for recency/age signals (consumed in A1_64);
+                    // before this field, any "age" was fabricated.
+                    "observed_at": observed_at,
                 });
                 hub.publish(
                     EventKind::BranchObserved,
@@ -1027,5 +1236,115 @@ mod tests {
             !s.contains("\"merged_into_default\""),
             "no merged_into_default"
         );
+    }
+
+    // ----- A1_62: canonical-main cascade -----
+
+    /// Scripted GitRunner: exercises the local-trunk cascade without a real repo.
+    struct FakeGit {
+        symbolic_ref: Result<String, String>,
+        ls_remote: Result<String, String>,
+        heads_present: Vec<&'static str>,
+    }
+    impl GitRunner for FakeGit {
+        fn run_in(&self, _repo: &Path, args: &[&str]) -> Result<String, String> {
+            match args {
+                ["symbolic-ref", ..] => self.symbolic_ref.clone(),
+                ["ls-remote", ..] => self.ls_remote.clone(),
+                ["show-ref", "--verify", "--quiet", r] => {
+                    if self.heads_present.iter().any(|h| r.ends_with(h)) {
+                        Ok(String::new())
+                    } else {
+                        Err("not found".into())
+                    }
+                }
+                _ => Err("unexpected git args".into()),
+            }
+        }
+    }
+
+    #[test]
+    fn relate_is_pure_observed_function_missing_side_never_inferred() {
+        assert_eq!(relate(Some("main"), Some("main")), Relation::Agree);
+        assert_eq!(
+            relate(Some("claude/brave"), Some("main")),
+            Relation::RefDiffers
+        );
+        assert_eq!(relate(Some("main"), None), Relation::LocalUnobserved);
+        assert_eq!(relate(None, Some("main")), Relation::RemoteUnobserved);
+        assert_eq!(relate(None, None), Relation::RemoteUnobserved);
+    }
+
+    #[test]
+    fn parse_symbolic_ref_strips_remote_segment() {
+        assert_eq!(parse_symbolic_ref("origin/main\n").as_deref(), Some("main"));
+        // a slash-bearing branch name keeps everything after the first segment
+        assert_eq!(
+            parse_symbolic_ref("origin/claude/brave-knuth-5uo3ce\n").as_deref(),
+            Some("claude/brave-knuth-5uo3ce")
+        );
+        assert_eq!(parse_symbolic_ref(""), None);
+        assert_eq!(parse_symbolic_ref("   \n"), None);
+    }
+
+    #[test]
+    fn parse_ls_remote_symref_extracts_head_branch() {
+        assert_eq!(
+            parse_ls_remote_symref("ref: refs/heads/main\tHEAD\nabc123\tHEAD\n").as_deref(),
+            Some("main")
+        );
+        assert_eq!(parse_ls_remote_symref("abc123\tHEAD\n"), None);
+        assert_eq!(parse_ls_remote_symref(""), None);
+    }
+
+    #[test]
+    fn observe_local_trunk_cascade_cached_then_live_then_heuristic_then_none() {
+        let repo = Path::new("/tmp/does-not-matter");
+        // rung 1: cached symbolic-ref wins.
+        let g1 = FakeGit {
+            symbolic_ref: Ok("origin/main\n".into()),
+            ls_remote: Err("x".into()),
+            heads_present: vec![],
+        };
+        assert_eq!(
+            observe_local_trunk(&g1, repo),
+            Some(TrunkObservation {
+                git_ref: "main".into(),
+                source: TrunkSource::LocalHeadCached
+            })
+        );
+        // rung 2: cached missing (exit128) -> live ls-remote.
+        let g2 = FakeGit {
+            symbolic_ref: Err("fatal: ref ... is not a symbolic ref".into()),
+            ls_remote: Ok("ref: refs/heads/dev\tHEAD\n".into()),
+            heads_present: vec![],
+        };
+        assert_eq!(
+            observe_local_trunk(&g2, repo),
+            Some(TrunkObservation {
+                git_ref: "dev".into(),
+                source: TrunkSource::RemoteSymrefLive
+            })
+        );
+        // rung 3: both fail -> existence heuristic (master present).
+        let g3 = FakeGit {
+            symbolic_ref: Err("x".into()),
+            ls_remote: Err("x".into()),
+            heads_present: vec!["master"],
+        };
+        assert_eq!(
+            observe_local_trunk(&g3, repo),
+            Some(TrunkObservation {
+                git_ref: "master".into(),
+                source: TrunkSource::LocalHeuristic
+            })
+        );
+        // none resolve -> honestly unobserved (never guessed).
+        let g4 = FakeGit {
+            symbolic_ref: Err("x".into()),
+            ls_remote: Err("x".into()),
+            heads_present: vec![],
+        };
+        assert_eq!(observe_local_trunk(&g4, repo), None);
     }
 }

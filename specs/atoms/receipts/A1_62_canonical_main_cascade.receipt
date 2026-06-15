@@ -1,0 +1,52 @@
+---
+atom: A1_62_canonical_main_cascade
+timestamp_utc: 2026-06-15T03:05:14Z
+git_head: 5b21163a6f0e3c910f701703ee66481c01a55d59
+implementer: claude-opus-4-8 (ADR-017 落点1; 调研 wf_3a765aaa + 对抗审查 wf_35cdeba3; 真机 daemon-replay 验证)
+---
+
+# A1_62 — canonical-main 级联 + RefReconciliation + observed_at/source（daemon 基座；ADR-017 落点1）
+
+## 交付
+修真机实证缺陷:今天 galaxy 主线 = `gh .default_branch` 字符串等值(无本地 trunk、无 observed_at、provenance 硬编码)。
+- **GitRunner 接缝 + 本地 trunk 诚实级联**(`observe_local_trunk`,纯解析+级联可单测):
+  rung1 `git symbolic-ref --short refs/remotes/origin/HEAD`(缓存,标 LocalHeadCached)→ rung2 `git ls-remote --symref origin HEAD`(活值,RemoteSymrefLive)→ rung3 main/master/trunk/develop 存在性启发(LocalHeuristic);**永不用任意 local HEAD**;均不解析则 None(诚实未观测)。
+- **新事件 `RefReconciliation`(契约加性:仅 kind 枚举 +1 值;payload 不受约束,无需改 source 枚举)**:
+  payload `{remote_default:{git_ref,source,observed_at}, local_trunk:{...}|null, relation}`;
+  `relate()` 纯函数 ∈ {agree, ref_differs, remote_unobserved, local_unobserved},缺失侧显式 *_unobserved、绝不推断。
+- **每 BranchObserved 加 `observed_at`**(daemon 观测时刻 = envelope ts;A1_64 recency 的诚实基础;此前"年龄"是虚构)。
+- **诚实律不变**:merged_into_default 恒 false(回归测在);contained 仅可达性;源不可达 → null+*_unobserved。
+- poll() 签名 +`git: &dyn GitRunner`;main.rs 注入 LiveGitRunner;Events.swift 加 case refReconciliation(解码不 fold)。
+
+## 验证
+- shipgate p1 16/16 PASS(见下;过门前须 pkill GUI app —— A1_56 自动重生 daemon 会与 app-lane 探针抢锁,已识别)。
+- daemon 单测 47 passed,含 4 新:relate 纯函数(4 组合 + 缺失侧不推断)/parse_symbolic_ref/parse_ls_remote_symref/observe_local_trunk 级联(cached→live→heuristic→None);fixtures_conform_to_envelope 现校验新 ref_reconciliation.jsonl。
+- **真机 daemon-replay 已证(2026-06-15,/tmp/galaxy_evidence/a162_replay*.jsonl)**:
+  - turingos_app → relation=`local_unobserved`(registry 无 local path → 本地诚实未观测、local=null、不猜测),remote=claude/brave-knuth-5uo3ce(github_api),observed_at 在。
+  - turingosv4 → relation=`agree`,remote=main(github_api) ∧ local=main(local_head_cached,级联 rung1 命中)。
+
+## 诚实交代（报忧）
+- **本卡级联 = remote-default vs local-origin/HEAD;实测二者一致(origin/HEAD 镜像远程 default),故 relation=agree/local_unobserved,非 ref_differs。**
+  用户关切的「designated default(turingos.app=claude/brave-knuth)≠ 实际存在的惯名 main」**不是 remote-vs-local 冲突**——它是 trunk-candidacy 信号(main 按名是候选但非 designated default),押 **A1_63**(本地全分支发现 + 多候选 trunk)。
+  **故本卡是诚实数据基座,尚非用户可见的 spine 修复**;galaxy 仍按 designated default 取脊柱(A1_64/65 渲染 + A1_63 候选才让"真 main"浮现)。
+- fixture 的 ref_differs 行 = 合法可能态示例(远程 default 改名而 origin/HEAD 未刷新),非 turingos.app 实况。
+- gate flake:A1_56 自动重生 daemon 与 app-lane 探针抢锁 → 跑门前 pkill GUI app + daemon + 删 lock。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS
