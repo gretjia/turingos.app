@@ -1,0 +1,65 @@
+---
+atom: A1_69_commit_detail_info
+timestamp_utc: 2026-06-15T10:55:26Z
+git_head_base: e81c35dea2700cb24bd2f420c3d758c2bea6ce51 (stacked on A1_57 branch / PR #50)
+implementer: claude-opus-4-8 (用户反馈 commit 基本信息 → 实证数据已观测 → Opus impl → 清洁视角对抗复核 agent acf22149 SHIP)
+---
+
+# A1_69 — commit 节点 popover 显示基本信息(message/作者/日期)+ popover 轻度视觉打磨
+
+## 交付
+用户反馈(细节卡 #5 续):commit popover 应显示 commit **基本信息**,让用户懂"这个 commit 是什么意思、发生了
+什么",理解项目全貌;颜色/字体轻度优化("如果有时间")。
+
+**根因(实证)**:数据**已观测**——`CommitFact` 已带 `summary`(message)/`author`/`ts`,daemon `CommitObserved`
+已 emit 三者(branch_poller.rs:765-770/817-822,gh 取 .commit.message + author.name/.date),app 端也已 decode
+进 CommitFact(AttentionModel.swift:234-236)。唯一缺口:`RadarScene.derive` 构造 commit 节点时**丢弃**了三者。
+→ 纯 app 侧、**全诚实**(已在 tape 的观测事实)。
+
+**修复**:
+- RadarModel:新增 `CommitMeta {summary, author, ts}`;RadarNode 加 `var commitMeta: CommitMeta? = nil`
+  (var+默认 → 既有 ~20 处 RadarNode 构造点零改动,仅 commit 节点 fold 自 CommitFact)。
+- `deriveCommit`:headline = commit message **首行(subject)** = "发生了什么"(语言优先);行 commit(sha8)+
+  作者 + 时间(ts 前10位=日期)+ 分支。subject 空 → 回退"提交节点"(诚实占位,非伪造)。
+- RadarViews `detailPopover` 轻度打磨:headline 升主色 ui13(语言优先引导句更醒目)、值字号 mono11、divider 描边、
+  查看证据 用项目 accent 着色(身份色非语义/信任,合 honesty)、padding16/width268、标题 lineLimit1+中截断。
+
+**诚实**:summary/author/ts 全是已观测 tape 事实;**commitMeta 不入 canonicalDump**(展示层,golden-free)。
+
+## 验证
+- shipgate p1 **16/16 PASS**(a169_shipgate.log;golden 逐字节不变——commitMeta 不入 canonicalDump,
+  testSceneGoldenOverP1Fixture/testSameLeadgeSameCanonicalDump 仍绿)。RadarModelTests **26/26**。
+- **机械按 kind 测**(testNodeCardContentIsKindSpecificAndHonest 扩充):commit **带 CommitMeta**(多行 summary)
+  → headline == message 首行 subject;行含 作者/时间(日期 yyyy-MM-dd);commit **无 meta** → 回退"提交节点"。
+- **清洁视角对抗复核(agent acf22149)结论 SHIP**:全诚实(三者皆观测、回退非伪造、accent 是身份色非语义、
+  ts 仅 prefix10 无 wall-clock);golden-free(canonicalDump 不碰 commitMeta);var 改动 correctness-safe
+  (Equatable 合成含 CommitMeta、Sendable 保持、无 immutability/hash 依赖);far/unselected/branch/worktree 无回归。
+
+## 诚实交代(报忧 / 残留)
+- **commit popover 的"专属"真机截屏本次未拿到**:诊断自选 commit 节点后,app 窗口又漂到非活跃 Space(缩成
+  146×148 缩略图)、computer-use 截图报 SCContentFilter 失败、screencapture -l 空帧——**环境性**(动态壁纸/Space
+  漂移,[[reference_computer_use_coordinate_workaround]]/[[reference_locked_mac_live_verify]]),非代码问题。
+  代偿证据:① commit popover 与 **branch popover 同一套 detailPopover 渲染机制**,后者已在 A1_57 真机截屏目视证实
+  (有界、锚定、内容正常,card_popover_context.png);② commit 内容机械测钉死(subject headline + 作者/日期行);
+  ③ 对抗复核 SHIP。故"渲染"经共享机制已证、"内容"经测已证;唯独 commit 专属 live 帧待环境恢复后补(用户也可
+  自行点一个 commit 节点目视)。
+- popover 视觉打磨属主观,走 RiskFinding(非 predicate);headline 主色 + 单个 accent 词不违"安静即成功"(复核确认)。
+
+## shipgate p1 输出
+[PASS] 1 constitution pin (sha256 matches PINS.toml)
+[PASS] 2 contracts+fixtures valid (structural-subset)
+[PASS] 3 projection requires derive_source/schema_version/rebuild_command
+[PASS] 4 predicate verdict enum == {PASS,FAIL}
+[PASS] 5 market claim guard (no unjustified performance claims)
+[PASS] 6 forbidden assertions absent; contracts beta-free
+[PASS] 7 repo law independent of Claude layer
+[PASS] 8 ratification payload: canonical fields + human-readable summary required
+[PASS] 9 fixture determinism (double-read sha256 + strict seq)
+[PASS] 10 hooks dry-run + R-memo gate + dead links
+[PASS] 11 slice render determinism (4 streams, double-render sha256)
+[PASS] 12 golden snapshot match (p1 dashboard == committed golden)
+[PASS] 13 rust fmt
+[PASS] 14 rust clippy (-D warnings)
+[PASS] 15 rust tests (incl. fixture contract conformance)
+[PASS] 16 app lane (swift build+test+bundle+wire-probe)
+SHIPGATE p1: PASS
