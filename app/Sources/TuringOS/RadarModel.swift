@@ -14,6 +14,22 @@ import Foundation
 
 // MARK: - Nodes (forms bound to facts; precedence = declaration order)
 
+/// A1_69: commit-only display facts folded from CommitFact — all OBSERVED tape
+/// facts (message / author / date), never fabricated. Shown in the commit popover
+/// so the user can see what a commit actually did. View-layer only.
+public struct CommitMeta: Equatable, Sendable {
+    public let summary: String // commit subject — first line of the message (git %s)
+    public let body: String // A1_70: commit message body (git %b); "" when none
+    public let author: String
+    public let ts: String // ISO-8601 author date
+    public init(summary: String, body: String = "", author: String, ts: String) {
+        self.summary = summary
+        self.body = body
+        self.author = author
+        self.ts = ts
+    }
+}
+
 public struct RadarNode: Identifiable, Equatable, Sendable {
     /// A1_51b: the three node kinds in the galaxy. worktree chrome is driven
     /// by Form (the old path); branch/commit chrome uses a kind-based NEUTRAL
@@ -108,6 +124,11 @@ public struct RadarNode: Identifiable, Equatable, Sendable {
     public let containedInDefault: Bool
     /// True when branch was observed merged into default.
     public let mergedIntoDefault: Bool
+    /// A1_69: commit-only display facts (message/author/date), folded from CommitFact;
+    /// nil for worktree/branch nodes. `var` with a default so the many existing
+    /// RadarNode call sites stay unchanged (only the commit node sets it). NOT emitted
+    /// in canonicalDump — display facts, golden stays free.
+    public var commitMeta: CommitMeta? = nil
 
     /// 0/1 accessibility predicate surface: every node MUST speak its
     /// project, name and form in text (rule 3; pinned by test).
@@ -180,7 +201,8 @@ public struct RadarScene: Equatable, Sendable {
                 ahead: 0, behind: 0,
                 mergeStatus: "unknown",
                 containedInDefault: false,
-                mergedIntoDefault: false
+                mergedIntoDefault: false,
+                commitMeta: nil
             )
         }
 
@@ -208,7 +230,8 @@ public struct RadarScene: Equatable, Sendable {
                 behind: branchFact.behind,
                 mergeStatus: branchFact.mergeStatus,
                 containedInDefault: branchFact.containedInDefault,
-                mergedIntoDefault: branchFact.mergedIntoDefault
+                mergedIntoDefault: branchFact.mergedIntoDefault,
+                commitMeta: nil
             ))
         }
 
@@ -233,7 +256,12 @@ public struct RadarScene: Equatable, Sendable {
                 ahead: 0, behind: 0,
                 mergeStatus: "unknown",
                 containedInDefault: false,
-                mergedIntoDefault: false
+                mergedIntoDefault: false,
+                commitMeta: CommitMeta(
+                    summary: commitFact.summary,
+                    body: commitFact.body,
+                    author: commitFact.author,
+                    ts: commitFact.ts)
             ))
         }
 
@@ -793,6 +821,9 @@ public struct NodeCardContent: Equatable, Sendable {
     /// The card LEADS with what this node means (a sentence), not a generic
     /// "状态: 安静" row — which was meaningless for branch/commit nodes (#5).
     public let headline: String?
+    /// A1_69: optional longer description block (e.g. a commit message body / 说明)
+    /// shown below the headline. `var` with default so non-commit derive paths omit it.
+    public var body: String? = nil
     public let detailRows: [(String, String)]
     public let showsEvidenceAction: Bool
 
@@ -802,6 +833,7 @@ public struct NodeCardContent: Equatable, Sendable {
     public var accessibilityValue: String? {
         var parts: [String] = []
         if let headline { parts.append(headline) }
+        if let body { parts.append(body) }
         parts.append(contentsOf: detailRows.map { "\($0.0) \($0.1)" })
         return parts.isEmpty ? nil : parts.joined(separator: "，")
     }
@@ -809,6 +841,7 @@ public struct NodeCardContent: Equatable, Sendable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.showsTitle == rhs.showsTitle
             && lhs.headline == rhs.headline
+            && lhs.body == rhs.body
             && lhs.detailRows.elementsEqual(rhs.detailRows, by: ==)
             && lhs.showsEvidenceAction == rhs.showsEvidenceAction
     }
@@ -865,16 +898,32 @@ public struct NodeCardContent: Equatable, Sendable {
         return NodeCardContent(showsTitle: true, headline: headline, detailRows: rows, showsEvidenceAction: true)
     }
 
-    /// Commit: identity — short sha + the branch it was observed on.
+    /// Commit: Software-3.0 language-first — the message SUBJECT (what the commit
+    /// did) leads; author/date answer who/when; sha/branch give identity. All
+    /// fields are OBSERVED (CommitMeta folded from CommitFact), never fabricated.
     private static func deriveCommit(_ node: RadarNode) -> NodeCardContent {
+        // A1_70: subject and body are now distinct OBSERVED fields (the daemon
+        // carries git %s and %b separately), not a split of one `summary`. The
+        // subject leads; the body is the author's "说明", shown when present.
+        let subject = (node.commitMeta?.summary ?? "")
+            .trimmingCharacters(in: .whitespaces)
+        let headline = subject.isEmpty ? "提交节点" : subject
+        let bodyText = (node.commitMeta?.body ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let body: String? = bodyText.isEmpty ? nil : bodyText
         var rows: [(String, String)] = []
         if let head = node.head, !head.isEmpty {
             rows.append(("commit", String(head.prefix(8))))
         }
-        if let branch = node.branch {
-            rows.append(("所在分支", String(branch.split(separator: "/").last ?? Substring(branch))))
+        if let m = node.commitMeta {
+            if !m.author.isEmpty { rows.append(("作者", m.author)) }
+            if !m.ts.isEmpty { rows.append(("时间", String(m.ts.prefix(10)))) }
         }
-        return NodeCardContent(showsTitle: true, headline: "提交节点", detailRows: rows, showsEvidenceAction: true)
+        if let branch = node.branch {
+            rows.append(("分支", String(branch.split(separator: "/").last ?? Substring(branch))))
+        }
+        return NodeCardContent(showsTitle: true, headline: headline, body: body,
+                               detailRows: rows, showsEvidenceAction: true)
     }
 
     /// Worktree: the form label IS meaningful here (失败/冲突/孤儿/有未提交改动/安静),

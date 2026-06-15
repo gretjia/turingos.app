@@ -382,7 +382,7 @@ final class RadarModelTests: XCTestCase {
                 kind: .branch, isAnchor: isDefault, sameBranchConflict: false,
                 locked: false, detached: false, evidence: .object([:]),
                 ahead: ahead, behind: behind, mergeStatus: mergeStatus,
-                containedInDefault: contained, mergedIntoDefault: false)
+                containedInDefault: contained, mergedIntoDefault: false, commitMeta: nil)
         }
         // ahead-only branch → opportunity framing; never "安静"; never a merged claim.
         let opp = NodeCardContent.derive(node: branchNode(ahead: 3, behind: 0, contained: false), selected: true, far: false)
@@ -411,23 +411,61 @@ final class RadarModelTests: XCTestCase {
         let identical = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 0, contained: false, mergeStatus: "identical"), selected: true, far: false)
         XCTAssertEqual(identical.headline, "与主线一致")
 
-        // commit node → short-sha identity.
+        // commit node WITHOUT observed meta → sha identity + fallback headline.
         let commit = RadarNode(
             id: "commit:p:abcdef1234567890", projectId: "p", title: "abcdef12",
             branch: "refs/heads/main", head: "abcdef1234567890", form: .quiet,
             kind: .commit, isAnchor: false, sameBranchConflict: false, locked: false,
             detached: false, evidence: .object([:]), ahead: 0, behind: 0,
-            mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false)
+            mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false, commitMeta: nil)
         let cc = NodeCardContent.derive(node: commit, selected: true, far: false)
         XCTAssertTrue(cc.detailRows.contains { $0.1.contains("abcdef12") },
                       "commit card must show its short sha")
+        XCTAssertEqual(cc.headline, "提交节点", "no observed meta → fallback headline")
+        XCTAssertNil(cc.body, "no observed meta → no description body")
+
+        // A1_69/A1_70: commit WITH observed meta → the SUBJECT (git %s) leads,
+        // the BODY (git %b, now a distinct observed field) is the description,
+        // and author/date rows appear (all observed CommitFact facts).
+        let commitWithMeta = RadarNode(
+            id: "commit:p:abcdef1234567890", projectId: "p", title: "abcdef12",
+            branch: "refs/heads/main", head: "abcdef1234567890", form: .quiet,
+            kind: .commit, isAnchor: false, sameBranchConflict: false, locked: false,
+            detached: false, evidence: .object([:]), ahead: 0, behind: 0,
+            mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false,
+            commitMeta: CommitMeta(summary: "A1_70: show commit info",
+                                   body: "body paragraph one\nbody paragraph two",
+                                   author: "zephryj", ts: "2026-06-14T08:30:00Z"))
+        let ccm = NodeCardContent.derive(node: commitWithMeta, selected: true, far: false)
+        XCTAssertEqual(ccm.headline, "A1_70: show commit info",
+                       "commit headline = message subject (git %s), the body is separate")
+        XCTAssertEqual(ccm.body, "body paragraph one\nbody paragraph two",
+                       "commit body (git %b, observed) shown as the description")
+        XCTAssertTrue(ccm.detailRows.contains { $0.0 == "作者" && $0.1 == "zephryj" },
+                      "commit card shows the observed author")
+        XCTAssertTrue(ccm.detailRows.contains { $0.0 == "时间" && $0.1 == "2026-06-14" },
+                      "commit card shows the observed date (yyyy-MM-dd)")
+
+        // A1_70: commit WITH a subject but NO body → headline shows, body is nil
+        // (empty body is never rendered as a description; no fabrication).
+        let commitNoBody = RadarNode(
+            id: "commit:p:abcdef1234567890", projectId: "p", title: "abcdef12",
+            branch: "refs/heads/main", head: "abcdef1234567890", form: .quiet,
+            kind: .commit, isAnchor: false, sameBranchConflict: false, locked: false,
+            detached: false, evidence: .object([:]), ahead: 0, behind: 0,
+            mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false,
+            commitMeta: CommitMeta(summary: "single-line commit, no body",
+                                   body: "", author: "zephryj", ts: "2026-06-14T08:30:00Z"))
+        let ccnb = NodeCardContent.derive(node: commitNoBody, selected: true, far: false)
+        XCTAssertEqual(ccnb.headline, "single-line commit, no body")
+        XCTAssertNil(ccnb.body, "empty observed body → no description block")
 
         // worktree node → form label leads (meaningful for a worktree).
         let wt = RadarNode(
             id: "wt_1", projectId: "p", title: "main", branch: "main", head: "deadbeef00000000",
             form: .active, kind: .worktree, isAnchor: true, sameBranchConflict: false,
             locked: false, detached: false, evidence: .object([:]), ahead: 0, behind: 0,
-            mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false)
+            mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false, commitMeta: nil)
         let wc = NodeCardContent.derive(node: wt, selected: true, far: false)
         XCTAssertEqual(wc.headline, RadarNode.Form.active.label,
                        "worktree card leads with its (meaningful) form label")

@@ -696,45 +696,62 @@ struct RadarNodeCard: View {
     // the kind-aware headline leads, then the fact rows). Fixed width so a long
     // ref/sha wraps instead of stretching; floats above neighbours (no occlusion).
     private var detailPopover: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 7) {
                 Image(systemName: node.form.iconName)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                     .foregroundStyle(chrome)
                 Text(node.title)
-                    .font(Tokens.Typography.mono(14, weight: .bold))
+                    .font(Tokens.Typography.mono(13, weight: .bold))
                     .foregroundStyle(Tokens.Text.primary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
+            // A1_69 polish: language-first — the lead sentence (commit subject /
+            // branch framing) reads as the PRIMARY content, not a faint subtitle.
             if let headline = content.headline {
                 Text(headline)
-                    .font(Tokens.Typography.ui(12, weight: .medium))
+                    .font(Tokens.Typography.ui(13, weight: .medium))
+                    .foregroundStyle(Tokens.Text.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            // A1_69: the longer description (commit message body / 说明), wrapped.
+            // lineLimit caps a pathological message so the popover stays sane.
+            if let body = content.body {
+                Text(body)
+                    .font(Tokens.Typography.ui(11))
                     .foregroundStyle(Tokens.Text.secondary)
+                    .lineLimit(8)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if !content.detailRows.isEmpty {
-                Divider()
-                ForEach(content.detailRows, id: \.0) { row in
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(row.0)
-                            .font(Tokens.Typography.ui(10))
-                            .foregroundStyle(Tokens.Text.tertiary)
-                        Spacer(minLength: 12)
-                        Text(row.1)
-                            .font(Tokens.Typography.mono(10))
-                            .foregroundStyle(Tokens.Text.secondary)
-                            .multilineTextAlignment(.trailing)
+                Divider().overlay(Tokens.Space.glassBorder)
+                VStack(alignment: .leading, spacing: 5) {
+                    ForEach(content.detailRows, id: \.0) { row in
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(row.0)
+                                .font(Tokens.Typography.ui(10))
+                                .foregroundStyle(Tokens.Text.tertiary)
+                            Spacer(minLength: 16)
+                            Text(row.1)
+                                .font(Tokens.Typography.mono(11))
+                                .foregroundStyle(Tokens.Text.secondary)
+                                .multilineTextAlignment(.trailing)
+                        }
                     }
                 }
             }
             if content.showsEvidenceAction {
                 Button("查看证据", action: onEvidence)
                     .buttonStyle(.plain)
-                    .font(Tokens.Typography.ui(11))
-                    .foregroundStyle(Tokens.Text.secondary)
+                    .font(Tokens.Typography.ui(11, weight: .medium))
+                    // Identity-accent tint (never a semantic claim) so the one
+                    // interactive affordance is discoverable without shouting.
+                    .foregroundStyle(Tokens.Accent.color(forProjectId: node.projectId))
             }
         }
-        .padding(14)
-        .frame(width: 260, alignment: .leading)
+        .padding(16)
+        .frame(width: 268, alignment: .leading)
         .background(Tokens.Space.background)
     }
 }
