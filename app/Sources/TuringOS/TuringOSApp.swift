@@ -204,8 +204,15 @@ struct TuringOSApp: App {
     }
 
     private func startWorkspace() {
-        daemon.ensureRunning(daemonPath: daemonBinaryPath.isEmpty ? nil : daemonBinaryPath)
-        store.start(socketPath: Workspace.socketPath)
+        let path = daemonBinaryPath.isEmpty ? nil : daemonBinaryPath
+        daemon.ensureRunning(daemonPath: path)
+        // A1_56: inject the daemon-respawn hook so the reconnect supervisor can
+        // revive a dead daemon (not just re-attach to a live socket). Keeps
+        // GlanceStore decoupled from process management.
+        store.start(
+            socketPath: Workspace.socketPath,
+            ensureDaemon: { daemon.ensureRunning(daemonPath: path) }
+        )
     }
 
     /// One law, three surfaces: dot, popover and home all read the store's

@@ -73,24 +73,57 @@ public final class GlanceStore: ObservableObject {
 
     private var client: UDSClient?
     private var consumer: Task<Void, Never>?
+    /// A1_56: reconnect supervisor — re-drives connect() after a LIVE stream
+    /// drops. Lives here (not in UDSClient) so UDSClient's terminal-disconnect
+    /// generation/ordering guarantees stay intact.
+    private var supervisor: ReconnectSupervisor?
+
+    /// The disconnect reason stop() uses; the supervisor treats it as
+    /// user-initiated and does NOT reconnect (only daemon-side drops do).
+    public nonisolated static let userStopReason = "stopped by user"
 
     public init() {}
 
-    public func start(socketPath: String) {
+    /// - Parameters:
+    ///   - ensureDaemon: optional hook to (re)spawn a dead daemon before a
+    ///     reconnect attempt. Injected by the app (= DaemonController.ensureRunning)
+    ///     so GlanceStore stays decoupled from process management.
+    ///   - socketIsLive: liveness probe used to gate reconnects; defaults to the
+    ///     real witness-grade probe, injectable for deterministic tests.
+    public func start(
+        socketPath: String,
+        ensureDaemon: (@MainActor () -> Void)? = nil,
+        socketIsLive: (@MainActor (String) -> Bool)? = nil
+    ) {
         stop()
         projection = GlanceProjection()
         ledger = WorktreeLedger()
         let client = UDSClient(socketPath: socketPath)
         self.client = client
+        let liveProbe: @MainActor (String) -> Bool = socketIsLive ?? { DaemonController.socketIsLive($0) }
+        let supervisor = ReconnectSupervisor(
+            connect: { [weak client] in Task { await client?.connect() } },
+            socketIsLive: { liveProbe(socketPath) },
+            ensureDaemon: ensureDaemon
+        )
+        self.supervisor = supervisor
         consumer = Task { [weak self] in
             for await update in client.updates {
                 guard let self else { return }
                 switch update {
                 case .state(let state):
                     self.connection = state
-                    if case .connecting = state {
+                    switch state {
+                    case .connecting:
                         self.projection = GlanceProjection()
                         self.ledger = WorktreeLedger()
+                    case .connected:
+                        // Live stream restored — stop the reconnect backoff.
+                        self.supervisor?.noteConnected()
+                    case .disconnected(let reason):
+                        // A live stream dropped (or initial connect failed):
+                        // schedule a gated reconnect unless the user stopped us.
+                        self.supervisor?.noteDisconnected(reason: reason)
                     }
                 case .event(let envelope):
                     self.projection.apply(envelope)
@@ -106,10 +139,119 @@ public final class GlanceStore: ObservableObject {
     }
 
     public func stop() {
+        supervisor?.markUserStopped()
+        supervisor = nil
         consumer?.cancel()
         consumer = nil
         let client = client
-        Task { await client?.disconnect(reason: "stopped by user") }
+        Task { await client?.disconnect(reason: Self.userStopReason) }
         self.client = nil
+    }
+
+    /// Manual 重连 affordance: reset the backoff and force one immediate,
+    /// socket-liveness-gated attempt. Surfaced as a button in the disconnect banner.
+    public func reconnect() {
+        supervisor?.requestManual()
+    }
+}
+
+/// A1_56: bounded-backoff reconnect supervisor, layered ABOVE UDSClient's
+/// terminal disconnect (UDSClient is unchanged). Fail-visible discipline: it
+/// NEVER hides the disconnected state — the honest banner stays until a real
+/// `.connected` arrives; each attempt only fires when the socket is actually
+/// accepting (witness-grade probe), never a swallowed `.waiting` spinner.
+/// All side effects are injected closures, so the decision logic is unit-tested
+/// without a real client/timer.
+@MainActor
+final class ReconnectSupervisor {
+    private let connect: @MainActor () -> Void
+    private let socketIsLive: @MainActor () -> Bool
+    private let ensureDaemon: (@MainActor () -> Void)?
+    private let sleepFor: (TimeInterval) async -> Void
+    private(set) var attempt = 0
+    private(set) var userStopped = false
+    private var task: Task<Void, Never>?
+
+    /// Exposed for deterministic tests: await the in-flight scheduled step.
+    var inFlight: Task<Void, Never>? { task }
+
+    init(
+        connect: @escaping @MainActor () -> Void,
+        socketIsLive: @escaping @MainActor () -> Bool,
+        ensureDaemon: (@MainActor () -> Void)? = nil,
+        sleepFor: @escaping (TimeInterval) async -> Void = {
+            try? await Task.sleep(nanoseconds: UInt64(max($0, 0) * 1_000_000_000))
+        }
+    ) {
+        self.connect = connect
+        self.socketIsLive = socketIsLive
+        self.ensureDaemon = ensureDaemon
+        self.sleepFor = sleepFor
+    }
+
+    /// Bounded exponential backoff capped at 8s. Pure → directly testable.
+    nonisolated static func backoff(attempt: Int) -> TimeInterval {
+        let capped = min(max(attempt, 0), 4)
+        return min(0.5 * pow(2.0, Double(capped)), 8.0)
+    }
+
+    /// User-initiated stop suppresses reconnect; daemon-side drops do not. Pure.
+    nonisolated static func shouldReconnect(reason: String, userStopped: Bool) -> Bool {
+        !userStopped && reason != GlanceStore.userStopReason
+    }
+
+    func noteConnected() {
+        attempt = 0
+        task?.cancel()
+        task = nil
+    }
+
+    func noteDisconnected(reason: String) {
+        guard Self.shouldReconnect(reason: reason, userStopped: userStopped) else { return }
+        schedule()
+    }
+
+    func markUserStopped() {
+        userStopped = true
+        task?.cancel()
+        task = nil
+    }
+
+    /// Force an immediate gated attempt (manual 重连): reset backoff + stop flag.
+    func requestManual() {
+        userStopped = false
+        attempt = 0
+        task?.cancel()
+        task = Task { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            self.performStep()
+        }
+    }
+
+    /// One reconnect step: revive a dead daemon via the injected hook if one is
+    /// provided, then connect ONLY when the socket is actually accepting.
+    /// Returns true iff a connect() was issued. Internal for unit tests.
+    @discardableResult
+    func performStep() -> Bool {
+        if !socketIsLive() { ensureDaemon?() }
+        guard socketIsLive() else { return false }
+        connect()
+        return true
+    }
+
+    private func schedule() {
+        task?.cancel()
+        let scheduledAttempt = attempt
+        task = Task { [weak self] in
+            guard let self else { return }
+            await self.sleepFor(Self.backoff(attempt: scheduledAttempt))
+            if Task.isCancelled || self.userStopped { return }
+            self.attempt = min(self.attempt + 1, 5)
+            if !self.performStep() {
+                // Socket still dead — keep probing with capped backoff so the
+                // stream self-heals when the daemon returns. Banner stays up.
+                self.schedule()
+            }
+        }
     }
 }
