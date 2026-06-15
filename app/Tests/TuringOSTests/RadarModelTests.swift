@@ -282,7 +282,9 @@ final class RadarModelTests: XCTestCase {
             XCTAssertTrue(far.detailRows.isEmpty)
 
             let selected = NodeCardContent.derive(node: node, selected: true, far: false)
-            XCTAssertFalse(selected.detailRows.isEmpty, "selection opens the detail")
+            // A1_57: selection opens the detail — a kind-aware headline and/or rows.
+            XCTAssertTrue(selected.headline != nil || !selected.detailRows.isEmpty,
+                          "selection opens the detail (headline or rows) on \(node.id)")
             XCTAssertTrue(selected.showsEvidenceAction)
         }
     }
@@ -347,12 +349,88 @@ final class RadarModelTests: XCTestCase {
                          "default node carries no detail - nothing to mirror")
             let selected = NodeCardContent.derive(node: node, selected: true, far: false)
             let value = selected.accessibilityValue
-            XCTAssertNotNil(value)
-            XCTAssertTrue(value?.contains(node.form.label) ?? false,
-                          "the state row must reach assistive tech: \(value ?? "nil")")
+            XCTAssertNotNil(value, "selected node must mirror its detail to assistive tech")
             XCTAssertTrue(selected.showsEvidenceAction,
                           "evidence action exists exactly when the drawer is offered")
+            // A1_57: content is now KIND-SPECIFIC and meaningful — not the old
+            // generic "状态: 安静" for every kind (#5). The mirror speaks per kind.
+            switch node.kind {
+            case .worktree:
+                XCTAssertTrue(value?.contains(node.form.label) ?? false,
+                              "worktree card must speak its (meaningful) form: \(value ?? "nil")")
+            case .branch:
+                let v = value ?? ""
+                XCTAssertTrue(
+                    v.contains("↑") || v.contains("主线") || v.contains("机会") || v.contains("分叉") || v.contains("主干"),
+                    "branch card must speak merge/divergence framing, not '安静': \(v)")
+            case .commit:
+                let sha8 = String((node.head ?? "").prefix(8))
+                XCTAssertTrue(!sha8.isEmpty && (value?.contains(sha8) ?? false),
+                              "commit card must speak its sha: \(value ?? "nil")")
+            }
         }
+    }
+
+    // A1_57 (absorbs A1_58): per-kind meaningful content; honesty (never green /
+    // never asserts "merged"); the meaningless generic "安静" is gone for branch/commit.
+    func testNodeCardContentIsKindSpecificAndHonest() {
+        func branchNode(ahead: Int, behind: Int, contained: Bool, isDefault: Bool = false,
+                        mergeStatus: String = "unknown") -> RadarNode {
+            RadarNode(
+                id: "branch:p:refs/heads/feature", projectId: "p", title: "feature",
+                branch: "refs/heads/feature", head: "abcdef1234567890", form: .quiet,
+                kind: .branch, isAnchor: isDefault, sameBranchConflict: false,
+                locked: false, detached: false, evidence: .object([:]),
+                ahead: ahead, behind: behind, mergeStatus: mergeStatus,
+                containedInDefault: contained, mergedIntoDefault: false)
+        }
+        // ahead-only branch → opportunity framing; never "安静"; never a merged claim.
+        let opp = NodeCardContent.derive(node: branchNode(ahead: 3, behind: 0, contained: false), selected: true, far: false)
+        XCTAssertEqual(opp.headline, "3 个 commit 待并入 — 未收割的机会")
+        XCTAssertFalse((opp.accessibilityValue ?? "").contains("安静"),
+                       "branch card must not show the meaningless '安静'")
+        XCTAssertTrue(opp.detailRows.contains { $0.0 == "分歧" && $0.1.contains("↑3") },
+                      "branch card must show the observed ahead/behind divergence")
+        // contained-in-default → reachability disclaimer; NEVER asserts merged content.
+        let contained = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 0, contained: true), selected: true, far: false)
+        XCTAssertEqual(contained.headline, "已在主线可达（≠ 已并入内容）")
+        XCTAssertFalse((contained.headline ?? "").contains("已并入") && !(contained.headline ?? "").contains("≠"),
+                       "contained-in-default must carry the ≠-merged disclaimer, never a bare merged claim")
+        // default branch → trunk framing.
+        let trunk = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 0, contained: false, isDefault: true), selected: true, far: false)
+        XCTAssertEqual(trunk.headline, "主干 · 默认分支")
+        // HONESTY (Codex P2): behind-only / unobserved must NEVER claim "与主线一致".
+        let behind = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 2, contained: false, mergeStatus: "behind"), selected: true, far: false)
+        XCTAssertEqual(behind.headline, "落后主线 2 个 commit",
+                       "behind-only branch must report stale, not in-sync")
+        let unobserved = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 0, contained: false, mergeStatus: "unknown"), selected: true, far: false)
+        XCTAssertEqual(unobserved.headline, "与主线关系未观测",
+                       "unobserved relation must be fail-visible, never claimed in-sync")
+        XCTAssertNotEqual(unobserved.headline, "与主线一致")
+        // Only a CONFIRMED identical observation earns the in-sync claim.
+        let identical = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 0, contained: false, mergeStatus: "identical"), selected: true, far: false)
+        XCTAssertEqual(identical.headline, "与主线一致")
+
+        // commit node → short-sha identity.
+        let commit = RadarNode(
+            id: "commit:p:abcdef1234567890", projectId: "p", title: "abcdef12",
+            branch: "refs/heads/main", head: "abcdef1234567890", form: .quiet,
+            kind: .commit, isAnchor: false, sameBranchConflict: false, locked: false,
+            detached: false, evidence: .object([:]), ahead: 0, behind: 0,
+            mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false)
+        let cc = NodeCardContent.derive(node: commit, selected: true, far: false)
+        XCTAssertTrue(cc.detailRows.contains { $0.1.contains("abcdef12") },
+                      "commit card must show its short sha")
+
+        // worktree node → form label leads (meaningful for a worktree).
+        let wt = RadarNode(
+            id: "wt_1", projectId: "p", title: "main", branch: "main", head: "deadbeef00000000",
+            form: .active, kind: .worktree, isAnchor: true, sameBranchConflict: false,
+            locked: false, detached: false, evidence: .object([:]), ahead: 0, behind: 0,
+            mergeStatus: "unknown", containedInDefault: false, mergedIntoDefault: false)
+        let wc = NodeCardContent.derive(node: wt, selected: true, far: false)
+        XCTAssertEqual(wc.headline, RadarNode.Form.active.label,
+                       "worktree card leads with its (meaningful) form label")
     }
 
     // MARK: golden #2 - a discriminative synthetic scene (the committed
