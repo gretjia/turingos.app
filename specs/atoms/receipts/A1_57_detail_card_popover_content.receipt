@@ -51,6 +51,16 @@ implementer: claude-opus-4-8 (真机反馈 #5 → 吸收 A1_57+A1_58 → Opus im
   correctness-by-construction(SwiftUI 交互排序难单测),已加 onDismiss 守卫。
 - 聚合光点 vs 标签轻微错位(Metal NDC vs SwiftUI screen 映射差)前置独立,归 A1_63/A1_65,非本卡。
 
+## 复审修订(PR #50 — Codex P2 honesty bug)
+我的自审 + 清洁视角对抗复核(agent a8229a07)都判 SHIP,但 PR #50 上 **Codex(第三视角,comment 3412760887)
+又揪出一个真诚实 bug**:deriveBranch 的 `else → "与主线一致"` 兜底,会把**仅落后**(ahead==0,behind>0)与
+**未观测**(ahead==0,behind==0,mergeStatus=="unknown"——fold 默认 0/0/unknown)的分支**谎报为"与主线一致"**
+= fake-green-邻近违纪(分支明明 stale 或没观测,却告诉用户已同步)。已修:behind>0 → "落后主线 N 个 commit";
+**仅当 mergeStatus=="identical"** 才 claim "与主线一致";其余(unknown)→ "与主线关系未观测"(fail-visible)。
+新增 3 断言(behind/unobserved/identical)钉死;shipgate p1 重跑仍 16/16(a157_shipgate3.log)。
+**教训实证**([[feedback_self_grade_needs_adversarial]]):自审 + 单个对抗 agent 仍可同漏,多独立视角(此处 Codex)
+是真护栏 —— 诚实类违纪尤其要多眼复核。
+
 ## shipgate p1 输出
 [PASS] 1 constitution pin (sha256 matches PINS.toml)
 [PASS] 2 contracts+fixtures valid (structural-subset)

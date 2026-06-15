@@ -834,6 +834,11 @@ public struct NodeCardContent: Equatable, Sendable {
     /// "merged" and never green — mergedIntoDefault is daemon-hardcoded false, and
     /// containedInDefault is mere reachability (≠ merged content, ADR-017 §C).
     private static func deriveBranch(_ node: RadarNode) -> NodeCardContent {
+        // Honesty: only claim "与主线一致" when the observation CONFIRMS it
+        // (mergeStatus == "identical"). A branch that is only behind, or whose
+        // relation is unobserved (mergeStatus "unknown", folded default 0/0/unknown),
+        // must NOT be reported as in-sync — that would be a fake-green-adjacent
+        // claim the observed facts don't support (Codex P2, ADR-017 honesty law).
         let headline: String
         if node.isAnchor {
             headline = "主干 · 默认分支"
@@ -843,8 +848,15 @@ public struct NodeCardContent: Equatable, Sendable {
             headline = "\(node.ahead) 个 commit 待并入 — 未收割的机会"
         } else if node.ahead > 0, node.behind > 0 {
             headline = "分叉中：领先 \(node.ahead) / 落后 \(node.behind)"
-        } else {
+        } else if node.behind > 0 {
+            // ahead == 0, behind > 0 → strictly behind (stale), not in sync.
+            headline = "落后主线 \(node.behind) 个 commit"
+        } else if node.mergeStatus == "identical" {
+            // ahead == 0, behind == 0, AND the daemon confirmed identical.
             headline = "与主线一致"
+        } else {
+            // ahead == 0, behind == 0, mergeStatus not confirmed (unknown) → unobserved.
+            headline = "与主线关系未观测"
         }
         var rows: [(String, String)] = [("分歧", "↑\(node.ahead)  ↓\(node.behind)")]
         if let head = node.head, !head.isEmpty {

@@ -374,13 +374,14 @@ final class RadarModelTests: XCTestCase {
     // A1_57 (absorbs A1_58): per-kind meaningful content; honesty (never green /
     // never asserts "merged"); the meaningless generic "安静" is gone for branch/commit.
     func testNodeCardContentIsKindSpecificAndHonest() {
-        func branchNode(ahead: Int, behind: Int, contained: Bool, isDefault: Bool = false) -> RadarNode {
+        func branchNode(ahead: Int, behind: Int, contained: Bool, isDefault: Bool = false,
+                        mergeStatus: String = "unknown") -> RadarNode {
             RadarNode(
                 id: "branch:p:refs/heads/feature", projectId: "p", title: "feature",
                 branch: "refs/heads/feature", head: "abcdef1234567890", form: .quiet,
                 kind: .branch, isAnchor: isDefault, sameBranchConflict: false,
                 locked: false, detached: false, evidence: .object([:]),
-                ahead: ahead, behind: behind, mergeStatus: "unknown",
+                ahead: ahead, behind: behind, mergeStatus: mergeStatus,
                 containedInDefault: contained, mergedIntoDefault: false)
         }
         // ahead-only branch → opportunity framing; never "安静"; never a merged claim.
@@ -398,6 +399,17 @@ final class RadarModelTests: XCTestCase {
         // default branch → trunk framing.
         let trunk = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 0, contained: false, isDefault: true), selected: true, far: false)
         XCTAssertEqual(trunk.headline, "主干 · 默认分支")
+        // HONESTY (Codex P2): behind-only / unobserved must NEVER claim "与主线一致".
+        let behind = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 2, contained: false, mergeStatus: "behind"), selected: true, far: false)
+        XCTAssertEqual(behind.headline, "落后主线 2 个 commit",
+                       "behind-only branch must report stale, not in-sync")
+        let unobserved = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 0, contained: false, mergeStatus: "unknown"), selected: true, far: false)
+        XCTAssertEqual(unobserved.headline, "与主线关系未观测",
+                       "unobserved relation must be fail-visible, never claimed in-sync")
+        XCTAssertNotEqual(unobserved.headline, "与主线一致")
+        // Only a CONFIRMED identical observation earns the in-sync claim.
+        let identical = NodeCardContent.derive(node: branchNode(ahead: 0, behind: 0, contained: false, mergeStatus: "identical"), selected: true, far: false)
+        XCTAssertEqual(identical.headline, "与主线一致")
 
         // commit node → short-sha identity.
         let commit = RadarNode(
