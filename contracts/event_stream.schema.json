@@ -37,7 +37,8 @@
         "BranchObserved",
         "BranchRemoved",
         "CommitObserved",
-        "RefReconciliation"
+        "RefReconciliation",
+        "PinObserved"
       ]
     },
     "source": {
