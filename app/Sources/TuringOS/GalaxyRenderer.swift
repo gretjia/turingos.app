@@ -30,6 +30,7 @@ struct InstanceData {
     float4 color;
     float  size;
     uint   kind;
+    float2 half_vec;   // A1_71: half edge-vector (NDC) for oriented lines; (0,0)=square
 };
 
 struct VertexIn {
@@ -51,7 +52,19 @@ vertex VertexOut galaxy_vertex(
     // blast radius of any future Swift/MSL layout drift (the A1_68 bug rendered
     // screen-filling quads when inst.size was misread from a neighbor's center).
     float s = clamp(inst.size, 0.0, 0.6);
-    float2 pos = inst.center + in.localPos * s;
+    // A1_71: when half_vec is non-zero this is a LINE — map localPos.x along the
+    // edge (full span = center ± half_vec) and localPos.y across it (thickness s).
+    // Otherwise it is a square node/nebula quad (the original path). This stops a
+    // long edge from rendering as a giant square (the gray-rectangle bug).
+    float hlen = length(inst.half_vec);
+    float2 pos;
+    if (hlen > 1e-6) {
+        float2 dir = inst.half_vec / hlen;
+        float2 perp = float2(-dir.y, dir.x);
+        pos = inst.center + in.localPos.x * inst.half_vec + in.localPos.y * perp * s;
+    } else {
+        pos = inst.center + in.localPos * s;
+    }
     VertexOut out;
     out.position = float4(pos, 0.0, 1.0);
     out.color    = inst.color;
@@ -81,6 +94,37 @@ struct GalaxyInstanceData {
     var color: SIMD4<Float>
     var size: Float
     var kind: UInt32
+    // A1_71: half edge-vector (NDC) for oriented LINE instances; (0,0) for square
+    // node/nebula instances. Falls exactly in the former 40-48 alignment padding,
+    // so the stride stays 48 (no layout drift — A1_68 layout test still holds).
+    // For a line, `size` is the half-thickness (perpendicular); for a square it is
+    // the half-extent. Lets edges render as thin oriented lines instead of squares.
+    var halfVec: SIMD2<Float> = SIMD2<Float>(0, 0)
+}
+
+extension GalaxyInstanceData {
+    /// A1_71: build a thin ORIENTED line instance for an edge between two screen
+    /// points. `center` = the NDC midpoint, `halfVec` = half the edge vector (NDC)
+    /// so the oriented quad spans `center ± halfVec`, and `size` is a small constant
+    /// half-thickness — NOT the edge length. This replaces the old `size: lenNDC*0.5`
+    /// square (a long edge rendered as a screen-filling gray block). Pure + static
+    /// so the geometry is unit-testable without a GPU.
+    static func edge(
+        fromScreen fs: CGPoint, toScreen ts: CGPoint,
+        viewW: Double, viewH: Double, gray: Float, alpha: Float
+    ) -> GalaxyInstanceData {
+        let fxn = Float(fs.x / viewW * 2.0 - 1.0)
+        let fyn = Float(1.0 - fs.y / viewH * 2.0)
+        let txn = Float(ts.x / viewW * 2.0 - 1.0)
+        let tyn = Float(1.0 - ts.y / viewH * 2.0)
+        return GalaxyInstanceData(
+            center: SIMD2<Float>((fxn + txn) * 0.5, (fyn + tyn) * 0.5),
+            color: SIMD4<Float>(gray, gray, gray, alpha),
+            size: 0.002, // thin half-thickness (NDC); never the edge length
+            kind: 2,
+            halfVec: SIMD2<Float>((txn - fxn) * 0.5, (tyn - fyn) * 0.5)
+        )
+    }
 }
 
 // MARK: - Coordinator (MTKViewDelegate)
@@ -247,15 +291,14 @@ extension GalaxyRenderer {
                         size: size, kind: 1))
                 }
 
-                // 3. Edge midpoint quads (thin elongated) — only in node/detail band.
+                // 3. A1_71: edges as thin ORIENTED lines (was: squares of size
+                // lenNDC*0.5 → a long edge became a screen-filling gray block).
+                // Only in node/detail band.
                 for edge in rs.edges {
                     guard out.count + 1 < Tokens.LOD.instanceBatchSize else { break }
                     guard let fw = scene.positions[edge.from],
                           let tw = scene.positions[edge.to] else { continue }
                     let fs = camera.toScreen(fw); let ts = camera.toScreen(tw)
-                    let mx = Float((fs.x + ts.x) / 2.0 / viewW * 2.0 - 1.0)
-                    let my = Float(1.0 - (fs.y + ts.y) / 2.0 / viewH * 2.0)
-                    let lenNDC = Float(hypot(ts.x - fs.x, ts.y - fs.y) / viewW)
                     let edgeA: Float
                     switch edge.kind {
                     case .conflictTension: edgeA = 0.7
@@ -263,10 +306,9 @@ extension GalaxyRenderer {
                     case .fork: edgeA = 0.12
                     case .parent: edgeA = 0.08
                     }
-                    out.append(GalaxyInstanceData(
-                        center: SIMD2<Float>(mx, my),
-                        color: SIMD4<Float>(grayMul, grayMul, grayMul, edgeA),
-                        size: lenNDC * 0.5, kind: 2))
+                    out.append(GalaxyInstanceData.edge(
+                        fromScreen: fs, toScreen: ts,
+                        viewW: viewW, viewH: viewH, gray: grayMul, alpha: edgeA))
                 }
             }
 
