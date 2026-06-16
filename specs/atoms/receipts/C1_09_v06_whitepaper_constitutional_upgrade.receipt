@@ -1,0 +1,176 @@
+C1_09_v06_whitepaper_constitutional_upgrade receipt
+
+Scope:
+- Rewrote WHITEPAPER.md from v0.5 to v0.6 as a constitution-bound design document.
+- Added research/WHITEPAPER_v06_constitution_audit.md with a line-to-constitution audit.
+- Restored and upgraded the v0.5 Mermaid flowcharts as v0.6 protocol views.
+- Did not edit constitution/constitution.md.
+
+Red baseline:
+- Initial predicate check failed before the rewrite:
+  - head: # Turing Agentic OS 白皮书 v0.5
+  - missing required strings: Two-Scale Sovereign Kernel, Micro ChainTape, Macro artifacts are not Micro nodes.
+- Post-review preservation baseline:
+  - git show HEAD:WHITEPAPER.md | grep -c '^```mermaid' => 5
+  - prior C1_09 draft had 0 Mermaid flowcharts, which was a non-constitutional process/harness violation.
+  - restored v0.6 draft has 6 Mermaid flowcharts.
+
+Flowchart correction:
+- Restored the v0.5 four-loop operating-flow architecture:
+  - overview
+  - Boot
+  - Legislation / Project Ready
+  - Execution / Micro Tick / Macro Boundary
+  - Meta / Architecture Evolution
+  - Attention / Morning Ritual
+- Updated diagrams for the v0.6 directive:
+  - every cross-loop arrow names a typed ChainTape event.
+  - GitHub merge is labeled Macro artifact only.
+  - Macro evidence crosses into Micro via MacroArtifactAnchor.
+  - failure paths append evidence and leave accepted_head unchanged.
+  - macro merge requires macro predicate, budget/stop-loss/provenance gates, and contract/signature route.
+
+Process/harness incident:
+- Finding: the first C1_09 rewrite deleted load-bearing v0.5 flowcharts.
+- Root cause: the rewrite and audit optimized for prose-level constitutional line mapping, while atom predicates did not check Mermaid count, flowchart interface contract, typed event names, or prior-artifact preservation.
+- Correction:
+  - Added Flowchart Interface Contract to WHITEPAPER.md.
+  - Added non-negotiables requiring flowchart protocol semantics and diagram preservation.
+  - Added C1_09 predicates requiring at least five Mermaid blocks, Flowchart Interface Contract, SystemConstitutionAccepted, MacroArtifactAnchor, and Incident Review.
+  - Added Incident Review to research/WHITEPAPER_v06_constitution_audit.md.
+
+Clean-context auditor:
+- Auditor: fresh-context review agent, no inherited chat context.
+- Verdict: PASS.
+- Constitutional violations found: none.
+- Checked boundaries:
+  - The constitution is not modified or weakened.
+  - Macro artifacts are not treated as Micro ChainTape nodes.
+  - App, daemon, and UI are not promoted to runtime truth.
+  - Predicate, Veto, and RiskFinding remain distinct.
+  - Veto-AI is not described as a quality reviewer.
+  - Approval and signature sovereignty remain user-rooted.
+  - No unimplemented runtime capability is claimed as complete.
+- Restored-flowchart audit rerun:
+  - Verdict: PASS.
+  - Verified v0.5-style operating flowcharts are present as Mermaid diagrams.
+  - Verified Flowchart Interface Contract and typed ChainTape events.
+  - Verified two-scale Micro/Macro boundary in diagrams.
+  - Non-blocking risks: no machine predicate yet verifies every Mermaid edge against a schema/replay registry; Phase B/C runtime and contract enforcement remain future work; Art. 0.4 substrate fidelity remains a future decision.
+
+Latest auditor amendment:
+- Source: attached 2026-06-16 auditor comment headed "WHITEPAPER v0.6 Constitutional Audit".
+- Prior auditor VETOs accepted as valid:
+  - Legal hierarchy was ambiguous because the whitepaper could be read as outranking `constitution/constitution.md`.
+  - The execution flow could reach GitHub merge before final Micro predicate / approval-byte validation.
+  - The meta-evolution flow could route constitutional or substrate amendment proposals into broadcast activation.
+  - `Q_t` aliasing under-specified the distinction between `accepted_head_t` and Git/Macro `HEAD`.
+  - Cross-loop event wording was too absolute for Macro Git actions.
+  - The audit-file wording could imply a maintained artifact before commit/adoption.
+- Repairs applied:
+  - `WHITEPAPER.md` now defines itself as the top product and architecture charter for `turingos.app`, while `constitution/constitution.md` remains root founding law and recursive conflict authority.
+  - `accepted_head_t` is explicitly `HEAD_t^micro`; Macro Git/GitHub heads cannot silently replace it.
+  - GitHub merge is now an external Macro action that requires an accepted `MacroMergeAuthorization` node, canonical approval-byte validation, budget/provenance gates, and Micro predicate pass before merge.
+  - Post-merge evidence is imported only afterward as `MacroObservationImported` / `MacroMergeReceiptAnchor`.
+  - Constitutional or substrate amendment proposals enter `HALT_CONSTITUTIONAL_PENDING`; they do not broadcast as active artifacts.
+  - Cross-loop rules now distinguish internal Micro transitions from external Macro actions with pre-action authorization and post-action observation import.
+  - The audit file is named as an adoption prerequisite: it must be committed with the whitepaper before the charter is adopted.
+- Remaining non-blocking implementation gap:
+  - The Phase B audit script names in `WHITEPAPER.md` are charter/gate requirements, not implemented scripts yet. The document does not claim they already exist or pass.
+
+Final recursive constitutional audit repair:
+- Source: second 2026-06-16 recursive constitutional verdict supplied by the user.
+- Prior VETO/E findings accepted as valid against the physical text:
+  - VETO-1: generic irreversible external action path still allowed `H4` approval to flow directly into execution / receipt append.
+  - VETO-2: `MacroMergeReceiptAnchor` flowed directly to worktree GC without a receipt-consistency predicate.
+  - E-1: flowchart-local event types were missing from the §14.1 event table.
+  - E-2: Art. 0.4 wording softened Phase E Path B as default/approximation.
+  - E-3: §17 audit-file wording used present-tense "is maintained" language instead of a pre-adoption MUST.
+- Repairs applied:
+  - Inserted `ExternalActionAuthorization`, `MICROEXT`, `NOEXT`, and `EXTADV` before any generic irreversible external action.
+  - Inserted receipt consistency predicate `receipt matches MacroMergeAuthorization?` between `MacroMergeReceiptAnchor` and GC.
+  - Added `MacroMergeReceiptMismatch` / `FailureNode` path for mismatched Macro receipts.
+  - Added "Additional internal event types used inside loops" table covering `ReceiptAppended`, `OutsideGovernanceObserved`, `PredicateResult`, `FailureNode`, `FailureCertificate`, `MacroMergeAuthorization`, `ExternalActionAuthorization`, `MacroMergeReceiptAnchor`, `MacroMergeReceiptMismatch`, and `VetoDecision`.
+  - Replaced the soft Phase E phrase with: "Phase E gate forces Path B unless a human sudo constitutional amendment explicitly lowers the fidelity requirement."
+  - Replaced §17 audit wording with: "The detailed certification audit MUST be maintained..."
+- Predicate improvements:
+  - Added positive checks for `ExternalActionAuthorization`, receipt consistency, `MacroMergeReceiptMismatch`, additional internal event types, hard Phase E Path B wording, and audit MUST wording.
+  - Added negative checks against direct `H4` approval to `EXE`, direct `POSTANCHOR --> GC`, and the soft `Phase E 默认逼近 Path B` wording.
+
+Local predicate result:
+- PASS:
+  - test "$(head -1 WHITEPAPER.md)" = "# Turing Agentic OS 白皮书 v0.6"
+  - grep -q "Two-Scale Sovereign Kernel" WHITEPAPER.md
+  - grep -q "Micro ChainTape" WHITEPAPER.md
+  - grep -q "Macro artifacts are not Micro nodes" WHITEPAPER.md
+  - test "$(grep -c '^```mermaid' WHITEPAPER.md)" -ge 5
+  - grep -q "Flowchart Interface Contract" WHITEPAPER.md
+  - grep -q "SystemConstitutionAccepted" WHITEPAPER.md
+  - grep -q "MacroArtifactAnchor" WHITEPAPER.md
+  - grep -q "CONSTITUTIONAL PRODUCT CHARTER FOR turingos.app v0.6" WHITEPAPER.md
+  - grep -q "HEAD_t^micro" WHITEPAPER.md
+  - grep -q "MacroMergeAuthorization" WHITEPAPER.md
+  - grep -q "ExternalActionAuthorization" WHITEPAPER.md
+  - grep -q "receipt matches MacroMergeAuthorization" WHITEPAPER.md
+  - grep -q "MacroMergeReceiptMismatch" WHITEPAPER.md
+  - grep -q "Additional internal event types used inside loops" WHITEPAPER.md
+  - grep -q "Phase E gate forces Path B unless a human sudo constitutional amendment explicitly lowers the fidelity requirement" WHITEPAPER.md
+  - grep -q "The detailed certification audit MUST be maintained" WHITEPAPER.md
+  - grep -q "HALT_CONSTITUTIONAL_PENDING" WHITEPAPER.md
+  - grep -q "No irreversible Macro action" WHITEPAPER.md
+  - ! grep -q 'H4 -->|"批准"| EXE' WHITEPAPER.md
+  - ! grep -q "POSTANCHOR --> GC" WHITEPAPER.md
+  - ! grep -q "Phase E 默认逼近 Path B" WHITEPAPER.md
+  - grep -q "Incident Review" research/WHITEPAPER_v06_constitution_audit.md
+  - grep -q "Final Recursive Constitutional Audit Repairs" research/WHITEPAPER_v06_constitution_audit.md
+  - grep -q "Line-to-Constitution Audit" research/WHITEPAPER_v06_constitution_audit.md
+
+Gate evidence:
+- Plain direct cargo from the Codex shell initially failed because cargo was not on PATH:
+  - zsh:1: command not found: cargo
+- First plain shipgate p1 failed at Rust gate 15:
+  - process did not exit successfully: daemon/target/debug/deps/turingosd-e2a3c8cea05083fb
+  - signal: 9, SIGKILL: kill
+- Direct Rust library tests passed after normalizing PATH:
+  - cd daemon && PATH="$HOME/.cargo/bin:$PATH" cargo test --lib
+  - 55 passed, 0 failed.
+- A later plain shipgate p1 run hung after Rust clippy; it was interrupted with exit 130.
+- Isolated diagnosis found the rebuilt workspace-target test binary was rejected by AMFI:
+  - amfid: worktree_boundaries-3cce4a8d6116f037 not valid
+  - AppleMobileFileIntegrityError Code=-423
+  - The file is adhoc signed or signed by an unknown certificate chain.
+- No valid local code-signing identities were available:
+  - security find-identity -v -p codesigning
+  - 0 valid identities found.
+- The same Rust test binary built under /tmp listed and ran normally.
+
+Final gate:
+- PASS:
+  - CARGO_TARGET_DIR=/tmp/tos-cargo-target bash scripts/shipgate.sh p1
+  - Gates 1-16 passed.
+  - Final output: SHIPGATE p1: PASS.
+
+Residual local caveat:
+- In this Codex desktop session on macOS, plain workspace-target Rust test executables under daemon/target can be killed by AMFI before Rust code runs.
+- The successful p1 run used CARGO_TARGET_DIR=/tmp/tos-cargo-target to keep the same source and same shipgate script while avoiding that local execution policy.
+
+Latest verification rerun after auditor amendment:
+- Document predicates:
+  - PASS: required v0.6 title, Two-Scale Sovereign Kernel, Micro ChainTape, Macro/Micro boundary, at least five Mermaid blocks, Flowchart Interface Contract, SystemConstitutionAccepted, MacroArtifactAnchor, app-charter hierarchy text, `HEAD_t^micro`, `MacroMergeAuthorization`, `HALT_CONSTITUTIONAL_PENDING`, "No irreversible Macro action", Incident Review, and Line-to-Constitution Audit.
+  - PASS: forbidden legacy-flow scan returned empty for direct `ROUTE --> MERGE`, `AMLOG --> BCAST`, ambiguous `Q_t = <q_t, accepted_head_t, tape_t>`, GitHub merge SHA as `HEAD_t`, and `Q_t+1` merge conflation.
+- Plain `CARGO_TARGET_DIR=/tmp/tos-cargo-target bash scripts/shipgate.sh p1`:
+  - PASS gates 1-15.
+  - FAIL gate 16 app lane because SwiftPM loaded the test bundle from `app/.build/out/.../TuringOSTests` and macOS rejected the ad-hoc signed bundle under local system policy.
+- Isolated scratch rerun:
+  - Preserved existing ignored `app/.build`, temporarily symlinked `app/.build` to `/tmp`, ran `CARGO_TARGET_DIR=/tmp/tos-cargo-target bash scripts/shipgate.sh p1`, then restored the original `app/.build` via shell trap.
+  - PASS gates 1-16.
+  - Final output: SHIPGATE p1: PASS.
+
+Final recursive repair verification:
+- Document predicates:
+  - PASS: required v0.6 title, Two-Scale Sovereign Kernel, Micro ChainTape, Macro/Micro boundary, Mermaid block count, Flowchart Interface Contract, SystemConstitutionAccepted, MacroArtifactAnchor, app-charter hierarchy, `HEAD_t^micro`, `MacroMergeAuthorization`, `ExternalActionAuthorization`, receipt consistency predicate, `MacroMergeReceiptMismatch`, additional event type table, hard Phase E Path B wording, audit MUST wording, `HALT_CONSTITUTIONAL_PENDING`, "No irreversible Macro action", Incident Review, Final Recursive Constitutional Audit Repairs, and Line-to-Constitution Audit.
+  - PASS: forbidden scans empty for direct `H4` approval to `EXE`, direct `POSTANCHOR --> GC`, soft `Phase E 默认逼近 Path B`, present-tense audit "is maintained", direct `ROUTE --> MERGE`, `AMLOG --> BCAST`, ambiguous `Q_t = <q_t, accepted_head_t, tape_t>`, GitHub merge SHA as `HEAD_t`, and `Q_t+1` merge conflation.
+- Full gate:
+  - Preserved existing ignored `app/.build`, temporarily symlinked `app/.build` to `/tmp`, and ran `CARGO_TARGET_DIR=/tmp/tos-cargo-target bash scripts/shipgate.sh p1`.
+  - PASS gates 1-16.
+  - Final output: SHIPGATE p1: PASS.
